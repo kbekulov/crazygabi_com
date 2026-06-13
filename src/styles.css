@@ -74,6 +74,57 @@ button:active {
   image-rendering: pixelated;
 }
 
+.speech-layer {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  font-family: "Courier New", ui-monospace, monospace;
+  image-rendering: auto;
+}
+
+.world-speech-bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  min-height: var(--speech-min-height, 28px);
+  width: var(--speech-width, 160px);
+  padding: 7px 10px 8px;
+  color: #f4f0dc;
+  background: rgba(5, 5, 5, var(--speech-opacity, 0.9));
+  border-radius: 5px;
+  font-size: var(--speech-font-size, 13px);
+  font-weight: 900;
+  line-height: 1.16;
+  text-align: center;
+  text-shadow: 1px 1px 0 #000;
+  white-space: normal;
+  transform: translate(-9999px, -9999px);
+  will-change: transform, opacity;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.world-speech-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 8px solid rgba(5, 5, 5, var(--speech-opacity, 0.9));
+}
+
+.world-speech-bubble.is-hidden {
+  display: none;
+}
+
 #hud {
   position: absolute;
   z-index: 2;
@@ -533,6 +584,24 @@ button:active {
   background: rgba(0, 0, 0, 0.28);
 }
 
+.main-menu-layout {
+  position: relative;
+  width: min(760px, 88%);
+}
+
+.game-version {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  z-index: 1;
+  padding: 4px 7px;
+  left: auto;
+  color: rgba(244, 220, 176, 0.9);
+  font-size: clamp(0.72rem, 1.45vw, 0.95rem);
+  font-weight: 900;
+  text-shadow: 2px 2px 0 #000;
+}
+
 .main-menu[hidden],
 .menu-panel[hidden] {
   display: none;
@@ -554,10 +623,17 @@ button:active {
   grid-template-columns: minmax(230px, 0.78fr) minmax(220px, 0.72fr);
   align-items: stretch;
   gap: 0;
-  width: min(760px, 88%);
+  width: 100%;
   max-height: min(620px, 88vh);
   padding: 0;
   overflow: hidden;
+}
+
+.main-menu-promo-wrap {
+  position: relative;
+  min-height: 420px;
+  background: #050505;
+  border-right: 3px solid rgba(244, 220, 176, 0.58);
 }
 
 .main-menu-promo {
@@ -567,7 +643,6 @@ button:active {
   min-height: 420px;
   object-fit: contain;
   background: #050505;
-  border-right: 3px solid rgba(244, 220, 176, 0.58);
 }
 
 .main-menu-actions,
@@ -666,13 +741,20 @@ button:active {
 }
 
 @media (max-width: 680px) {
+  .main-menu-layout {
+    width: min(390px, 90%);
+  }
+
   .main-menu-card {
     grid-template-columns: 1fr;
-    width: min(390px, 90%);
   }
 
   .main-menu-promo {
     max-height: 54vh;
+    min-height: 0;
+  }
+
+  .main-menu-promo-wrap {
     min-height: 0;
     border-right: 0;
     border-bottom: 3px solid rgba(244, 220, 176, 0.58);
@@ -1474,13 +1556,20 @@ button:active {
 }
 
 @media (hover: none) and (pointer: coarse) and (orientation: portrait), (max-width: 680px) and (orientation: portrait) {
-  .main-menu-card {
-    grid-template-columns: 1fr;
+  .main-menu-layout {
     width: min(390px, 94%);
   }
 
-  .main-menu-promo {
+  .main-menu-card {
+    grid-template-columns: 1fr;
+  }
+
+  .main-menu-promo,
+  .main-menu-promo-wrap {
     height: min(26dvh, 34vw, 150px);
+  }
+
+  .main-menu-promo-wrap {
     border-right: 0;
     border-bottom: 3px solid rgba(244, 220, 176, 0.58);
   }
@@ -1497,7 +1586,7 @@ button:active {
 }
 
 @media (hover: none) and (pointer: coarse) and (orientation: landscape) and (max-height: 520px), (max-width: 900px) and (orientation: landscape) and (max-height: 520px) {
-  .main-menu-card {
+  .main-menu-layout {
     width: min(690px, 96%);
   }
 
