@@ -1,5 +1,5 @@
 const TILE = 32;
-const GAME_VERSION = "v0.55.0";
+const GAME_VERSION = "v0.55.8";
 const VIEW_WIDTH = 960;
 const VIEW_HEIGHT = 540;
 const PLAY_HEIGHT = VIEW_HEIGHT;
@@ -28,7 +28,7 @@ const BIRD_NORMAL_DELAY = [5200, 9800];
 const BIRD_ELEVATOR_DELAY = [850, 1800];
 const BIRD_FLOCK_MIN_Y = 60;
 const BIRD_FLOCK_BASE_MARGIN = 210;
-const BIRD_DEPTH = -9.6;
+const BIRD_DEPTH = -9.44;
 const BIRD_ATTACK_DEPTH = 9.4;
 const BIRD_ATTACK_COOLDOWN = 10000;
 const BIRD_ATTACK_SPEED_MULTIPLIER = 6;
@@ -95,6 +95,11 @@ const HAY_BURST_DEPTH = HAYSTACK_DEPTH + 0.5;
 const HAY_BURST_COLORS = [0xc99654, 0x7d5525, 0xe6bc75, 0xca9656, 0x8a5b2e, 0xb9894a];
 const HAY_BURST_MIN_TOUCH_SPEED = 44;
 const HAY_BURST_COOLDOWN_MS = 1000;
+const DIVE_JUMP_MIN_HORIZONTAL_SPEED = 70;
+const DIVE_JUMP_FORCED_HORIZONTAL_SPEED = 230;
+const DIVE_JUMP_FORCED_VERTICAL_SPEED = -500;
+const DIVE_WALK_OFF_TRIGGER_DISTANCE = 44;
+const DIVE_WALK_OFF_VERTICAL_TOLERANCE = 34;
 const SCRIPTED_DIVE_MIN_SPEED_X = 160;
 const SCRIPTED_DIVE_MAX_SPEED_X = 430;
 const SCRIPTED_DIVE_MAX_SPEED_Y = 720;
@@ -156,6 +161,7 @@ const MAGPIE_AMBIENT_SFX_CHANCE = 0.125;
 const COLOSSUS_DEPTH = -9.55;
 const COLOSSUS_STEP_SHAKE_DURATION = 180;
 const COLOSSUS_STEP_SHAKE_INTENSITY = 0.0014;
+const COLOSSUS_HOWL_VOLUME = 1.08;
 const THROWN_ACORN_MAX_BOUNCES = 3;
 const ROBOT_FRAME_WIDTH = 238;
 const ROBOT_FRAME_HEIGHT = 238;
@@ -262,7 +268,7 @@ const ENEMY_NAMES = [
   "OCM Tiers Case Escalation",
   "KYC WUDB Onboarding Assistant"
 ];
-const ASSET_VERSION = "20260614-colossus-boss-reveal";
+const ASSET_VERSION = "20260614-colossus-head";
 const STORY_ASSET_VERSION = ASSET_VERSION;
 
 function getSpineRuntime() {
@@ -289,7 +295,7 @@ const MUSIC_TRACKS = [
   { key: "bgm-lv2", label: "Level 2 Theme", src: "./public/assets/sound/bgm_lv2.mp3" },
   { key: "bgm-lv3", label: "Level 3 Theme", src: "./public/assets/sound/bgm_lv3.mp3" },
   { key: "bgm-lv5", label: "Level 5 Theme", src: "./public/assets/sound/bgm_lv5.mp3" },
-  { key: "bgm-lv5-boss", label: "Level 5 Theme (Boss)", src: "./public/assets/sound/bgm_lv5_boss.mp3", volumeScale: 1.1 }
+  { key: "bgm-lv5-boss", label: "Level 5 Theme (Boss)", src: "./public/assets/sound/bgm_lv5_boss.mp3", volumeScale: 1.32 }
 ];
 const LOADING_RUNNERS = [
   {
@@ -567,17 +573,31 @@ const LEVELS = [
     birdSfx: MAGPIE_CALL_SFX_KEY,
     ambientBirds: true,
     distantColossus: {
-      type: "spine",
-      dataKey: "colossus-placeholder-data",
-      atlasKey: "colossus-placeholder-atlas",
-      skeleton: "./public/assets/boss/colossus/colossus_placeholder.json",
-      atlas: "./public/assets/boss/colossus/colossus_placeholder.atlas",
+      type: "png-rig",
+      parts: {
+        torso: "./public/assets/boss/colossus/torso.png",
+        pelvis: "./public/assets/boss/colossus/pelvis.png",
+        head: "./public/assets/boss/colossus/head.png",
+        crown: "./public/assets/boss/colossus/slanted_crown.png",
+        upperArm: "./public/assets/boss/colossus/upper_arm.png",
+        lowerArm: "./public/assets/boss/colossus/lower_arm.png",
+        openHand: "./public/assets/boss/colossus/open_hand.png",
+        closedHand: "./public/assets/boss/colossus/closed_hand.png",
+        suitcase: "./public/assets/boss/colossus/suitcase.png",
+        upperLeg: "./public/assets/boss/colossus/upper_leg.png",
+        lowerLeg: "./public/assets/boss/colossus/lower_leg.png",
+        foot: "./public/assets/boss/colossus/foot.png"
+      },
       x: 720,
-      groundY: 214,
-      scale: 0.72,
+      groundY: 320,
+      scale: 0.48,
       driftSpeed: -4.8,
+      seekGabi: true,
+      seekSpeed: 54,
+      seekStopDistance: 62,
+      seekScreenOffset: 420,
       cycleMs: 5200,
-      alpha: 0.62,
+      alpha: 1,
       shakeDuration: COLOSSUS_STEP_SHAKE_DURATION,
       shakeIntensity: COLOSSUS_STEP_SHAKE_INTENSITY
     },
@@ -1124,6 +1144,8 @@ const hud = {
   coinIcon: document.querySelector("#coin-icon"),
   keyIcon: document.querySelector("#key-icon"),
   questList: document.querySelector("#quest-list"),
+  bossHealth: document.querySelector("#boss-health"),
+  bossHealthFill: document.querySelector("#boss-health-fill"),
   equippedIcon: document.querySelector("#equipped-icon"),
   equippedName: document.querySelector("#equipped-name"),
   itemActionKey: document.querySelector("#item-action-key"),
@@ -1231,6 +1253,22 @@ function updateBirdCooldownHud(progress = 0) {
   const value = Phaser.Math.Clamp(progress || 0, 0, 1);
   hud.birdCooldown.style.setProperty("--bird-cooldown-progress", value.toFixed(3));
   hud.birdCooldown.style.setProperty("--bird-cooldown-hidden", `${(value * 100).toFixed(1)}%`);
+}
+
+function setBossHealthVisible(visible) {
+  if (!hud.bossHealth) return;
+  hud.bossHealth.hidden = !visible;
+}
+
+function updateBossHealthHud({ x = VIEW_WIDTH / 2, y = 72, value = 1 } = {}) {
+  if (!hud.bossHealth) return;
+  const clampedX = Phaser.Math.Clamp(x, 120, VIEW_WIDTH - 120);
+  const clampedY = Phaser.Math.Clamp(y, 36, 112);
+  hud.bossHealth.style.setProperty("--boss-health-x", `${clampedX}px`);
+  hud.bossHealth.style.setProperty("--boss-health-y", `${clampedY}px`);
+  if (hud.bossHealthFill) {
+    hud.bossHealthFill.style.width = `${Phaser.Math.Clamp(value, 0, 1) * 100}%`;
+  }
 }
 
 function getActiveLevel() {
@@ -1962,6 +2000,7 @@ class PlayScene extends Phaser.Scene {
     this.bossRevealActive = false;
     this.bossRevealTweens = [];
     this.bossRevealTimers = [];
+    this.bossHealthVisible = false;
     this.elevatorSignBubble = null;
     this.elevatorSignPromptShown = false;
     this.mysteriousMan = null;
@@ -1973,6 +2012,7 @@ class PlayScene extends Phaser.Scene {
     this.catFollowPlayerAfterElevator = false;
     this.clearDomSpeechBubbles();
     this.domSpeechBubbles = [];
+    setBossHealthVisible(false);
 
     state.totalGems = 0;
     state.levelGems = 0;
@@ -2136,6 +2176,12 @@ class PlayScene extends Phaser.Scene {
           queued += 1;
         }
       };
+      const colossusPartAssets = (config) => {
+        if (!config || config.type !== "png-rig") return;
+        Object.entries(config.parts || {}).forEach(([partName, src]) => {
+          image(`colossus-${partName}`, src);
+        });
+      };
 
       sheet("gabi-sheet", "./public/assets/character/main_char_sprite.png", GABI_FRAME_WIDTH, GABI_FRAME_HEIGHT);
       sheet("gabi-wings-sheet", "./public/assets/character/main_char_sprite_with_double_jump.png", GABI_FRAME_WIDTH, GABI_FRAME_HEIGHT);
@@ -2169,6 +2215,7 @@ class PlayScene extends Phaser.Scene {
         sheet("autumn-leaf-1", "./public/assets/environment/autumn_leaf_1.png", AUTUMN_LEAF_FRAME_WIDTH, AUTUMN_LEAF_FRAME_HEIGHT);
       }
       spineAsset(level.distantColossus);
+      colossusPartAssets(level.distantColossus);
 
       image("parallax-city", "./public/assets/environment/paralax_city.png");
       if (level.parallax === "parallax-underground") image("parallax-underground", "./public/assets/environment/paralax_underground.png");
@@ -2528,6 +2575,7 @@ class PlayScene extends Phaser.Scene {
 
   createBackdrop() {
     const textureKey = this.level.parallax || "parallax-city";
+    this.frontParallaxLayer = null;
     const makeParallaxLayer = (key, speed, depth) => {
       const source = this.textures.get(key).getSourceImage();
       const sourceHeight = source.height;
@@ -2545,7 +2593,8 @@ class PlayScene extends Phaser.Scene {
     this.parallaxLayers = [makeParallaxLayer(textureKey, 0.18, -10)];
     if (this.level.colossusHaze) this.createColossusHazeGradient(this.level.colossusHaze);
     if (this.level.frontParallax && this.textures.exists(this.level.frontParallax)) {
-      this.parallaxLayers.push(makeParallaxLayer(this.level.frontParallax, 0.18, -9.4));
+      this.frontParallaxLayer = makeParallaxLayer(this.level.frontParallax, 0.18, -9.4);
+      this.parallaxLayers.push(this.frontParallaxLayer);
     }
     this.parallaxLayers.forEach(({ sprite, scale, depth }) => {
       sprite.setOrigin(0, 0);
@@ -2602,6 +2651,11 @@ class PlayScene extends Phaser.Scene {
   createDistantColossus() {
     const config = this.level.distantColossus;
     if (!config) return;
+
+    if (config.type === "png-rig") {
+      this.createPngDistantColossus(config);
+      return;
+    }
 
     if (config.type !== "spine" || typeof this.add.spine !== "function") return;
 
@@ -2677,14 +2731,12 @@ class PlayScene extends Phaser.Scene {
         return { boneName, offsetX, offsetY, text };
       });
 
-    const projection = this.getDistantColossusParallaxProjection();
     this.distantColossus = {
       config,
       object,
       bones,
       labels,
-      parallaxX: (config.x ?? VIEW_WIDTH + 180) / (projection.scale || 1),
-      parallaxProjection: projection,
+      screenX: config.x ?? VIEW_WIDTH + 180,
       baseGroundY: config.groundY ?? PLAY_HEIGHT - 78,
       cycleMs: config.cycleMs ?? 5200,
       lastStepIndex: -1,
@@ -2694,21 +2746,86 @@ class PlayScene extends Phaser.Scene {
     this.updateDistantColossus(this.time.now, 0);
   }
 
-  getDistantColossusParallaxProjection() {
+  createPngDistantColossus(config) {
+    const projection = this.getDistantColossusProjection();
+    const object = this.add.container(config.x ?? VIEW_WIDTH + 180, config.groundY ?? PLAY_HEIGHT - 78);
+    object.setScrollFactor(0);
+    object.setDepth(config.depth ?? COLOSSUS_DEPTH);
+    object.setScale(config.scale ?? 1);
+    object.setAlpha(config.alpha ?? 0.55);
+
+    const addPart = (name, key, x, y, options = {}) => {
+      if (!this.textures.exists(key)) return null;
+      const sprite = this.add.image(x, y, key);
+      sprite.setOrigin(options.originX ?? 0.5, options.originY ?? 0.5);
+      sprite.setScale(options.scaleX ?? 1, options.scaleY ?? 1);
+      sprite.setAngle(options.angle ?? 0);
+      sprite.setAlpha(options.alpha ?? 1);
+      object.add(sprite);
+      return sprite;
+    };
+
+    const parts = {
+      farLeg: addPart("farLeg", "colossus-upperLeg", 34, -254, { originY: 0.12 }),
+      farShin: addPart("farShin", "colossus-lowerLeg", 34, -152, { originY: 0.1 }),
+      farFoot: addPart("farFoot", "colossus-foot", 48, -30, { originY: 0.18 }),
+      farArm: addPart("farArm", "colossus-upperArm", 66, -406, { originY: 0.12 }),
+      farForearm: addPart("farForearm", "colossus-lowerArm", 82, -300, { originY: 0.1 }),
+      farHand: addPart("farHand", "colossus-openHand", 98, -194, { originY: 0.16 }),
+      torso: addPart("torso", "colossus-torso", 0, -362),
+      pelvis: addPart("pelvis", "colossus-pelvis", 0, -248),
+      head: addPart("head", "colossus-head", 16, -520, { scaleX: 0.8, scaleY: 0.8 }),
+      crown: addPart("crown", "colossus-crown", 24, -580, { angle: -5, scaleX: 0.8, scaleY: 0.8 }),
+      nearLeg: addPart("nearLeg", "colossus-upperLeg", -34, -254, { originY: 0.12 }),
+      nearShin: addPart("nearShin", "colossus-lowerLeg", -34, -152, { originY: 0.1 }),
+      nearFoot: addPart("nearFoot", "colossus-foot", -48, -30, { originY: 0.18 }),
+      nearArm: addPart("nearArm", "colossus-upperArm", -70, -406, { originY: 0.12 }),
+      nearForearm: addPart("nearForearm", "colossus-lowerArm", -92, -300, { originY: 0.1 }),
+      nearHand: addPart("nearHand", "colossus-closedHand", -112, -194, { originY: 0.16 }),
+      suitcase: addPart("suitcase", "colossus-suitcase", -142, -142, { angle: -4 })
+    };
+
+    this.distantColossus = {
+      config,
+      object,
+      parts,
+      projection,
+      planeX: (config.x ?? VIEW_WIDTH + 180) / (projection.scale || 1),
+      facing: 1,
+      baseGroundY: config.groundY ?? PLAY_HEIGHT - 78,
+      cycleMs: config.cycleMs ?? 5200,
+      lastStepIndex: -1,
+      phaseOffset: Phaser.Math.FloatBetween(0, Math.PI * 2)
+    };
+    this.updateDistantColossus(this.time.now, 0);
+  }
+
+  getDistantColossusProjection() {
     const key = this.level.frontParallax || this.level.parallax;
     const layer = this.parallaxLayers?.find(({ sprite }) => sprite?.texture?.key === key);
     return {
       speed: layer?.speed ?? 0.18,
-      scale: layer?.scale ?? 1,
-      tileWidth: layer?.tileWidth ?? VIEW_WIDTH
+      scale: layer?.scale ?? 1
     };
   }
 
   projectDistantColossusX(rig, sway = 0) {
-    const cameraScrollX = this.cameras?.main?.scrollX || 0;
-    const projection = rig.parallaxProjection || { speed: 0.18, scale: 1, tileWidth: VIEW_WIDTH };
-    const parallaxTextureOffset = cameraScrollX * projection.speed;
-    return (rig.parallaxX - parallaxTextureOffset) * projection.scale + sway;
+    if (Number.isFinite(rig?.planeX)) {
+      const projection = rig.projection || this.getDistantColossusProjection();
+      const cameraScrollX = this.cameras?.main?.scrollX || 0;
+      const parallaxTextureOffset = cameraScrollX * projection.speed;
+      return (rig.planeX - parallaxTextureOffset) * projection.scale + sway;
+    }
+    return (rig.screenX ?? 0) + sway;
+  }
+
+  getDistantColossusTargetX(rig) {
+    const config = rig?.config || {};
+    if (!config.seekGabi || !this.player) return null;
+
+    const projection = rig.projection || this.getDistantColossusProjection();
+    const offset = (config.seekScreenOffset ?? VIEW_WIDTH * 0.52) / (projection.scale || 1);
+    return this.player.x * projection.speed + offset;
   }
 
   updateSpineColossusLabels() {
@@ -2770,6 +2887,100 @@ class PlayScene extends Phaser.Scene {
     this.setSpineBonePose(rig.bones["right-hand"], { rotation: -Math.sin(phase + 0.9) * 4 });
   }
 
+  posePngColossus() {
+    const rig = this.distantColossus;
+    const parts = rig?.parts;
+    if (!parts) return;
+
+    const phase = rig.phase || 0;
+    const nearStep = Math.sin(phase);
+    const farStep = Math.sin(phase + Math.PI);
+    const torsoLean = Math.sin(phase + 0.3) * 1.6;
+    const armSwing = Math.sin(phase + Math.PI) * 9;
+    const bob = Math.abs(Math.sin(phase)) * 3;
+
+    const set = (part, props = {}) => {
+      if (!part) return;
+      if (Number.isFinite(props.x)) part.x = props.x;
+      if (Number.isFinite(props.y)) part.y = props.y;
+      if (Number.isFinite(props.angle)) part.setAngle(props.angle);
+      if (Number.isFinite(props.scaleX) || Number.isFinite(props.scaleY)) {
+        part.setScale(props.scaleX ?? part.scaleX, props.scaleY ?? part.scaleY);
+      }
+    };
+
+    const jointEnd = (x, y, length, angle) => {
+      const radians = (angle * Math.PI) / 180;
+      return {
+        x: x + Math.sin(radians) * length,
+        y: y + Math.cos(radians) * length
+      };
+    };
+    const placeLimb = ({ upper, lower, end, x, y, upperAngle, lowerAngle, upperLength, lowerLength, endOffsetX = 0, endOffsetY = 0, endAngle = 0 }) => {
+      set(upper, { x, y, angle: upperAngle });
+      const elbow = jointEnd(x, y, upperLength, upperAngle);
+      set(lower, { x: elbow.x, y: elbow.y, angle: lowerAngle });
+      const wrist = jointEnd(elbow.x, elbow.y, lowerLength, lowerAngle);
+      set(end, { x: wrist.x + endOffsetX, y: wrist.y + endOffsetY, angle: endAngle });
+      return wrist;
+    };
+
+    set(parts.torso, { x: Math.sin(phase) * 1.8, y: -344 - bob, angle: torsoLean });
+    set(parts.pelvis, { x: 0, y: -222 + Math.abs(Math.sin(phase)) * 2, angle: -torsoLean * 0.42 });
+    set(parts.head, { x: 16 + Math.sin(phase + 0.55) * 2.2, y: -510 - bob, angle: -torsoLean * 0.45 });
+    set(parts.crown, { x: 24 + Math.sin(phase + 0.55) * 2.2, y: -566 - bob, angle: -5 - torsoLean * 0.45 });
+
+    const farFoot = placeLimb({
+      upper: parts.farLeg,
+      lower: parts.farShin,
+      end: parts.farFoot,
+      x: 34 + farStep * 5,
+      y: -250 + Math.abs(farStep) * 3,
+      upperAngle: -4 + farStep * 8,
+      lowerAngle: 5 - farStep * 10,
+      upperLength: 92,
+      lowerLength: 94,
+      endOffsetX: 10,
+      endOffsetY: 8,
+      endAngle: 78 + farStep * 5
+    });
+    const nearFoot = placeLimb({
+      upper: parts.nearLeg,
+      lower: parts.nearShin,
+      end: parts.nearFoot,
+      x: -34 + nearStep * 7,
+      y: -250 + Math.abs(nearStep) * 4,
+      upperAngle: 4 + nearStep * 10,
+      lowerAngle: -5 - nearStep * 12,
+      upperLength: 92,
+      lowerLength: 94,
+      endOffsetX: -10,
+      endOffsetY: 8,
+      endAngle: -78 + nearStep * 5
+    });
+
+    const farArmSwing = Math.sin(phase + Math.PI) * 5;
+    const nearArmSwing = Math.sin(phase) * 6;
+    const farShoulder = { x: 66, y: -392 - bob };
+    const nearShoulder = { x: -66, y: -392 - bob };
+    const farElbow = { x: farShoulder.x + farArmSwing * 0.22, y: farShoulder.y + 92 };
+    const nearElbow = { x: nearShoulder.x + nearArmSwing * 0.22, y: nearShoulder.y + 92 };
+    const farWrist = { x: farElbow.x + farArmSwing * 0.18, y: farElbow.y + 88 };
+    const nearWrist = { x: nearElbow.x + nearArmSwing * 0.18, y: nearElbow.y + 88 };
+
+    set(parts.farArm, { x: farShoulder.x, y: farShoulder.y, angle: 3 + farArmSwing * 0.18 });
+    set(parts.farForearm, { x: farElbow.x, y: farElbow.y, angle: -2 + farArmSwing * 0.12 });
+    set(parts.farHand, { x: farWrist.x + 4, y: farWrist.y - 2, angle: 4 + farArmSwing * 0.08 });
+    set(parts.nearArm, { x: nearShoulder.x, y: nearShoulder.y, angle: -3 + nearArmSwing * 0.18 });
+    set(parts.nearForearm, { x: nearElbow.x, y: nearElbow.y, angle: 2 + nearArmSwing * 0.12 });
+    set(parts.nearHand, { x: nearWrist.x - 4, y: nearWrist.y - 2, angle: -4 + nearArmSwing * 0.08 });
+    set(parts.suitcase, {
+      x: nearWrist.x - 32,
+      y: Math.max(nearFoot.y - 10, nearWrist.y + 34 + Math.sin(phase + 0.9) * 4),
+      angle: -5 + Math.sin(phase) * 2
+    });
+  }
+
   updateDistantColossus(time = 0, delta = 0) {
     const rig = this.distantColossus;
     if (!rig?.object?.active) return;
@@ -2777,25 +2988,53 @@ class PlayScene extends Phaser.Scene {
     const config = rig.config;
     const phase = ((time / rig.cycleMs) * Math.PI * 2 + rig.phaseOffset) % (Math.PI * 2);
     rig.phase = phase;
-    const drift = (config.driftSpeed ?? -4.8) * (delta / 1000);
-    const projection = rig.parallaxProjection || { scale: 1 };
-    rig.parallaxX += Number.isFinite(drift) ? drift / (projection.scale || 1) : 0;
+    if (!this.bossRevealActive) {
+      const dt = delta / 1000;
+      const targetX = this.getDistantColossusTargetX(rig);
+      if (Number.isFinite(targetX)) {
+        const stopDistance = config.seekStopDistance ?? 80;
+        const speed = (config.seekSpeed ?? 36) * dt;
+        const positionKey = Number.isFinite(rig.planeX) ? "planeX" : "screenX";
+        const distance = targetX - rig[positionKey];
+        const remaining = Math.max(0, Math.abs(distance) - stopDistance);
+        if (remaining > 0 && Number.isFinite(speed)) {
+          const direction = Math.sign(distance);
+          rig.facing = direction || rig.facing || 1;
+          rig[positionKey] += direction * Math.min(remaining, speed);
+        }
+      } else {
+        const drift = (config.driftSpeed ?? -4.8) * dt;
+        if (Number.isFinite(drift) && Math.abs(drift) > 0.001) rig.facing = Math.sign(drift) || rig.facing || 1;
+        if (Number.isFinite(rig.planeX)) {
+          rig.planeX += Number.isFinite(drift) ? drift : 0;
+        } else {
+          rig.screenX += Number.isFinite(drift) ? drift : 0;
+        }
+      }
+    }
 
     const bob = Math.abs(Math.sin(phase)) * 5;
     const sway = Math.sin(phase * 0.5) * 4;
     const wrapPadding = 320;
-    const wrapDistance = (VIEW_WIDTH + wrapPadding * 2) / (projection.scale || 1);
+    const wrapDistance = VIEW_WIDTH + wrapPadding * 2;
     let projectedX = this.projectDistantColossusX(rig, sway);
-    while (projectedX < -wrapPadding) {
-      rig.parallaxX += wrapDistance;
-      projectedX = this.projectDistantColossusX(rig, sway);
-    }
-    while (projectedX > VIEW_WIDTH + wrapPadding) {
-      rig.parallaxX -= wrapDistance;
-      projectedX = this.projectDistantColossusX(rig, sway);
+    if (!Number.isFinite(rig.planeX)) {
+      while (projectedX < -wrapPadding) {
+        rig.screenX += wrapDistance;
+        projectedX = this.projectDistantColossusX(rig, sway);
+      }
+      while (projectedX > VIEW_WIDTH + wrapPadding) {
+        rig.screenX -= wrapDistance;
+        projectedX = this.projectDistantColossusX(rig, sway);
+      }
     }
     rig.object.setPosition(projectedX, rig.baseGroundY + bob);
+    if (rig.parts) {
+      const baseScale = config.scale ?? 1;
+      rig.object.setScale((rig.facing || 1) * baseScale, baseScale);
+    }
     this.poseSpineColossus();
+    this.posePngColossus();
     this.updateSpineColossusLabels();
 
     const stepIndex = Math.floor((time + rig.phaseOffset * 100) / (rig.cycleMs / 2));
@@ -2828,6 +3067,7 @@ class PlayScene extends Phaser.Scene {
     if (this.bossRevealTriggered || this.bossRevealActive) return;
     this.bossRevealTriggered = true;
     this.bossRevealActive = true;
+    this.fadeFrontParallaxForBossReveal(false);
     this.cancelBirdAttackCameraZoom({ restoreCamera: false });
     this.cancelDiveCameraZoom({ restoreCamera: false });
     this.player?.setAccelerationX(0);
@@ -2839,6 +3079,8 @@ class PlayScene extends Phaser.Scene {
     if (!camera || !rig?.object?.active) {
       this.startBossSoundtrack();
       this.bossRevealActive = false;
+      this.showBossHealthBar();
+      this.fadeFrontParallaxForBossReveal(true);
       return;
     }
 
@@ -2861,7 +3103,7 @@ class PlayScene extends Phaser.Scene {
       onUpdate: keepCentered,
       onComplete: () => {
         keepCentered();
-        this.playLevelSfx(COLOSSUS_HOWL_SFX_KEY, 0.72);
+        this.playLevelSfx(COLOSSUS_HOWL_SFX_KEY, COLOSSUS_HOWL_VOLUME);
         const hold = this.time.delayedCall(950, () => {
           const zoomOut = this.tweens.add({
             targets: proxy,
@@ -2875,6 +3117,8 @@ class PlayScene extends Phaser.Scene {
               camera.startFollow(this.player, true, 0.12, 0.12);
               camera.setDeadzone(170, 110);
               this.startBossSoundtrack();
+              this.showBossHealthBar();
+              this.fadeFrontParallaxForBossReveal(true);
               this.bossRevealActive = false;
               this.bossRevealTweens = this.bossRevealTweens.filter((tween) => tween !== zoomOut);
             }
@@ -2889,9 +3133,44 @@ class PlayScene extends Phaser.Scene {
     this.bossRevealTweens.push(zoomIn);
   }
 
+  fadeFrontParallaxForBossReveal(visible = true) {
+    const sprite = this.frontParallaxLayer?.sprite;
+    if (!sprite?.active) return;
+    this.frontParallaxFadeTween?.remove?.();
+    this.frontParallaxFadeTween = this.tweens.add({
+      targets: sprite,
+      alpha: visible ? 1 : 0,
+      duration: visible ? 560 : 420,
+      ease: "Sine.easeInOut",
+      onComplete: () => {
+        this.frontParallaxFadeTween = null;
+      }
+    });
+  }
+
+  showBossHealthBar() {
+    this.bossHealthVisible = true;
+    setBossHealthVisible(true);
+    this.updateBossHealthBar();
+  }
+
+  updateBossHealthBar() {
+    if (!this.bossHealthVisible || !this.distantColossus?.object?.active) return;
+    const rig = this.distantColossus;
+    const head = rig.parts?.head;
+    const scaleX = rig.object.scaleX || 1;
+    const scaleY = rig.object.scaleY || 1;
+    const headX = rig.object.x + ((head?.x ?? 0) * scaleX);
+    const headY = rig.object.y + ((head?.y ?? -500) * scaleY) - 22;
+    updateBossHealthHud({ x: headX, y: headY, value: 1 });
+  }
+
   cancelBossRevealCamera({ restoreCamera = true } = {}) {
     this.bossRevealTweens?.forEach((tween) => tween?.remove?.());
     this.bossRevealTimers?.forEach((timer) => timer?.remove?.(false));
+    this.frontParallaxFadeTween?.remove?.();
+    this.frontParallaxFadeTween = null;
+    if (this.frontParallaxLayer?.sprite?.active) this.frontParallaxLayer.sprite.setAlpha(1);
     this.bossRevealTweens = [];
     this.bossRevealTimers = [];
     this.bossRevealActive = false;
@@ -4763,6 +5042,7 @@ class PlayScene extends Phaser.Scene {
     this.updateParallax();
     this.updateDistantColossus(time, delta);
     this.updateBossReveal(time);
+    this.updateBossHealthBar();
     this.updateLightRays(time);
     this.updateWater(delta);
     this.updateLanternOverlay();
@@ -4841,6 +5121,13 @@ class PlayScene extends Phaser.Scene {
       this.usingWingJump = false;
       this.resetGlideState();
       if (this.gabiDiveActive) this.resetGabiDiveState();
+    }
+
+    if (!onFloor && this.tryStartWalkOffDive(left, right, time)) {
+      this.updateDiveWindLines(time);
+      this.updateDiveCameraZoom();
+      this.updateGabiAnimation(false, false);
+      return;
     }
 
     if (jump && this.isGliding) {
@@ -5183,10 +5470,60 @@ class PlayScene extends Phaser.Scene {
 
   shouldUseGabiDiveJump(left = false, right = false) {
     if (!this.anims.exists("gabi-dive") || !this.player?.body) return false;
-    const direction = left !== right ? (left ? -1 : 1) : (this.player.flipX ? -1 : 1);
-    const diveLedge = this.getPlayerManualDiveLedge(direction) || this.getPlayerManualDiveLedge(-direction);
+    const direction = this.getDiveLaunchDirection(left, right);
+    if (!direction) {
+      this.pendingDiveLedge = null;
+      return false;
+    }
+
+    const diveLedge = this.getPlayerManualDiveLedge(direction);
+    if (!this.isValidDiveLaunchDirection(diveLedge, direction)) {
+      this.pendingDiveLedge = null;
+      return false;
+    }
+
+    const currentSpeed = Math.abs(this.player.body.velocity.x || 0);
+    if (currentSpeed < DIVE_JUMP_MIN_HORIZONTAL_SPEED && left !== right) {
+      this.player.setVelocityX(direction * DIVE_JUMP_FORCED_HORIZONTAL_SPEED);
+    }
+
+    this.setGabiFlip(direction < 0);
     this.pendingDiveLedge = diveLedge || null;
     return Boolean(diveLedge);
+  }
+
+  getDiveLaunchDirection(left = false, right = false) {
+    if (!this.player?.body) return 0;
+    if (left !== right) return left ? -1 : 1;
+    const velocityX = this.player.body.velocity.x || 0;
+    if (Math.abs(velocityX) >= DIVE_JUMP_MIN_HORIZONTAL_SPEED) return velocityX < 0 ? -1 : 1;
+    return 0;
+  }
+
+  isValidDiveLaunchDirection(diveLedge, direction = 1) {
+    if (!diveLedge || !direction || !this.matchesDiveLedgeSide(diveLedge, direction)) return false;
+    if (!diveLedge.scriptedHaystackDive) return true;
+    const haystack = this.getPrimaryHaystack();
+    if (!haystack?.active || !this.player) return true;
+    const targetDirection = Math.sign(haystack.x - this.player.x);
+    return !targetDirection || targetDirection === direction;
+  }
+
+  tryStartWalkOffDive(left = false, right = false, time = 0) {
+    if (!this.anims.exists("gabi-dive") || !this.player?.body || this.gabiDiveActive || this.scriptedHaystackDive) return false;
+    const inputDirection = left !== right ? (left ? -1 : 1) : 0;
+    const velocityX = this.player.body.velocity.x || 0;
+    const direction = inputDirection || (Math.abs(velocityX) >= DIVE_JUMP_MIN_HORIZONTAL_SPEED ? Math.sign(velocityX) : 0);
+    if (!direction) return false;
+
+    const diveLedge = this.getPlayerWalkOffDiveLedge(direction);
+    if (!this.isValidDiveLaunchDirection(diveLedge, direction)) return false;
+
+    this.pendingDiveLedge = diveLedge;
+    this.player.setVelocity(direction * DIVE_JUMP_FORCED_HORIZONTAL_SPEED, DIVE_JUMP_FORCED_VERTICAL_SPEED);
+    this.setGabiFlip(direction < 0);
+    this.startGabiDive(time);
+    return true;
   }
 
   getPlayerManualDiveLedge(direction = 1) {
@@ -5197,6 +5534,17 @@ class PlayScene extends Phaser.Scene {
       if (ledge.type === "final-elevator-top") return this.isPlayerOnFinalElevatorDiveLedge(direction) ? ledge : null;
       const run = this.getManualDiveLedgeRun(ledge);
       return run && this.isPlayerNearDiveRunEdge(run, direction, ledge) ? ledge : null;
+    }) || null;
+  }
+
+  getPlayerWalkOffDiveLedge(direction = 1) {
+    const ledges = this.level.manualDiveLedges || [];
+    if (!ledges.length || !this.player?.body || !direction) return null;
+    return ledges.find((ledge) => {
+      if (!this.matchesDiveLedgeSide(ledge, direction)) return false;
+      if (ledge.type === "final-elevator-top") return this.isPlayerWalkingOffFinalElevatorDiveLedge(direction);
+      const run = this.getManualDiveLedgeRun(ledge);
+      return run && this.isPlayerJustPastDiveRunEdge(run, direction, ledge);
     }) || null;
   }
 
@@ -5233,6 +5581,18 @@ class PlayScene extends Phaser.Scene {
     return this.isPlayerNearDiveRunEdge(run, direction);
   }
 
+  isPlayerWalkingOffFinalElevatorDiveLedge(direction = 1) {
+    if (!this.finalElevatorCompleted || !this.player?.body) return false;
+    const platformBody = this.finalElevator?.body?.body;
+    if (!platformBody) return false;
+    const run = {
+      startX: platformBody.x,
+      endX: platformBody.x + platformBody.width,
+      topY: platformBody.y
+    };
+    return this.isPlayerJustPastDiveRunEdge(run, direction, { edgeDistance: GABI_DIVE_EDGE_DISTANCE });
+  }
+
   isPlayerNearDiveRunEdge(run, direction = 1, ledge = {}) {
     if (!run || !this.player?.body) return false;
     const body = this.player.body;
@@ -5241,6 +5601,20 @@ class PlayScene extends Phaser.Scene {
       : body.x - run.startX;
     const edgeDistance = ledge.edgeDistance ?? GABI_DIVE_EDGE_DISTANCE;
     return distanceToEdge >= -32 && distanceToEdge <= edgeDistance;
+  }
+
+  isPlayerJustPastDiveRunEdge(run, direction = 1, ledge = {}) {
+    if (!run || !this.player?.body) return false;
+    const body = this.player.body;
+    const bodyBottom = body.y + body.height;
+    const topY = run.topY ?? bodyBottom;
+    const nearPlatformHeight = bodyBottom >= topY - DIVE_WALK_OFF_VERTICAL_TOLERANCE && bodyBottom <= topY + DIVE_WALK_OFF_VERTICAL_TOLERANCE;
+    if (!nearPlatformHeight) return false;
+    const distancePastEdge = direction > 0
+      ? body.x - run.endX
+      : run.startX - (body.x + body.width);
+    const edgeDistance = Math.max(ledge.edgeDistance ?? GABI_DIVE_EDGE_DISTANCE, DIVE_WALK_OFF_TRIGGER_DISTANCE);
+    return distancePastEdge >= -6 && distancePastEdge <= edgeDistance;
   }
 
   startGabiDive(time = 0) {

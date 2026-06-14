@@ -1,5 +1,48 @@
 # Changelog
 
+## v0.55.8
+
+- Reduced the Level 5 colossus head and crown size and shifted them back over the neck.
+
+## v0.55.7
+
+- Reworked the Level 5 colossus arm pose so lower arms and hands stay attached beneath the shoulders.
+
+## v0.55.6
+
+- Reworked the Level 5 colossus PNG rig so arms and legs use connected joint anchors.
+- Reduced the colossus render scale and kept all colossus body parts opaque.
+- Faded the park front parallax during the colossus howl reveal.
+- Added a persistent clamped boss health bar after the howl reveal.
+- Kept ambient birds above the colossus layer while still allowing them behind the front parallax.
+
+## v0.55.5
+
+- Reframed the Level 5 colossus so it is opaque and tall enough to reach the top of the screen.
+- Tightened dive triggers so Gabi must launch toward the haystack with horizontal and vertical motion.
+- Added an automatic dive launch when Gabi walks off an approved dive ledge.
+
+## v0.55.4
+
+- Rescaled and re-grounded the Level 5 PNG colossus rig so the full body reads in the distant background.
+- Simplified the colossus body layering into far limbs, core body, and near limbs.
+- Flipped the entire colossus rig by movement direction instead of mirroring individual body parts.
+
+## v0.55.3
+
+- Rebuilt the Level 5 colossus as a PNG body-part rig instead of the placeholder Spine rig.
+- Moved the colossus through a parallax-plane coordinate system so its X position is derived from the background layer offset rather than Gabi's camera center.
+- Updated the colossus seek behavior to chase Gabi's world position after converting it into the parallax plane.
+
+## v0.55.2
+
+- Reworked the Level 5 colossus into a Gabi-seeking horizon actor with capped movement instead of camera-derived drift.
+- Increased the Level 5 boss music and colossus howl volumes.
+
+## v0.55.1
+
+- Removed camera scroll from the Level 5 distant colossus movement so Gabi running no longer speeds up or reverses its drift.
+
 ## v0.55.0
 
 - Added a Level 5 midpoint colossus reveal with a zoom-in, howl sound, and boss music transition.
