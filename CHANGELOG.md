@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.54.3
+
+- Re-aligned the Level 5 distant colossus with the scaled parallax layer so its movement stays consistent against background details while Gabi moves.
+
+## v0.54.2
+
+- Decoupled the Level 5 distant colossus drift from Gabi's camera movement so it no longer accelerates when the player runs.
+
 ## v0.54.1
 
 - Reduced Gabi's dash distance and added a small white dust puff at her feet when the dash begins.
