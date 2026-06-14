@@ -1,5 +1,5 @@
 const TILE = 32;
-const GAME_VERSION = "v0.51.0";
+const GAME_VERSION = "v0.54.1";
 const VIEW_WIDTH = 960;
 const VIEW_HEIGHT = 540;
 const PLAY_HEIGHT = VIEW_HEIGHT;
@@ -43,6 +43,14 @@ const GABI_POINT_FRAME_HEIGHT = 238;
 const GABI_POINT_DURATION = 520;
 const GABI_AIR_DIVE_FRAME_WIDTH = 1034;
 const GABI_AIR_DIVE_FRAME_HEIGHT = 775;
+const GABI_DASH_FRAME_WIDTH = 238;
+const GABI_DASH_FRAME_HEIGHT = 238;
+const GABI_DASH_DOUBLE_TAP_MS = 260;
+const GABI_DASH_DISTANCE = GABI_FRAME_WIDTH * GABI_SCALE * 5 * 0.8;
+const GABI_DASH_SPEED = 780;
+const GABI_DASH_DURATION_MS = Math.round((GABI_DASH_DISTANCE / GABI_DASH_SPEED) * 1000);
+const GABI_DASH_COOLDOWN_MS = 1000;
+const GABI_DASH_FIRST_FRAME_MS = 80;
 const MR_MAGPIE_FRAME_WIDTH = 238;
 const MR_MAGPIE_FRAME_HEIGHT = 238;
 const MR_MAGPIE_SCALE = 0.34;
@@ -109,6 +117,7 @@ const ITEM_DEPTH = 8;
 const LIGHT_RAY_FRONT_DEPTH = ITEM_DEPTH + 0.75;
 const LIGHT_SPARKLE_DEPTH = ITEM_DEPTH + 1;
 const LIGHT_RAY_BLINDING_DEPTH = LIGHT_SPARKLE_DEPTH + 0.55;
+const COLOSSUS_HAZE_DEPTH = -9.48;
 const ITEM_SCALE = 0.32;
 const BASKET_SCALE = 0.17;
 const LANTERN_SCALE = 0.23;
@@ -142,6 +151,9 @@ const BIRD_ZOOM_OUT_SFX_KEY = "bird-zoom-out";
 const MAGPIE_ATTACK_SFX_VOLUME = 0.19;
 const MAGPIE_AMBIENT_SFX_VOLUME = 0.17;
 const MAGPIE_AMBIENT_SFX_CHANCE = 0.125;
+const COLOSSUS_DEPTH = -9.55;
+const COLOSSUS_STEP_SHAKE_DURATION = 180;
+const COLOSSUS_STEP_SHAKE_INTENSITY = 0.0014;
 const THROWN_ACORN_MAX_BOUNCES = 3;
 const ROBOT_FRAME_WIDTH = 238;
 const ROBOT_FRAME_HEIGHT = 238;
@@ -248,8 +260,14 @@ const ENEMY_NAMES = [
   "OCM Tiers Case Escalation",
   "KYC WUDB Onboarding Assistant"
 ];
-const ASSET_VERSION = "20260612-bird-attack-zoom";
-const STORY_ASSET_VERSION = "20260608-level5-manga-v2";
+const ASSET_VERSION = "20260614-shorter-dash-puff";
+const STORY_ASSET_VERSION = ASSET_VERSION;
+
+function getSpineRuntime() {
+  if (typeof spine !== "undefined") return spine;
+  if (globalThis.spine) return globalThis.spine;
+  return null;
+}
 const DIFFICULTY_COOKIE = "crazy-gabi-difficulty";
 const AUDIO_SETTINGS_COOKIE = "crazy-gabi-audio-settings";
 const DIFFICULTY_EASY = "easy";
@@ -544,6 +562,21 @@ const LEVELS = [
     birdScale: 1.2,
     birdSfx: MAGPIE_CALL_SFX_KEY,
     ambientBirds: true,
+    distantColossus: {
+      type: "spine",
+      dataKey: "colossus-placeholder-data",
+      atlasKey: "colossus-placeholder-atlas",
+      skeleton: "./public/assets/boss/colossus/colossus_placeholder.json",
+      atlas: "./public/assets/boss/colossus/colossus_placeholder.atlas",
+      x: 720,
+      groundY: 214,
+      scale: 0.72,
+      driftSpeed: -4.8,
+      cycleMs: 5200,
+      alpha: 0.62,
+      shakeDuration: COLOSSUS_STEP_SHAKE_DURATION,
+      shakeIntensity: COLOSSUS_STEP_SHAKE_INTENSITY
+    },
     storyFrames: [
       { key: "story-level-5-frame-1-v2", src: "./public/assets/story/level-5/frame_1_v2.png" },
       { key: "story-level-5-frame-2-v2", src: "./public/assets/story/level-5/frame_2_v2.png" },
@@ -558,6 +591,14 @@ const LEVELS = [
     catFollowPlayer: true,
     doorYOffset: -30,
     parallax: "parallax-park",
+    frontParallax: "parallax-park-frontlayer",
+    colossusHaze: {
+      color: "#f0d2b8",
+      bottomAlpha: 1,
+      midAlphaFactor: 0.6,
+      upperAlphaFactor: 0.14,
+      depth: COLOSSUS_HAZE_DEPTH
+    },
     platformTexture: "platform-strip",
     fenceTexture: "platform-fence",
     ambientLeaves: {
@@ -1810,7 +1851,8 @@ class PlayScene extends Phaser.Scene {
       }
       if (!this.isActiveLevelLoad(loadId)) return;
       this.createLevelRuntime();
-    } catch (_error) {
+    } catch (error) {
+      console.error("Level load failed", error);
       if (!this.isActiveLevelLoad(loadId)) return;
       updateLoadingProgress(1, "Could not load level.");
       this.cancelLevelRuntime();
@@ -1837,8 +1879,10 @@ class PlayScene extends Phaser.Scene {
     this.spawnPoint = { x: 96, y: 120 };
     this.levelWidth = this.levelRows[0].length * TILE;
     this.levelHeight = this.levelRows.length * TILE;
+    this.distantColossus = null;
 
     this.createBackdrop();
+    this.createDistantColossus();
     if (this.level.showWater !== false) this.createWaterBelow();
     if (this.level.showStartingHouse) this.createStartingHouse();
     if (this.level.constructionBillboard) this.createConstructionBillboard();
@@ -2070,11 +2114,26 @@ class PlayScene extends Phaser.Scene {
         this.load.audio(key, `${src}?v=${ASSET_VERSION}`);
         queued += 1;
       };
+      const spineAsset = (config) => {
+        if (!config || config.type !== "spine") return;
+        if (typeof this.load.spineJson !== "function" || typeof this.load.spineAtlas !== "function") return;
+        const dataKey = config.dataKey || "colossus-placeholder-data";
+        const atlasKey = config.atlasKey || "colossus-placeholder-atlas";
+        if (!this.cache.json.exists(dataKey)) {
+          this.load.spineJson(dataKey, `${config.skeleton}?v=${ASSET_VERSION}`);
+          queued += 1;
+        }
+        if (!this.cache.text.exists(atlasKey)) {
+          this.load.spineAtlas(atlasKey, `${config.atlas}?v=${ASSET_VERSION}`);
+          queued += 1;
+        }
+      };
 
       sheet("gabi-sheet", "./public/assets/character/main_char_sprite.png", GABI_FRAME_WIDTH, GABI_FRAME_HEIGHT);
       sheet("gabi-wings-sheet", "./public/assets/character/main_char_sprite_with_double_jump.png", GABI_FRAME_WIDTH, GABI_FRAME_HEIGHT);
       sheet("gabi-glide-sheet", "./public/assets/character/main_char_sprite_glide.png", GABI_FRAME_WIDTH, GABI_FRAME_HEIGHT);
       sheet("gabi-air-dive-sheet", "./public/assets/character/main_char_air_dive.png", GABI_AIR_DIVE_FRAME_WIDTH, GABI_AIR_DIVE_FRAME_HEIGHT);
+      sheet("gabi-dash-sheet", "./public/assets/character/main_char_sprite_dash.png", GABI_DASH_FRAME_WIDTH, GABI_DASH_FRAME_HEIGHT);
       if (level.actionAbility === "command-birds") {
         sheet("gabi-point-sheet", "./public/assets/character/main_char_sprite_point.png", GABI_POINT_FRAME_WIDTH, GABI_POINT_FRAME_HEIGHT);
       }
@@ -2101,12 +2160,16 @@ class PlayScene extends Phaser.Scene {
       if (level.ambientLeaves) {
         sheet("autumn-leaf-1", "./public/assets/environment/autumn_leaf_1.png", AUTUMN_LEAF_FRAME_WIDTH, AUTUMN_LEAF_FRAME_HEIGHT);
       }
+      spineAsset(level.distantColossus);
 
       image("parallax-city", "./public/assets/environment/paralax_city.png");
       if (level.parallax === "parallax-underground") image("parallax-underground", "./public/assets/environment/paralax_underground.png");
       if (level.parallax === "parallax-tunnel") image("parallax-tunnel", "./public/assets/environment/paralax_tunnel.png");
       if (level.parallax === "parallax-cathedral") image("parallax-cathedral", "./public/assets/environment/paralax_cathedral.png");
       if (level.parallax === "parallax-park") image("parallax-park", "./public/assets/environment/paralax_park.png");
+      if (level.frontParallax === "parallax-park-frontlayer") {
+        image("parallax-park-frontlayer", "./public/assets/environment/paralax_park_frontlayer.png");
+      }
       if (level.showWater !== false) image("water-below", "./public/assets/environment/water_below.png");
       if (level.haystacks?.length) image("haystack", "./public/assets/environment/haystack.png");
       if (level.showStartingHouse || level.constructionBillboard) {
@@ -2450,22 +2513,279 @@ class PlayScene extends Phaser.Scene {
 
   createBackdrop() {
     const textureKey = this.level.parallax || "parallax-city";
-    const source = this.textures.get(textureKey).getSourceImage();
-    const sourceHeight = source.height;
-    const scale = PLAY_HEIGHT / sourceHeight;
-    const tileWidth = Math.ceil(VIEW_WIDTH / scale);
-    this.parallaxLayers = [
-      {
-        sprite: this.add.tileSprite(0, 0, tileWidth, sourceHeight, textureKey),
-        speed: 0.18
-      }
-    ];
-    this.parallaxLayers.forEach(({ sprite }, index) => {
+    const makeParallaxLayer = (key, speed, depth) => {
+      const source = this.textures.get(key).getSourceImage();
+      const sourceHeight = source.height;
+      const scale = PLAY_HEIGHT / sourceHeight;
+      const tileWidth = Math.ceil(VIEW_WIDTH / scale);
+      return {
+        sprite: this.add.tileSprite(0, 0, tileWidth, sourceHeight, key),
+        speed,
+        scale,
+        depth
+      };
+    };
+    this.parallaxLayers = [makeParallaxLayer(textureKey, 0.18, -10)];
+    if (this.level.colossusHaze) this.createColossusHazeGradient(this.level.colossusHaze);
+    if (this.level.frontParallax && this.textures.exists(this.level.frontParallax)) {
+      this.parallaxLayers.push(makeParallaxLayer(this.level.frontParallax, 0.18, -9.4));
+    }
+    this.parallaxLayers.forEach(({ sprite, scale, depth }) => {
       sprite.setOrigin(0, 0);
       sprite.setScale(scale);
       sprite.setScrollFactor(0);
-      sprite.setDepth(-10 + index);
+      sprite.setDepth(depth);
     });
+  }
+
+  createColossusHazeGradient(config = {}) {
+    const textureKey = `colossus-haze-gradient-${state.levelIndex}`;
+    if (this.textures.exists(textureKey)) this.textures.remove(textureKey);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 8;
+    canvas.height = VIEW_HEIGHT;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const gradient = ctx.createLinearGradient(0, VIEW_HEIGHT, 0, 0);
+    const color = config.color || "#f0d2b8";
+    const bottomAlpha = Phaser.Math.Clamp(config.bottomAlpha ?? 0.56, 0, 1);
+    const midAlphaFactor = Phaser.Math.Clamp(config.midAlphaFactor ?? 0.36, 0, 1);
+    const upperAlphaFactor = Phaser.Math.Clamp(config.upperAlphaFactor ?? 0.08, 0, 1);
+    gradient.addColorStop(0, this.hexToRgba(color, bottomAlpha));
+    gradient.addColorStop(0.36, this.hexToRgba(color, bottomAlpha * midAlphaFactor));
+    gradient.addColorStop(0.74, this.hexToRgba(color, bottomAlpha * upperAlphaFactor));
+    gradient.addColorStop(1, this.hexToRgba(color, 0));
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    this.textures.addCanvas(textureKey, canvas);
+    const haze = this.add.tileSprite(0, 0, VIEW_WIDTH, VIEW_HEIGHT, textureKey);
+    haze.setOrigin(0, 0);
+    haze.setScrollFactor(0);
+    haze.setDepth(config.depth ?? COLOSSUS_HAZE_DEPTH);
+    haze.setAlpha(config.alpha ?? 1);
+    haze.setBlendMode(Phaser.BlendModes.SCREEN ?? Phaser.BlendModes.ADD);
+    this.colossusHaze = haze;
+  }
+
+  hexToRgba(hex, alpha = 1) {
+    const value = String(hex).replace("#", "");
+    const normalized = value.length === 3
+      ? value.split("").map((char) => `${char}${char}`).join("")
+      : value.padEnd(6, "0").slice(0, 6);
+    const numeric = Number.parseInt(normalized, 16);
+    const r = (numeric >> 16) & 255;
+    const g = (numeric >> 8) & 255;
+    const b = numeric & 255;
+    return `rgba(${r}, ${g}, ${b}, ${Phaser.Math.Clamp(alpha, 0, 1)})`;
+  }
+
+  createDistantColossus() {
+    const config = this.level.distantColossus;
+    if (!config) return;
+
+    if (config.type !== "spine" || typeof this.add.spine !== "function") return;
+
+    const spineRuntime = getSpineRuntime();
+    const boundsProvider = spineRuntime?.AABBRectangleBoundsProvider
+      ? new spineRuntime.AABBRectangleBoundsProvider(-170, -430, 340, 430)
+      : undefined;
+    const object = this.add.spine(
+      config.x ?? VIEW_WIDTH + 180,
+      config.groundY ?? PLAY_HEIGHT - 78,
+      config.dataKey || "colossus-placeholder-data",
+      config.atlasKey || "colossus-placeholder-atlas",
+      boundsProvider
+    );
+    object.setScrollFactor(0);
+    object.setDepth(config.depth ?? COLOSSUS_DEPTH);
+    object.setScale(config.scale ?? 1);
+    object.setAlpha(config.alpha ?? 0.55);
+
+    const boneNames = [
+      "pelvis",
+      "torso",
+      "neck",
+      "head",
+      "left-shoulder",
+      "left-forearm",
+      "left-hand",
+      "right-shoulder",
+      "right-forearm",
+      "right-hand",
+      "left-thigh",
+      "left-shin",
+      "left-foot",
+      "right-thigh",
+      "right-shin",
+      "right-foot"
+    ];
+    const bones = Object.fromEntries(
+      boneNames.map((name) => [name, object.skeleton.findBone(name)]).filter(([, bone]) => Boolean(bone))
+    );
+    const labels = [
+      ["head", "HEAD", 0, -4],
+      ["neck", "NECK", 0, -8],
+      ["torso", "TORSO", 0, -8],
+      ["pelvis", "PELVIS", 0, 5],
+      ["left-shoulder", "L ARM", -34, 22],
+      ["left-forearm", "L FORE", -30, 16],
+      ["left-hand", "L HAND", -8, 4],
+      ["right-shoulder", "R ARM", 34, 22],
+      ["right-forearm", "R FORE", 30, 16],
+      ["right-hand", "R HAND", 8, 4],
+      ["left-thigh", "L THIGH", -30, 20],
+      ["left-shin", "L SHIN", -28, 18],
+      ["left-foot", "L FOOT", -4, 6],
+      ["right-thigh", "R THIGH", 30, 20],
+      ["right-shin", "R SHIN", 28, 18],
+      ["right-foot", "R FOOT", 4, 6]
+    ]
+      .map(([boneName, label, offsetX, offsetY]) => {
+        const text = this.add.text(0, 0, label, {
+          fontFamily: '"Courier New", monospace',
+          fontSize: "9px",
+          fontStyle: "bold",
+          color: "#f2e5c4",
+          align: "center",
+          stroke: "#050505",
+          strokeThickness: 2
+        });
+        text.setOrigin(0.5);
+        text.setScrollFactor(0);
+        text.setDepth((config.depth ?? COLOSSUS_DEPTH) + 0.03);
+        text.setAlpha(Math.min(0.9, (config.alpha ?? 0.55) + 0.24));
+        return { boneName, offsetX, offsetY, text };
+      });
+
+    this.distantColossus = {
+      config,
+      object,
+      bones,
+      labels,
+      parallaxX: config.x ?? VIEW_WIDTH + 180,
+      parallaxSpeed: config.parallaxSpeed ?? this.getDistantColossusParallaxSpeed(),
+      baseGroundY: config.groundY ?? PLAY_HEIGHT - 78,
+      cycleMs: config.cycleMs ?? 5200,
+      lastStepIndex: -1,
+      phaseOffset: Phaser.Math.FloatBetween(0, Math.PI * 2)
+    };
+    object.beforeUpdateWorldTransforms = () => this.poseSpineColossus();
+    this.updateDistantColossus(this.time.now, 0);
+  }
+
+  getDistantColossusParallaxSpeed() {
+    const layer = this.parallaxLayers?.find(({ sprite }) => sprite?.texture?.key === (this.level.frontParallax || this.level.parallax));
+    return layer?.speed ?? 0.18;
+  }
+
+  projectDistantColossusX(rig, sway = 0) {
+    const cameraScrollX = this.cameras?.main?.scrollX || 0;
+    return rig.parallaxX - cameraScrollX * (rig.parallaxSpeed ?? 0.18) + sway;
+  }
+
+  updateSpineColossusLabels() {
+    const rig = this.distantColossus;
+    if (!rig?.labels?.length || !rig.object?.skeleton) return;
+
+    rig.object.skeleton.updateWorldTransform?.(2);
+    const scale = rig.object.scaleX || 1;
+    rig.labels.forEach(({ boneName, offsetX, offsetY, text }) => {
+      const bone = rig.bones[boneName];
+      const pose = bone?.appliedPose;
+      if (!pose || !text?.active) return;
+      text.setPosition(
+        rig.object.x + (pose.worldX + offsetX) * scale,
+        rig.object.y + (pose.worldY + offsetY) * scale
+      );
+      text.setVisible(rig.object.visible);
+    });
+  }
+
+  setSpineBonePose(bone, { x, y, rotation, scaleX, scaleY }) {
+    if (!bone?.pose) return;
+    if (Number.isFinite(x)) bone.pose.x = x;
+    if (Number.isFinite(y)) bone.pose.y = y;
+    if (Number.isFinite(rotation)) bone.pose.rotation = rotation;
+    if (Number.isFinite(scaleX)) bone.pose.scaleX = scaleX;
+    if (Number.isFinite(scaleY)) bone.pose.scaleY = scaleY;
+  }
+
+  poseSpineColossus() {
+    const rig = this.distantColossus;
+    if (!rig?.bones) return;
+
+    const phase = rig.phase || 0;
+    const breathe = Math.sin(phase * 2) * 0.018;
+    const torsoLean = Math.sin(phase + 0.35) * 1.8;
+    const leftStep = Math.sin(phase);
+    const rightStep = Math.sin(phase + Math.PI);
+    const armSwing = Math.sin(phase + Math.PI) * 8;
+    const headCounter = Math.sin(phase + 0.6) * 1.8;
+
+    this.setSpineBonePose(rig.bones.pelvis, { rotation: Math.sin(phase) * 1.2, y: Math.abs(Math.sin(phase)) * 3 });
+    this.setSpineBonePose(rig.bones.torso, { rotation: torsoLean, scaleX: 1 + breathe, scaleY: 1 - breathe * 0.7 });
+    this.setSpineBonePose(rig.bones.neck, { rotation: -torsoLean * 0.25 });
+    this.setSpineBonePose(rig.bones.head, { rotation: -headCounter - torsoLean * 0.25 });
+
+    this.setSpineBonePose(rig.bones["left-thigh"], { rotation: -78 - leftStep * 8 });
+    this.setSpineBonePose(rig.bones["left-shin"], { rotation: -6 + leftStep * 7 });
+    this.setSpineBonePose(rig.bones["left-foot"], { rotation: -Math.sin(phase - 0.4) * 5 });
+    this.setSpineBonePose(rig.bones["right-thigh"], { rotation: -102 - rightStep * 8 });
+    this.setSpineBonePose(rig.bones["right-shin"], { rotation: 6 + rightStep * 7 });
+    this.setSpineBonePose(rig.bones["right-foot"], { rotation: -Math.sin(phase + Math.PI - 0.4) * 5 });
+
+    this.setSpineBonePose(rig.bones["left-shoulder"], { rotation: -138 - armSwing });
+    this.setSpineBonePose(rig.bones["left-forearm"], { rotation: 18 - Math.sin(phase + 0.45) * 5 });
+    this.setSpineBonePose(rig.bones["left-hand"], { rotation: Math.sin(phase + 0.9) * 4 });
+    this.setSpineBonePose(rig.bones["right-shoulder"], { rotation: -42 + armSwing });
+    this.setSpineBonePose(rig.bones["right-forearm"], { rotation: -18 + Math.sin(phase + 0.45) * 5 });
+    this.setSpineBonePose(rig.bones["right-hand"], { rotation: -Math.sin(phase + 0.9) * 4 });
+  }
+
+  updateDistantColossus(time = 0, delta = 0) {
+    const rig = this.distantColossus;
+    if (!rig?.object?.active) return;
+
+    const config = rig.config;
+    const phase = ((time / rig.cycleMs) * Math.PI * 2 + rig.phaseOffset) % (Math.PI * 2);
+    rig.phase = phase;
+    const drift = (config.driftSpeed ?? -4.8) * (delta / 1000);
+    rig.parallaxX += Number.isFinite(drift) ? drift : 0;
+
+    const bob = Math.abs(Math.sin(phase)) * 5;
+    const sway = Math.sin(phase * 0.5) * 4;
+    const wrapPadding = 320;
+    let projectedX = this.projectDistantColossusX(rig, sway);
+    while (projectedX < -wrapPadding) {
+      rig.parallaxX += VIEW_WIDTH + wrapPadding * 2;
+      projectedX = this.projectDistantColossusX(rig, sway);
+    }
+    while (projectedX > VIEW_WIDTH + wrapPadding) {
+      rig.parallaxX -= VIEW_WIDTH + wrapPadding * 2;
+      projectedX = this.projectDistantColossusX(rig, sway);
+    }
+    rig.object.setPosition(projectedX, rig.baseGroundY + bob);
+    this.poseSpineColossus();
+    this.updateSpineColossusLabels();
+
+    const stepIndex = Math.floor((time + rig.phaseOffset * 100) / (rig.cycleMs / 2));
+    if (stepIndex !== rig.lastStepIndex) {
+      rig.lastStepIndex = stepIndex;
+      this.triggerColossusFootstepShake();
+    }
+  }
+
+  triggerColossusFootstepShake() {
+    if (!state.running || state.won || !this.cameras?.main) return;
+    if (this.birdAttackZoomActive || this.diveCameraZoomActive) return;
+    const config = this.distantColossus?.config || {};
+    this.cameras.main.shake(
+      config.shakeDuration ?? COLOSSUS_STEP_SHAKE_DURATION,
+      config.shakeIntensity ?? COLOSSUS_STEP_SHAKE_INTENSITY
+    );
   }
 
   createLightRays() {
@@ -3114,6 +3434,14 @@ class PlayScene extends Phaser.Scene {
         frames: this.anims.generateFrameNumbers("gabi-air-dive-sheet", { frames: [0, 1] }),
         frameRate: 7,
         repeat: -1
+      });
+    }
+    if (this.textures.exists("gabi-dash-sheet") && !this.anims.exists("gabi-dash")) {
+      this.anims.create({
+        key: "gabi-dash",
+        frames: this.anims.generateFrameNumbers("gabi-dash-sheet", { frames: [2, 3] }),
+        duration: GABI_DASH_FIRST_FRAME_MS * 2,
+        repeat: 0
       });
     }
     if (this.textures.exists("gabi-point-sheet") && !this.anims.exists("gabi-point")) {
@@ -3809,6 +4137,10 @@ class PlayScene extends Phaser.Scene {
     this.player.setScale(GABI_SCALE);
     this.player.setDepth(4);
     this.currentGabiAnimation = null;
+    this.lastDashTapDirection = 0;
+    this.lastDashTapAt = -Infinity;
+    this.lastDashAt = -Infinity;
+    this.gabiDash = null;
     this.setGabiAnimation("idle");
   }
 
@@ -4242,6 +4574,7 @@ class PlayScene extends Phaser.Scene {
     this.lastBirdAttackAt = -Infinity;
     this.airJumpsUsed = 0;
     this.usingWingJump = false;
+    this.resetGabiDashState();
     this.resetGlideState();
     if (!state.hasKey) this.resetKeyReveal();
     this.acorns.children.iterate((acorn) => this.resetAcorn(acorn));
@@ -4313,6 +4646,7 @@ class PlayScene extends Phaser.Scene {
     this.updateAcorns(time);
     this.updateThrownItems();
     this.updateParallax();
+    this.updateDistantColossus(time, delta);
     this.updateLightRays(time);
     this.updateWater(delta);
     this.updateLanternOverlay();
@@ -4343,6 +4677,8 @@ class PlayScene extends Phaser.Scene {
     const mobileDirection = this.getMobileMoveDirection();
     const left = this.cursors.left.isDown || this.keysInput.left.isDown || mobileDirection < 0;
     const right = this.cursors.right.isDown || this.keysInput.right.isDown || mobileDirection > 0;
+    const leftPressed = Phaser.Input.Keyboard.JustDown(this.cursors.left) || Phaser.Input.Keyboard.JustDown(this.keysInput.left);
+    const rightPressed = Phaser.Input.Keyboard.JustDown(this.cursors.right) || Phaser.Input.Keyboard.JustDown(this.keysInput.right);
     const jump =
       Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
       Phaser.Input.Keyboard.JustDown(this.keysInput.jump) ||
@@ -4357,6 +4693,14 @@ class PlayScene extends Phaser.Scene {
       this.player.setVelocity(0, 0);
       this.setGabiAnimation("idle");
       if (action) this.handleItemPickupOk(time);
+      return;
+    }
+
+    if (leftPressed) this.handleGabiDashTap(-1, time);
+    if (rightPressed) this.handleGabiDashTap(1, time);
+    if (this.updateGabiDashState(time)) {
+      if (this.player.y > this.levelHeight + 56) this.loseLife();
+      this.updateDiveCameraZoom();
       return;
     }
 
@@ -5268,6 +5612,12 @@ class PlayScene extends Phaser.Scene {
       this.player.play("gabi-dive", true);
       return;
     }
+    if (name === "dash" && this.anims.exists("gabi-dash")) {
+      this.player.setScale(GABI_SCALE);
+      this.player.setAngle(0);
+      this.player.play("gabi-dash", true);
+      return;
+    }
     this.player.setScale(name === "glide" ? GABI_GLIDE_SCALE : GABI_SCALE);
     this.player.setAngle(0);
     const animationKey = name === "wing-jump"
@@ -5280,6 +5630,10 @@ class PlayScene extends Phaser.Scene {
 
   updateGabiAnimation(isMoving, onFloor) {
     if (this.gabiActionUntil && this.time.now < this.gabiActionUntil) return;
+    if (this.gabiDash?.active) {
+      this.setGabiAnimation("dash");
+      return;
+    }
     const shouldHoldDive =
       (this.gabiDiveActive || this.scriptedHaystackDive) &&
       !this.usingWingJump &&
@@ -5297,6 +5651,118 @@ class PlayScene extends Phaser.Scene {
     } else {
       this.setGabiAnimation("idle");
     }
+  }
+
+  canStartGabiDash(time = 0) {
+    if (!this.player?.body || !state.running || state.won) return false;
+    if (this.isItemPromptActive()) return false;
+    if (this.gabiDash?.active) return false;
+    if (this.gabiDiveActive || this.scriptedHaystackDive || this.isGliding) return false;
+    if (this.finalElevatorActive && this.isPlayerInsideFinalElevatorCabin()) return false;
+    if (this.gabiActionUntil && time < this.gabiActionUntil) return false;
+    return time - (this.lastDashAt || -Infinity) >= GABI_DASH_COOLDOWN_MS;
+  }
+
+  handleGabiDashTap(direction, time = 0) {
+    if (!direction) return;
+    const isDoubleTap =
+      this.lastDashTapDirection === direction &&
+      time - (this.lastDashTapAt || -Infinity) <= GABI_DASH_DOUBLE_TAP_MS;
+    this.lastDashTapDirection = direction;
+    this.lastDashTapAt = time;
+    if (isDoubleTap && this.canStartGabiDash(time)) this.startGabiDash(direction, time);
+  }
+
+  startGabiDash(direction, time = 0) {
+    if (!this.player?.body) return;
+    const dashDirection = direction < 0 ? -1 : 1;
+    this.gabiDash = {
+      active: true,
+      direction: dashDirection,
+      startedAt: time,
+      endsAt: time + GABI_DASH_DURATION_MS
+    };
+    this.lastDashAt = time;
+    this.usingWingJump = false;
+    this.resetGlideState();
+    this.resetGabiDiveState();
+    this.setGabiFlip(dashDirection < 0);
+    this.player.setAccelerationX(0);
+    this.player.setMaxVelocity(GABI_DASH_SPEED, 620);
+    this.player.setVelocityX(dashDirection * GABI_DASH_SPEED);
+    this.currentGabiAnimation = null;
+    this.setGabiAnimation("dash");
+    this.createDashDustPuff(dashDirection);
+    this.playLevelSfx(Phaser.Utils.Array.GetRandom(DOUBLE_JUMP_SFX_KEYS), 0.42);
+  }
+
+  updateGabiDashState(time = 0) {
+    if (!this.gabiDash?.active || !this.player?.body) return false;
+    if (time >= this.gabiDash.endsAt) {
+      this.finishGabiDash();
+      return false;
+    }
+    this.player.setAccelerationX(0);
+    this.player.setMaxVelocity(GABI_DASH_SPEED, 620);
+    this.player.setVelocityX(this.gabiDash.direction * GABI_DASH_SPEED);
+    this.setGabiAnimation("dash");
+    return true;
+  }
+
+  finishGabiDash() {
+    if (!this.gabiDash) return;
+    this.gabiDash = null;
+    if (this.player?.body) {
+      const currentVelocityX = this.player.body.velocity.x;
+      const exitDirection = currentVelocityX < 0 ? -1 : currentVelocityX > 0 ? 1 : 0;
+      this.player.setMaxVelocity(260, 620);
+      this.player.setVelocityX(exitDirection * Math.min(Math.abs(currentVelocityX), 260));
+      this.player.setAccelerationX(0);
+    }
+    this.currentGabiAnimation = null;
+  }
+
+  resetGabiDashState() {
+    this.gabiDash = null;
+    this.lastDashTapDirection = 0;
+    this.lastDashTapAt = -Infinity;
+    if (this.player?.body) this.player.setMaxVelocity(260, 620);
+  }
+
+  createDashDustPuff(direction = 1) {
+    if (!this.player?.body) return;
+    const footX = this.player.x - direction * 24;
+    const footY = this.player.body.bottom - 8;
+    const particles = Array.from({ length: 7 }, (_, index) => {
+      const puff = this.add.ellipse(
+        footX + Phaser.Math.Between(-4, 4),
+        footY + Phaser.Math.Between(-5, 3),
+        Phaser.Math.Between(5, 12),
+        Phaser.Math.Between(3, 7),
+        0xffffff,
+        Phaser.Math.FloatBetween(0.38, 0.72)
+      );
+      puff.setDepth(ITEM_DEPTH - 0.15 + index * 0.001);
+      puff.setBlendMode(Phaser.BlendModes.SCREEN ?? Phaser.BlendModes.ADD);
+      return puff;
+    });
+
+    particles.forEach((puff, index) => {
+      const driftX = -direction * Phaser.Math.Between(18, 46);
+      const driftY = Phaser.Math.Between(-16, 8);
+      this.tweens.add({
+        targets: puff,
+        x: puff.x + driftX,
+        y: puff.y + driftY,
+        alpha: 0,
+        scaleX: Phaser.Math.FloatBetween(1.4, 2.2),
+        scaleY: Phaser.Math.FloatBetween(1.0, 1.6),
+        duration: Phaser.Math.Between(180, 300),
+        delay: index * 8,
+        ease: "Quad.easeOut",
+        onComplete: () => puff.destroy()
+      });
+    });
   }
 
   resetGlideState() {
@@ -5352,6 +5818,7 @@ class PlayScene extends Phaser.Scene {
   resetPlayerToSpawn() {
     this.stopScriptedHaystackDive();
     this.resetPlayerMotion();
+    this.resetGabiDashState();
     this.resetGlideState();
     this.resetGabiDiveState();
     this.gabiActionRestoreTimer?.remove?.(false);
@@ -7740,6 +8207,9 @@ class PlayScene extends Phaser.Scene {
     this.birdFlockGroups = [];
     this.birdAttackFlocks?.forEach((flock) => flock.birds?.forEach((bird) => bird?.destroy?.()));
     this.birdAttackFlocks = [];
+    this.distantColossus?.labels?.forEach((label) => label.text?.destroy?.());
+    this.distantColossus?.object?.destroy?.();
+    this.distantColossus = null;
     this.clearDiveIndicatorBirds();
     this.clearDiveFieldLeaves();
     this.stopDiveWindSfx();
@@ -8151,6 +8621,11 @@ const game = new Phaser.Game({
       gravity: { y: 1150 },
       debug: false
     }
+  },
+  plugins: {
+    scene: [
+      { key: "SpinePlugin", plugin: getSpineRuntime()?.SpinePlugin, mapping: "spine" }
+    ].filter((plugin) => Boolean(plugin.plugin))
   },
   scene: [PlayScene]
 });
