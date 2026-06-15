@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.55.29
+
+- Added elevated Level 5 shelter platforms for avoiding BU's hand attacks.
+- Made giant hand impact debris fly higher, fall back down, and stay visible until it leaves.
+- Added a chance for giant hand impacts to drop a heart on the lowest platform.
+- Made giant hand impacts spawn regular enemies on the lowest platform.
+- Changed BU defeat to remove the boss, reveal a key, then reveal an exit door after the key is picked up.
+
+## v0.55.28
+
+- Moved BU's giant hand layer below Gabi and the cat while keeping it above the platforms.
+- Reduced giant hand impact sound volume.
+- Let bird attack target landed giant hands through their acorn hitbox.
+- Reduced giant hand boss damage to 1% per successful hit.
+
+## v0.55.27
+
+- Reworked BU's giant hand into a telegraphed boss attack with warning motion, impact sounds, debris, a punish window, and sky retraction.
+- Made BU's health drop only when Gabi damages the landed hand.
+- Added a Level 5 acorn basket so Gabi can attack the hand with throws.
+- Focused the boss intro zoom on BU's head.
+- Narrowed the giant hand's direct harm zone so near misses are fairer.
+
 ## v0.55.26
 
 - Added BU's giant hand crush attack after the boss reveal.
