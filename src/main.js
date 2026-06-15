@@ -1,5 +1,5 @@
 const TILE = 32;
-const GAME_VERSION = "v0.55.15";
+const GAME_VERSION = "v0.55.26";
 const VIEW_WIDTH = 960;
 const VIEW_HEIGHT = 540;
 const PLAY_HEIGHT = VIEW_HEIGHT;
@@ -162,6 +162,11 @@ const COLOSSUS_DEPTH = -9.55;
 const COLOSSUS_STEP_SHAKE_DURATION = 180;
 const COLOSSUS_STEP_SHAKE_INTENSITY = 0.0014;
 const COLOSSUS_HOWL_VOLUME = 1.08;
+const GIANT_HAND_DEPTH = ITEM_DEPTH + 1.35;
+const GIANT_HAND_FALL_SPEED = 940;
+const GIANT_HAND_IMPACT_SHAKE_DURATION = 360;
+const GIANT_HAND_IMPACT_SHAKE_INTENSITY = 0.009;
+const DAMAGE_INVULNERABLE_MS = 1250;
 const THROWN_ACORN_MAX_BOUNCES = 3;
 const ROBOT_FRAME_WIDTH = 238;
 const ROBOT_FRAME_HEIGHT = 238;
@@ -268,7 +273,7 @@ const ENEMY_NAMES = [
   "OCM Tiers Case Escalation",
   "KYC WUDB Onboarding Assistant"
 ];
-const ASSET_VERSION = "20260615-colossus-idle-attack";
+const ASSET_VERSION = "20260615-giant-hand-hazard";
 const STORY_ASSET_VERSION = ASSET_VERSION;
 
 function getSpineRuntime() {
@@ -331,7 +336,7 @@ const LEVEL_WIDTH_TILES = 148;
 const LEVEL_TWO_WIDTH_TILES = LEVEL_WIDTH_TILES * 2;
 const LEVEL_THREE_WIDTH_TILES = 220;
 const LEVEL_FOUR_WIDTH_TILES = 224;
-const LEVEL_FIVE_WIDTH_TILES = 480;
+const LEVEL_FIVE_WIDTH_TILES = 720;
 const LEVEL_HEIGHT_TILES = 18;
 const LEVELS = [
   {
@@ -564,6 +569,8 @@ const LEVELS = [
     soundtrack: "bgm-lv5",
     bossSoundtrack: "bgm-lv5-boss",
     bossRevealAt: 0.5,
+    bossHealthGate: true,
+    bossHealthDrainPerSecond: 0.012,
     ambientSoundtrack: "wind-1",
     ambientVolume: 0.18,
     enemySprite: "robot-lv1",
@@ -582,8 +589,7 @@ const LEVELS = [
         upperArm: "./public/assets/boss/colossus/upper_arm.png",
         lowerArm: "./public/assets/boss/colossus/lower_arm.png",
         openHand: "./public/assets/boss/colossus/open_hand.png",
-        closedHand: "./public/assets/boss/colossus/closed_hand.png",
-        suitcase: "./public/assets/boss/colossus/suitcase.png",
+        suitcaseHand: "./public/assets/boss/colossus/suitcase_hand.png",
         upperLeg: "./public/assets/boss/colossus/upper_leg.png",
         lowerLeg: "./public/assets/boss/colossus/lower_leg.png",
         foot: "./public/assets/boss/colossus/foot.png"
@@ -601,6 +607,10 @@ const LEVELS = [
       shakeDuration: COLOSSUS_STEP_SHAKE_DURATION,
       shakeIntensity: COLOSSUS_STEP_SHAKE_INTENSITY
     },
+    giantHandAttacks: [
+      { key: "giant-hand-1", src: "./public/assets/boss/colossus/giant_hand_1.png" },
+      { key: "giant-hand-2", src: "./public/assets/boss/colossus/giant_hand_2.png" }
+    ],
     storyFrames: [
       { key: "story-level-5-frame-1-v2", src: "./public/assets/story/level-5/frame_1_v2.png" },
       { key: "story-level-5-frame-2-v2", src: "./public/assets/story/level-5/frame_2_v2.png" },
@@ -666,7 +676,7 @@ const LEVELS = [
       { row: 8, column: 28.4, direction: 1 }
     ],
     finishZone: {
-      x: 452 * TILE,
+      x: 692 * TILE,
       y: 154 * TILE
     },
     haystacks: [
@@ -1062,7 +1072,19 @@ function createLevelFive() {
   const { rows, put, run } = createLevelRows(162, LEVEL_FIVE_WIDTH_TILES);
 
   run(8, 0, 30);
-  run(160, 42, 430);
+  run(160, 42, 655);
+  run(155, 104, 12);
+  run(152, 146, 14);
+  run(156, 192, 10);
+  run(151, 238, 16);
+  run(154, 292, 14);
+  run(150, 338, 18);
+  run(156, 386, 12);
+  run(152, 432, 16);
+  run(155, 486, 14);
+  run(151, 538, 18);
+  run(154, 598, 16);
+  run(150, 648, 18);
 
   [
     [6, 4, "p"],
@@ -1070,12 +1092,29 @@ function createLevelFive() {
     [7, 25, "d"],
     [159, 48, "g"],
     [159, 78, "g"],
+    [154, 109, "g"],
     [159, 118, "g"],
+    [151, 153, "g"],
     [159, 168, "g"],
+    [155, 197, "g"],
     [159, 228, "g"],
+    [150, 244, "g"],
+    [153, 299, "g"],
     [159, 292, "g"],
+    [149, 347, "g"],
     [159, 356, "g"],
-    [159, 424, "g"]
+    [155, 392, "g"],
+    [159, 424, "g"],
+    [151, 439, "g"],
+    [159, 468, "g"],
+    [154, 492, "g"],
+    [159, 522, "g"],
+    [150, 548, "g"],
+    [159, 584, "g"],
+    [153, 606, "g"],
+    [159, 636, "g"],
+    [149, 656, "g"],
+    [159, 684, "g"]
   ].forEach(([row, column, value]) => put(row, column, value));
 
   return rows.map((row) => row.join(""));
@@ -1262,8 +1301,14 @@ function setBossHealthVisible(visible) {
 
 function updateBossHealthHud({ value = 1 } = {}) {
   if (!hud.bossHealth) return;
+  const health = Phaser.Math.Clamp(value, 0, 1);
   if (hud.bossHealthFill) {
-    hud.bossHealthFill.style.width = `${Phaser.Math.Clamp(value, 0, 1) * 100}%`;
+    const textureWidth = 336;
+    const redLeft = 24;
+    const redRight = 313;
+    const visibleRight = redLeft + (redRight - redLeft) * health;
+    const clipRightPercent = ((textureWidth - visibleRight) / textureWidth) * 100;
+    hud.bossHealthFill.style.clipPath = `inset(0 ${clipRightPercent.toFixed(3)}% 0 0)`;
   }
 }
 
@@ -1943,6 +1988,7 @@ class PlayScene extends Phaser.Scene {
     this.enemies = this.physics.add.group({ allowGravity: true, immovable: false });
     this.acorns = this.physics.add.group({ allowGravity: false, immovable: true });
     this.thrownItems = this.physics.add.group({ allowGravity: true, immovable: false });
+    this.giantHands = this.physics.add.group({ allowGravity: false, immovable: false });
     this.keys = this.physics.add.group({ allowGravity: false, immovable: true });
     this.doors = this.physics.add.staticGroup();
     this.haystacks = this.physics.add.group({ allowGravity: false, immovable: true });
@@ -1997,6 +2043,11 @@ class PlayScene extends Phaser.Scene {
     this.bossRevealTweens = [];
     this.bossRevealTimers = [];
     this.bossHealthVisible = false;
+    this.bossHealth = 1;
+    this.bossDefeated = false;
+    this.bossSoundtrackActive = false;
+    this.damageInvulnerableUntil = 0;
+    this.damageFlickerTween = null;
     this.elevatorSignBubble = null;
     this.elevatorSignPromptShown = false;
     this.mysteriousMan = null;
@@ -2212,6 +2263,7 @@ class PlayScene extends Phaser.Scene {
       }
       spineAsset(level.distantColossus);
       colossusPartAssets(level.distantColossus);
+      (level.giantHandAttacks || []).forEach((attack) => image(attack.key, attack.src));
 
       image("parallax-city", "./public/assets/environment/paralax_city.png");
       if (level.parallax === "parallax-underground") image("parallax-underground", "./public/assets/environment/paralax_underground.png");
@@ -2826,23 +2878,22 @@ class PlayScene extends Phaser.Scene {
     const lowerLegTopAnchor = { x: 25, y: 23 };
     const footTopAnchor = { x: 26, y: 6 };
     const parts = {
-      farLeg: addPart("farLeg", "colossus-upperLeg", 34, -254, { anchor: upperLegTopAnchor }),
       farShin: addPart("farShin", "colossus-lowerLeg", 34, -152, { anchor: lowerLegTopAnchor }),
+      farLeg: addPart("farLeg", "colossus-upperLeg", 34, -254, { anchor: upperLegTopAnchor }),
       farFoot: addPart("farFoot", "colossus-foot", 48, -30, { anchor: footTopAnchor }),
       farArm: addPart("farArm", "colossus-upperArm", 66, -406, { anchor: armTopAnchor }),
       farForearm: addPart("farForearm", "colossus-lowerArm", 82, -300, { anchor: forearmTopAnchor }),
       farHand: addPart("farHand", "colossus-openHand", 98, -194, { anchor: { x: 30, y: 17 } }),
       pelvis: addPart("pelvis", "colossus-pelvis", 0, -264),
       torso: addPart("torso", "colossus-torso", 0, -362),
-      head: addPart("head", "colossus-head", 16, -520, { scaleX: 0.8, scaleY: 0.8 }),
+      head: addPart("head", "colossus-head", 16, -520, { anchor: { x: 38, y: 150 }, scaleX: 0.8, scaleY: 0.8 }),
       crown: addPart("crown", "colossus-crown", 24, -580, { angle: -5, scaleX: 0.8, scaleY: 0.8 }),
-      nearLeg: addPart("nearLeg", "colossus-upperLeg", -34, -254, { anchor: upperLegTopAnchor }),
       nearShin: addPart("nearShin", "colossus-lowerLeg", -34, -152, { anchor: lowerLegTopAnchor }),
+      nearLeg: addPart("nearLeg", "colossus-upperLeg", -34, -254, { anchor: upperLegTopAnchor }),
       nearFoot: addPart("nearFoot", "colossus-foot", -48, -30, { anchor: footTopAnchor }),
       nearArm: addPart("nearArm", "colossus-upperArm", -70, -406, { anchor: armTopAnchor }),
       nearForearm: addPart("nearForearm", "colossus-lowerArm", -92, -300, { anchor: forearmTopAnchor }),
-      nearHand: addPart("nearHand", "colossus-closedHand", -112, -194, { anchor: { x: 19, y: 14 } }),
-      suitcase: addPart("suitcase", "colossus-suitcase", -142, -142, { angle: -4 })
+      nearHand: addPart("nearHand", "colossus-suitcaseHand", -112, -194, { anchor: { x: 64, y: 13 } })
     };
 
     this.distantColossus = {
@@ -2860,9 +2911,14 @@ class PlayScene extends Phaser.Scene {
       isWalking: false,
       suitcaseAttackActive: false,
       suitcaseAttackStartedAt: 0,
-      suitcaseAttackDuration: 1180,
+      suitcaseAttackDuration: 2100,
       nextSuitcaseAttackAt: this.time.now + Phaser.Math.Between(4200, 8200),
-      suitcaseAttackDropTriggerAt: 0
+      suitcaseAttackDropTriggerAt: 0,
+      crownSlipActive: false,
+      crownSlipStartedAt: 0,
+      crownSlipDuration: 2100,
+      nextCrownSlipAt: this.time.now + Phaser.Math.Between(1400, 2800),
+      freeArmHandAttackTriggered: false
     };
     this.updateDistantColossus(this.time.now, 0);
   }
@@ -2969,7 +3025,20 @@ class PlayScene extends Phaser.Scene {
     const attackProgress = rig.suitcaseAttackActive
       ? Phaser.Math.Clamp((this.time.now - rig.suitcaseAttackStartedAt) / rig.suitcaseAttackDuration, 0, 1)
       : 0;
-    const suitcaseAttackLift = Math.sin(attackProgress * Math.PI) * -78;
+    const suitcaseAttackLift = Math.sin(attackProgress * Math.PI) * -168;
+    const suitcaseAttackLowerTwist = Math.sin(attackProgress * Math.PI) * -48;
+    const suitcaseAttackTwist = Math.sin(attackProgress * Math.PI) * -42;
+    const crownSlipProgress = rig.crownSlipActive
+      ? Phaser.Math.Clamp((this.time.now - rig.crownSlipStartedAt) / rig.crownSlipDuration, 0, 1)
+      : 0;
+    const crownSlipAmount = crownSlipProgress <= 0.34
+      ? Phaser.Math.Easing.Sine.Out(crownSlipProgress / 0.34)
+      : crownSlipProgress <= 0.62
+        ? 1
+        : 1 - Phaser.Math.Easing.Sine.InOut((crownSlipProgress - 0.62) / 0.38);
+    const crownFixAmount = crownSlipProgress > 0.48 && crownSlipProgress < 0.92
+      ? Math.sin(((crownSlipProgress - 0.48) / 0.44) * Math.PI)
+      : 0;
 
     const set = (part, props = {}) => {
       if (!part) return;
@@ -3026,18 +3095,11 @@ class PlayScene extends Phaser.Scene {
       set(end, { x: wrist.x + endOffsetX, y: wrist.y + endOffsetY, angle: endAngle });
       return anchorWorld(end, endTopAnchor, endAngle);
     };
-    const closedHandSuitcaseAnchor = (handAngle) => {
-      const handBottom = anchorWorld(parts.nearHand, { x: 19, y: 77 }, handAngle);
-      return {
-        x: handBottom.x - 18,
-        y: handBottom.y + 6
-      };
-    };
     const armAnchors = {
       upperLower: { x: 30, y: 143 },
       lowerLower: { x: 32, y: 140 },
       openHandTop: { x: 30, y: 17 },
-      closedHandTop: { x: 19, y: 14 }
+      suitcaseHandTop: { x: 64, y: 13 }
     };
     const legAnchors = {
       upperLower: { x: 29, y: 143 },
@@ -3049,18 +3111,45 @@ class PlayScene extends Phaser.Scene {
     const pelvisAngle = -torsoLean * 0.42;
     set(parts.torso, { x: Math.sin(phase) * 1.8, y: -344 - bob, angle: torsoAngle });
     set(parts.pelvis, { x: 0, y: -240 + Math.abs(Math.sin(phase)) * 2, angle: pelvisAngle });
-    set(parts.head, { x: 16 + Math.sin(phase + 0.55) * 2.2, y: -510 - bob, angle: -torsoLean * 0.45 });
-    set(parts.crown, { x: 24 + Math.sin(phase + 0.55) * 2.2, y: -566 - bob, angle: -5 - torsoLean * 0.45 });
+    const neck = torsoAnchor({ x: 100, y: 14 }, torsoAngle);
+    const headAngle = -torsoLean * 0.45;
+    set(parts.head, { x: neck.x + Math.sin(phase + 0.55) * 1.2, y: neck.y - 2 - bob * 0.35, angle: headAngle });
+    set(parts.crown, {
+      x: parts.head.x + 17 + crownSlipAmount * 14 + Math.sin(phase + 0.55) * 1.2,
+      y: parts.head.y - 102 + crownSlipAmount,
+      angle: -5 + crownSlipAmount * 18 - torsoLean * 0.45
+    });
 
     const leftShoulder = torsoAnchor({ x: 11, y: 70 }, torsoAngle);
     const rightShoulder = torsoAnchor({ x: 178, y: 70 }, torsoAngle);
     const leftHip = pelvisAnchor({ x: 12, y: 88 }, pelvisAngle);
     const rightHip = pelvisAnchor({ x: 103, y: 88 }, pelvisAngle);
 
-    const placeArm = ({ upper, lower, end, shoulder, swing, side, attackLift = 0 }) => {
-      const upperAngle = side * 2 + swing;
-      const lowerAngle = upperAngle * 0.68 + side * 4 + attackLift * 0.32;
-      const handAngle = lowerAngle * 0.42 + side * 3 + attackLift * 0.16;
+    const placeArm = ({
+      upper,
+      lower,
+      end,
+      shoulder,
+      swing,
+      side,
+      attackLift = 0,
+      handTwist = 0,
+      foldAmount = 0,
+      upperAdd = 0,
+      lowerAdd = 0,
+      handAdd = 0
+    }) => {
+      const upperAngle = side * 2 + swing + upperAdd;
+      const lowerAngle = Phaser.Math.Linear(
+        upperAngle * 0.68 + side * 4 + attackLift * 0.32,
+        upperAngle + side * 112,
+        foldAmount
+      ) + lowerAdd;
+      const handAngle = Phaser.Math.Linear(
+        lowerAngle * 0.42 + side * 3 + attackLift * 0.16 + handTwist,
+        lowerAngle + side * 14,
+        foldAmount
+      ) + handAdd;
       placeLimb({
         upper,
         lower,
@@ -3071,7 +3160,7 @@ class PlayScene extends Phaser.Scene {
         lowerAngle,
         upperLowerAnchor: armAnchors.upperLower,
         lowerLowerAnchor: armAnchors.lowerLower,
-        endTopAnchor: side < 0 ? armAnchors.closedHandTop : armAnchors.openHandTop,
+        endTopAnchor: side < 0 ? armAnchors.suitcaseHandTop : armAnchors.openHandTop,
         endOffsetX: side * 2,
         endOffsetY: -1,
         endAngle: handAngle
@@ -3082,7 +3171,7 @@ class PlayScene extends Phaser.Scene {
     const placeLeg = ({ upper, lower, end, hip, step, side }) => {
       const upperAngle = side * 2 + step;
       const lowerAngle = upperAngle * 0.58 - step * 0.22;
-      const footAngle = side * -76 + step * 0.32;
+      const footAngle = 0;
       placeLimb({
         upper,
         lower,
@@ -3109,7 +3198,7 @@ class PlayScene extends Phaser.Scene {
       step: farStep * 10,
       side: 1
     });
-    const nearFoot = placeLeg({
+    placeLeg({
       upper: parts.nearLeg,
       lower: parts.nearShin,
       end: parts.nearFoot,
@@ -3126,22 +3215,21 @@ class PlayScene extends Phaser.Scene {
       end: parts.farHand,
       shoulder: rightShoulder,
       swing: farArmSwing,
-      side: 1
+      side: 1,
+      upperAdd: crownFixAmount * -140,
+      lowerAdd: crownFixAmount * -160,
+      handAdd: crownFixAmount * -80
     });
-    const nearArmPose = placeArm({
+    placeArm({
       upper: parts.nearArm,
       lower: parts.nearForearm,
       end: parts.nearHand,
       shoulder: leftShoulder,
       swing: nearArmSwing,
       side: -1,
-      attackLift: suitcaseAttackLift
-    });
-    const suitcaseAnchor = closedHandSuitcaseAnchor(nearArmPose.handAngle);
-    set(parts.suitcase, {
-      x: suitcaseAnchor.x,
-      y: Math.max(nearFoot.y - 8, suitcaseAnchor.y + Math.sin(phase + 0.9) * 4),
-      angle: -4 + nearArmPose.handAngle * 0.22
+      attackLift: suitcaseAttackLift,
+      handTwist: suitcaseAttackTwist,
+      lowerAdd: suitcaseAttackLowerTwist
     });
   }
 
@@ -3188,7 +3276,7 @@ class PlayScene extends Phaser.Scene {
       if (!rig.suitcaseAttackActive && time >= (rig.nextSuitcaseAttackAt ?? 0)) {
         rig.suitcaseAttackActive = true;
         rig.suitcaseAttackStartedAt = time;
-        rig.suitcaseAttackDuration = Phaser.Math.Between(1040, 1280);
+        rig.suitcaseAttackDuration = Phaser.Math.Between(1850, 2400);
       }
     }
     if (rig.suitcaseAttackActive) {
@@ -3197,6 +3285,28 @@ class PlayScene extends Phaser.Scene {
         rig.suitcaseAttackActive = false;
         rig.suitcaseAttackDropTriggerAt = time;
         rig.nextSuitcaseAttackAt = time + Phaser.Math.Between(5200, 9800);
+      }
+    }
+    if (rig.parts && isWalking && !rig.crownSlipActive && time >= (rig.nextCrownSlipAt ?? Infinity)) {
+      rig.crownSlipActive = true;
+      rig.crownSlipStartedAt = time;
+      rig.crownSlipDuration = Phaser.Math.Between(1900, 2400);
+      rig.freeArmHandAttackTriggered = false;
+    }
+    if (rig.crownSlipActive) {
+      const progress = (time - rig.crownSlipStartedAt) / rig.crownSlipDuration;
+      if (
+        this.bossHealthVisible &&
+        !this.bossDefeated &&
+        !rig.freeArmHandAttackTriggered &&
+        progress >= 0.58
+      ) {
+        rig.freeArmHandAttackTriggered = true;
+        this.spawnGiantHandAttack();
+      }
+      if (progress >= 1) {
+        rig.crownSlipActive = false;
+        rig.nextCrownSlipAt = time + Phaser.Math.Between(1800, 3800);
       }
     }
 
@@ -3337,13 +3447,26 @@ class PlayScene extends Phaser.Scene {
 
   showBossHealthBar() {
     this.bossHealthVisible = true;
+    this.bossHealth = 1;
+    this.bossDefeated = false;
     setBossHealthVisible(true);
-    this.updateBossHealthBar();
+    this.updateBossHealthBar(0);
   }
 
-  updateBossHealthBar() {
+  updateBossHealthBar(delta = 0) {
     if (!this.bossHealthVisible || !this.distantColossus?.object?.active) return;
-    updateBossHealthHud({ value: 1 });
+    if (this.level.bossHealthGate && state.running && !state.won && !this.bossRevealActive && !this.bossDefeated) {
+      const drain = (this.level.bossHealthDrainPerSecond ?? 0) * (delta / 1000);
+      this.bossHealth = Phaser.Math.Clamp((this.bossHealth ?? 1) - drain, 0, 1);
+      if (this.bossHealth <= 0) {
+        this.bossDefeated = true;
+        this.bossHealth = 0;
+        updateBossHealthHud({ value: 0 });
+        this.completeLevel();
+        return;
+      }
+    }
+    updateBossHealthHud({ value: this.bossHealth ?? 1 });
   }
 
   cancelBossRevealCamera({ restoreCamera = true } = {}) {
@@ -5086,6 +5209,8 @@ class PlayScene extends Phaser.Scene {
       this.physics.add.collider(this.cat, this.movingPlatforms);
     }
     this.physics.add.collider(this.enemies, this.platforms);
+    this.physics.add.collider(this.giantHands, this.platforms, this.handleGiantHandPlatformHit, null, this);
+    this.physics.add.collider(this.giantHands, this.movingPlatforms, this.handleGiantHandPlatformHit, null, this);
     this.physics.add.collider(
       this.thrownItems,
       this.platforms,
@@ -5109,6 +5234,7 @@ class PlayScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.keys, this.collectKey, null, this);
     this.physics.add.overlap(this.player, this.enemies, this.hitEnemy, null, this);
     this.physics.add.overlap(this.player, this.acorns, this.hitAcorn, null, this);
+    this.physics.add.overlap(this.player, this.giantHands, this.hitGiantHand, null, this);
     this.physics.add.overlap(this.player, this.haystacks, this.landInHaystack, null, this);
     this.physics.add.overlap(this.player, this.doors, this.enterDoor, null, this);
   }
@@ -5220,10 +5346,11 @@ class PlayScene extends Phaser.Scene {
     this.updateEnvironmentalQuake(time);
     this.updateAcorns(time);
     this.updateThrownItems();
+    this.updateGiantHands();
     this.updateParallax();
     this.updateDistantColossus(time, delta);
     this.updateBossReveal(time);
-    this.updateBossHealthBar();
+    this.updateBossHealthBar(delta);
     this.updateLightRays(time);
     this.updateWater(delta);
     this.updateLanternOverlay();
@@ -5250,7 +5377,7 @@ class PlayScene extends Phaser.Scene {
       return;
     }
     if (this.updateScriptedHaystackDive(time, delta)) {
-      if (this.player.y > this.levelHeight + 56) this.loseLife();
+      if (this.player.y > this.levelHeight + 56) this.loseLife({ respawn: true });
       this.updateDiveWindLines(time);
       this.updateDiveCameraZoom();
       this.updateGabiAnimation(false, false);
@@ -5282,7 +5409,7 @@ class PlayScene extends Phaser.Scene {
     if (leftPressed) this.handleGabiDashTap(-1, time);
     if (rightPressed) this.handleGabiDashTap(1, time);
     if (this.updateGabiDashState(time)) {
-      if (this.player.y > this.levelHeight + 56) this.loseLife();
+      if (this.player.y > this.levelHeight + 56) this.loseLife({ respawn: true });
       this.updateDiveCameraZoom();
       return;
     }
@@ -5338,7 +5465,7 @@ class PlayScene extends Phaser.Scene {
     this.updateDiveWindLines(time);
     this.updateDiveCameraZoom();
 
-    if (this.player.y > this.levelHeight + 56) this.loseLife();
+    if (this.player.y > this.levelHeight + 56) this.loseLife({ respawn: true });
     this.updateGabiAnimation(left || right, onFloor);
     this.enforceFinalElevatorRidePose();
   }
@@ -6494,6 +6621,8 @@ class PlayScene extends Phaser.Scene {
 
   resetPlayerToSpawn() {
     this.stopScriptedHaystackDive();
+    this.damageFlickerTween?.remove?.();
+    this.damageFlickerTween = null;
     this.resetPlayerMotion();
     this.resetGabiDashState();
     this.resetGlideState();
@@ -6502,6 +6631,7 @@ class PlayScene extends Phaser.Scene {
     this.gabiActionRestoreTimer = null;
     this.gabiActionUntil = 0;
     this.player.setPosition(this.spawnPoint.x, this.spawnPoint.y);
+    this.player.setAlpha(1);
     this.currentGabiAnimation = null;
     this.setGabiAnimation("idle");
   }
@@ -7333,6 +7463,7 @@ class PlayScene extends Phaser.Scene {
   updateFinishZone() {
     const zone = this.level.finishZone;
     if (!zone || !this.player || !state.running || state.won) return;
+    if (this.level.bossHealthGate && !this.bossDefeated) return;
     if (this.player.x >= zone.x && this.player.y >= zone.y) {
       this.completeLevel();
     }
@@ -8643,7 +8774,24 @@ class PlayScene extends Phaser.Scene {
     });
   }
 
-  startMusic() {
+  shouldUseBossSoundtrack() {
+    return Boolean(this.level?.bossSoundtrack && (this.bossSoundtrackActive || this.bossHealthVisible || this.bossDefeated));
+  }
+
+  startActiveLevelMusic() {
+    if (this.shouldUseBossSoundtrack()) {
+      this.startBossSoundtrack();
+      return;
+    }
+    this.startMusic({ forceLevel: true });
+  }
+
+  startMusic({ forceLevel = false } = {}) {
+    if (!forceLevel && this.shouldUseBossSoundtrack()) {
+      this.startBossSoundtrack();
+      return;
+    }
+    this.bossSoundtrackActive = false;
     if (!isMusicEnabled()) {
       if (this.bgm?.isPlaying) this.bgm.stop();
       this.stopAmbientMusic({ destroy: false });
@@ -8678,6 +8826,7 @@ class PlayScene extends Phaser.Scene {
   startBossSoundtrack() {
     const soundtrack = this.level?.bossSoundtrack;
     if (!soundtrack) return;
+    this.bossSoundtrackActive = true;
     if (!isMusicEnabled()) {
       if (this.bgm?.isPlaying) this.bgm.stop();
       return;
@@ -8815,7 +8964,7 @@ class PlayScene extends Phaser.Scene {
       return;
     }
     if (this.levelReady && state.running && !state.won) {
-      this.startMusic();
+      this.startActiveLevelMusic();
     } else if (!this.levelReady && (!hud.mainMenu.hidden || !hud.menuPanel.hidden)) {
       this.startMenuMusic();
     }
@@ -8834,7 +8983,7 @@ class PlayScene extends Phaser.Scene {
       if (!this.wasMusicPlayingBeforeHidden) return;
       this.resumeAudioContext();
       if (this.levelReady && state.running && !state.won) {
-        this.startMusic();
+        this.startActiveLevelMusic();
       } else if (!this.levelReady && (!hud.mainMenu.hidden || !hud.menuPanel.hidden)) {
         this.startMenuMusic();
       }
@@ -8919,6 +9068,11 @@ class PlayScene extends Phaser.Scene {
     this.birdFlockGroups = [];
     this.birdAttackFlocks?.forEach((flock) => flock.birds?.forEach((bird) => bird?.destroy?.()));
     this.birdAttackFlocks = [];
+    this.giantHands?.clear?.(true, true);
+    this.giantHands = null;
+    this.damageFlickerTween?.remove?.();
+    this.damageFlickerTween = null;
+    this.damageInvulnerableUntil = 0;
     this.distantColossus?.labels?.forEach((label) => label.text?.destroy?.());
     this.distantColossus?.object?.destroy?.();
     this.distantColossus = null;
@@ -9163,6 +9317,67 @@ class PlayScene extends Phaser.Scene {
     this.loseLife();
   }
 
+  hitGiantHand(_player, hand) {
+    if (!state.running || !hand?.active || hand.getData("spent")) return;
+    this.loseLife();
+  }
+
+  spawnGiantHandAttack() {
+    if (!state.running || state.won || this.bossRevealActive || !this.bossHealthVisible || this.bossDefeated) return;
+    const attacks = this.level.giantHandAttacks || [];
+    if (!attacks.length || !this.player?.active || !this.giantHands) return;
+
+    const attack = Phaser.Utils.Array.GetRandom(attacks);
+    if (!attack?.key || !this.textures.exists(attack.key)) return;
+
+    const camera = this.cameras.main;
+    const hand = this.giantHands.create(this.player.x, 0, attack.key);
+    const scale = (PLAY_HEIGHT * 1.08) / Math.max(1, hand.height || PLAY_HEIGHT);
+    const spawnY = camera.scrollY - hand.height * scale * 0.58;
+    hand.setPosition(this.player.x, spawnY);
+    hand.setScale(scale);
+    hand.setDepth(GIANT_HAND_DEPTH);
+    hand.setAlpha(0.98);
+    hand.setVelocity(0, GIANT_HAND_FALL_SPEED);
+    hand.setData("spent", false);
+    hand.setData("armedAt", this.time.now + 120);
+    hand.body.setAllowGravity(false);
+    hand.body.setImmovable(false);
+    hand.body.setSize(hand.width * 0.72, hand.height * 0.88, true);
+  }
+
+  handleGiantHandPlatformHit(hand) {
+    if (!hand?.active || hand.getData("spent")) return;
+    hand.setData("spent", true);
+    hand.setVelocity(0, 0);
+    hand.body.moves = false;
+    hand.body.enable = false;
+    this.cameras.main.shake(GIANT_HAND_IMPACT_SHAKE_DURATION, GIANT_HAND_IMPACT_SHAKE_INTENSITY);
+    if (
+      this.player?.active &&
+      Phaser.Geom.Intersects.RectangleToRectangle(hand.getBounds(), this.player.getBounds())
+    ) {
+      this.loseLife();
+    }
+    this.tweens.add({
+      targets: hand,
+      alpha: 0,
+      y: hand.y + 10,
+      duration: 520,
+      ease: "Sine.in",
+      onComplete: () => hand.destroy()
+    });
+  }
+
+  updateGiantHands() {
+    if (!this.giantHands) return;
+    const cullY = this.cameras.main.scrollY + PLAY_HEIGHT + 760;
+    this.giantHands.children.iterate((hand) => {
+      if (!hand?.active) return;
+      if (hand.y > cullY) hand.destroy();
+    });
+  }
+
   hitEnemyWithThrownItem(item, enemy) {
     if (!state.running || !item.active || !enemy.active || enemy.getData("dying")) return;
     this.ricochetThrownItemFromEnemy(item, enemy);
@@ -9191,13 +9406,16 @@ class PlayScene extends Phaser.Scene {
     acorn.setData("pace", Phaser.Math.Between(...this.level.acornPace));
   }
 
-  loseLife() {
+  loseLife({ respawn = false } = {}) {
     if (!state.running) return;
+    const now = this.time?.now || 0;
+    if (!respawn && now < (this.damageInvulnerableUntil || 0)) return;
+    this.damageInvulnerableUntil = now + DAMAGE_INVULNERABLE_MS;
     this.cancelBirdAttackCameraZoom();
     this.cancelDiveCameraZoom();
     state.lives -= 1;
     updateHud();
-    this.cameras.main.shake(180, 0.012);
+    this.cameras.main.shake(respawn ? 180 : 120, respawn ? 0.012 : 0.006);
     if (state.lives <= 0) {
       this.showGameOverScreen({
         copy: "Gabi ran out of chances. The city was too demanding."
@@ -9205,10 +9423,14 @@ class PlayScene extends Phaser.Scene {
       return;
     }
     if (Number.isFinite(state.timeLeft)) state.timeLeft = Math.max(45, state.timeLeft);
-    this.resetFinalElevator();
-    this.resetMysteriousMan();
-    this.resetPlayerToSpawn();
-    this.showGabiSpeech(Phaser.Math.RND.pick(PICKUP_SPEECH_LINES.respawn));
+    if (respawn) {
+      this.resetFinalElevator();
+      this.resetMysteriousMan();
+      this.resetPlayerToSpawn();
+      this.showGabiSpeech(Phaser.Math.RND.pick(PICKUP_SPEECH_LINES.respawn));
+    } else {
+      this.flickerPlayerDamage();
+    }
     this.airJumpsUsed = 0;
     this.usingWingJump = false;
     this.resetGlideState();
@@ -9217,10 +9439,30 @@ class PlayScene extends Phaser.Scene {
     this.wingPromptActive = false;
     setItemPickupVisible(false);
     this.releaseBasketPromptControlLock();
-    this.thrownItems.clear(true, true);
-    if (!state.hasKey) this.resetKeyReveal();
-    this.resetCatNpc();
-    this.createDiveIndicatorBirds();
+    if (respawn) {
+      this.thrownItems.clear(true, true);
+      if (!state.hasKey) this.resetKeyReveal();
+      this.resetCatNpc();
+      this.createDiveIndicatorBirds();
+    }
+  }
+
+  flickerPlayerDamage() {
+    if (!this.player?.active) return;
+    this.damageFlickerTween?.remove?.();
+    this.player.setAlpha(1);
+    this.damageFlickerTween = this.tweens.add({
+      targets: this.player,
+      alpha: 0.18,
+      duration: 80,
+      yoyo: true,
+      repeat: 7,
+      ease: "Stepped",
+      onComplete: () => {
+        if (this.player?.active) this.player.setAlpha(1);
+        this.damageFlickerTween = null;
+      }
+    });
   }
 
   enterDoor() {
