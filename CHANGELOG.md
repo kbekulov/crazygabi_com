@@ -1,5 +1,39 @@
 # Changelog
 
+## v0.55.15
+
+- Added walking-aware colossus arm sway so idle motion stays subtle and walking keeps the stronger arm movement.
+- Added an occasional idle suitcase-arm swing for the colossus as a future attack trigger.
+- Updated the colossus foot anchor to the new explicit PNG joint coordinate.
+- Included the updated colossus hand and torso assets.
+
+## v0.55.14
+
+- Rebuilt the Level 5 colossus PNG rig with explicit humanoid shoulder, arm, hand, pelvis, and suitcase anchors.
+
+## v0.55.13
+
+- Exaggerated the Level 5 colossus arm sway to make the PNG limb anchors easier to verify.
+
+## v0.55.12
+
+- Restored the Level 5 colossus PNG rig to vertical limb joints with alpha-aware top pivots.
+
+## v0.55.11
+
+- Rebuilt the Level 5 colossus PNG limb math around right-facing bone axes and visible alpha-bound pivots.
+
+## v0.55.10
+
+- Reworked the Level 5 colossus arm and leg anchors to use texture-based limb spans.
+- Moved the colossus pelvis behind the torso in the body draw order.
+
+## v0.55.9
+
+- Tuned the Level 5 colossus gait so the pelvis sits higher, the suitcase stays closer to the hand, and the arms sway while walking.
+- Replaced the moving colossus health bar with a fixed boss health bar named BU.
+- Made Level 5 use an infinite timer instead of counting down.
+
 ## v0.55.8
 
 - Reduced the Level 5 colossus head and crown size and shifted them back over the neck.
