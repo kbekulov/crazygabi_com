@@ -1,5 +1,213 @@
 # Changelog
 
+## v0.59.3
+
+- Removed the cat from the main menu scene.
+- Made menu petals smaller and kept them pixelated.
+- Restyled submenu Back buttons as hollow buttons and hid panel scrollbars.
+- Raised the Level 6 exit door to match the other door placements.
+
+## v0.59.2
+
+- Blended overlapping Level 2 lantern light circles into a single darkness mask.
+- Polished the new main menu by removing Gabi, shrinking petals, restoring button styling, and restyling submenu panels.
+- Enlarged the Level 6 flower cooldown icon.
+
+
+## v0.59.0
+
+- Rebuilt the main menu around the new full-screen background art.
+- Added enlarged idle Gabi and cat animations to the menu.
+- Added drifting flower petals across the menu scene.
+- Kept Level 2 static lantern glow while returning Gabi's carried lantern to its cleaner light circle.
+
+## v0.58.0
+
+- Added hard-mode enemy damage respawns on non-boss levels.
+- Added Level 2 night lanterns with circular light pockets and sparkles.
+- Updated flower cooldown icons and BGM metadata.
+
+## v0.57.10
+
+- Recreated the cat NPC safely when repeated level switches remove its physics body.
+- Cleared stale key and door references during level teardown.
+
+## v0.57.9
+
+- Preserved spritesheet textures that back global animations during level cache cleanup.
+
+## v0.57.8
+
+- Hardened level switching cleanup to prevent stale timers, tweens, loader callbacks, and audio objects from touching old scenes.
+- Retired previous level-only cached assets before loading the next level to reduce memory pressure during long play sessions.
+- Added the flower cooldown UI icon for Level 6's petal attack.
+
+## v0.57.7
+
+- Added runtime diagnostics for intermittent level-loading crashes and freezes.
+
+## v0.57.6
+
+- Fixed Level 6 using the Level 1 soundtrack by restoring the correct music mapping.
+
+## v0.57.5
+
+- Added the Level 6 soundtrack and wired it into Level 6 and the Music Box.
+
+## v0.57.4
+
+- Reworked Level 6 petal attacks into a larger wind-chaos swarm with varied rotation and density.
+
+## v0.57.3
+
+- Added a wing pickup to Level 6 so its vertical route can be completed.
+- Reduced flower petal visuals and made bush scatter particles smaller.
+
+## v0.57.2
+
+- Reworked Level 6 garden placement to use the established garden layering and height rules.
+- Spread garden bushes and props across more Level 6 platforms.
+
+## v0.57.1
+
+- Fixed Level 6's starting spawn so Gabi lands safely on the opening platform.
+- Added a spawn snap guard to keep level starts aligned above nearby platforms.
+
+## v0.57.0
+
+- Added a Level 6 botanical garden route with a flower pickup and no key requirement.
+- Added flower-petal Shift attacks after the flower is collected.
+- Added ambient flower petals, garden decorations, magpies, and layered light beams to Level 6.
+- Added Settings controls to the in-game level-select menu, including a saved Dash toggle.
+
+## v0.56.9
+
+- Mirrored Gabi's chain-climb sway direction.
+- Kept garden benches, arcs, fountains, and lanterns behind characters while preserving their higher platform placement.
+
+## v0.56.8
+
+- Added a dense rooftop garden section after Level 4's elevator ascent.
+- Made Gabi's climb pose sway with the chain while staying anchored to it.
+
+## v0.56.7
+
+- Fixed Gabi's chain-climb facing and added a chain grab sound effect.
+- Added a short pickup delay after revealed keys appear.
+- Adjusted the Level 5 boss intro camera to focus on BU's head.
+
+## v0.56.6
+
+- Made garden-hidden keys reveal only after Gabi passes through the hiding bush.
+- Scaled garden decoration density to platform size and kept nearby platforms as lighter breadcrumb hints.
+- Strengthened garden light beams with layered shafts and brighter spotlight impacts.
+
+## v0.56.5
+
+- Moved the Level 1 key garden to the neighboring left platform.
+- Kept keys above all world objects and lanterns above garden bushes.
+- Adjusted foreground garden bushes to sit lower while background bushes stay higher.
+- Spread garden hints across more nearby platforms around key locations.
+
+## v0.56.4
+
+- Reworked key gardens with richer layered light beams, sparkles, and impact glows.
+- Replaced Level 1-3 key haystacks with interactive garden bushes and green-blue scatter effects.
+- Limited garden decoration types by level so underground routes use bushes and lanterns while city/cathedral routes can use larger garden pieces.
+
+## v0.56.3
+
+- Replaced the generated key-garden placeholders with the real garden sprites from `public/assets/environment/garden`.
+- Added the garden PNGs to level loading so each key location can use the proper decorative assets.
+
+## v0.56.2
+
+- Restored the v55-style level loading flow after the later loading/watchdog changes caused freezes.
+- Added small garden-style key indicators with three-direction light beams near key locations.
+- Kept the extra later-route platforms, pickups, hearts, and enemies for Levels 3 and 5.
+
+## v0.56.1
+
+- Added a gameplay-loop recovery guard so update errors do not leave the game frozen while music continues.
+- Added a runtime watchdog that reloads the current level if successful gameplay ticks stop during play.
+- Fixed stale music restore state after returning to the browser tab.
+
+## v0.56.0
+
+- Reworked level transitions to release previous level assets before loading the next route.
+- Added a safer cached-load handoff to reduce stuck starts after several level changes.
+- Added more platforms, pickups, hearts, and enemies to the later parts of Levels 3 and 5.
+
+## v0.55.42
+
+- Added more and longer hanging chains to the later Level 3 platforming section on Easy difficulty.
+
+## v0.55.41
+
+- Added haystacks beneath the brass key locations in Levels 1, 2, and 3.
+
+## v0.55.40
+
+- Made hanging chains thinner and lowered their root attachment point into the platform edge.
+- Let Gabi pump chain swing with left/right movement while climbing.
+- Fixed bottom-chain release so climbing down past the end drops Gabi off reliably.
+
+## v0.55.39
+
+- Let Gabi reliably jump or drop off hanging chains without immediately re-grabbing the same chain.
+- Added stronger directional chain swing when Gabi catches a chain from a jump or dash.
+
+## v0.55.38
+
+- Made Gabi release immediately after climbing past the bottom of a chain.
+- Added automatic chain grabbing when Gabi jumps or dashes into any part of a chain.
+- Centered Gabi's climbing sprite on the chain while keeping left/right directional control.
+
+## v0.55.37
+
+- Enlarged Gabi's climbing sprite on chains.
+- Fixed chain climbing so Gabi can move up and down manually.
+- Added side switching and directional chain jump-offs.
+- Moved chain anchors closer to platform edges for cleaner platform dismounts.
+
+## v0.55.36
+
+- Added Gabi's chain climbing sprite and animation.
+- Made hanging chains climbable with up/down movement, jump dismounts, and top platform dismounts.
+
+## v0.55.35
+
+- Updated the main chain link art.
+- Moved hanging chain anchors toward platform edges so they can later support climbing routes.
+
+## v0.55.34
+
+- Added decorative hanging chains for Level 3 and Level 5 platforms.
+- Built chains from root and link sprites with varied lengths and joint-based sway.
+
+## v0.55.33
+
+- Removed the main menu sound recommendation line.
+- Expanded Level 5 quest goals to include the basket, boss, key, enemies, and leap/bird objectives.
+- Retuned Easy and Hard difficulty around timers, hazard frequency, enemy density, recovery hearts, and BU boss attack pressure.
+
+## v0.55.32
+
+- Fixed BU's thrown crate so it spins around its center while flying toward the platform.
+## v0.55.31
+
+- Added spacing between BU's hand crush and suitcase crate attacks so patterns do not overlap.
+- Changed BU's thrown crate into a longer spinning ballistic arc from distant scale to full size.
+- Let bird attack sweep through and defeat multiple enemies along its flight path.
+
+## v0.55.30
+
+- Reduced kill impact sound volume and raised the Level 5 boss music volume.
+- Added fixed heart pickups across Level 5 boss platforms.
+- Made retracting giant hands briefly carry Gabi upward before shaking her off.
+- Moved enemy spawning from giant hand impacts to BU's thrown suitcase box attack.
+- Added thrown box debris and a chance for stray hearts to emerge from broken boxes.
+
 ## v0.55.29
 
 - Added elevated Level 5 shelter platforms for avoiding BU's hand attacks.

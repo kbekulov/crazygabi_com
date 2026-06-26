@@ -1,5 +1,5 @@
 const TILE = 32;
-const GAME_VERSION = "v0.55.29";
+const GAME_VERSION = "v0.59.3";
 const VIEW_WIDTH = 960;
 const VIEW_HEIGHT = 540;
 const PLAY_HEIGHT = VIEW_HEIGHT;
@@ -45,6 +45,25 @@ const GABI_AIR_DIVE_FRAME_WIDTH = 1034;
 const GABI_AIR_DIVE_FRAME_HEIGHT = 775;
 const GABI_DASH_FRAME_WIDTH = 238;
 const GABI_DASH_FRAME_HEIGHT = 238;
+const GABI_CLIMB_FRAME_WIDTH = 720;
+const GABI_CLIMB_FRAME_HEIGHT = 720;
+const GABI_CLIMB_SCALE = ((GABI_FRAME_HEIGHT * GABI_SCALE) / GABI_CLIMB_FRAME_HEIGHT) * 1.3;
+const GABI_CHAIN_GRAB_DISTANCE = 46;
+const GABI_CHAIN_AUTO_GRAB_DISTANCE = 30;
+const GABI_CHAIN_CLIMB_SPEED = 116;
+const GABI_CHAIN_HORIZONTAL_LERP = 0.38;
+const GABI_CHAIN_SIDE_OFFSET = 0;
+const GABI_CHAIN_TOP_DISMOUNT_Y = 12;
+const GABI_CHAIN_BOTTOM_DISMOUNT_Y = 10;
+const GABI_CHAIN_JUMP_SPEED_Y = -430;
+const GABI_CHAIN_JUMP_SPEED_X = 230;
+const GABI_CHAIN_RELEASE_LOCK_MS = 380;
+const GABI_CHAIN_BODY_SWAY_DEGREES = 10;
+const HANGING_CHAIN_IMPACT_MAX_ANGLE = (18 * Math.PI) / 180;
+const HANGING_CHAIN_IMPACT_SPRING = 18;
+const HANGING_CHAIN_IMPACT_DAMPING = 0.88;
+const HANGING_CHAIN_INPUT_FORCE = 8.5;
+const HANGING_CHAIN_INPUT_MAX_VELOCITY = 12;
 const GABI_DASH_DOUBLE_TAP_MS = 260;
 const GABI_DASH_DISTANCE = GABI_FRAME_WIDTH * GABI_SCALE * 5 * 0.8;
 const GABI_DASH_SPEED = 780;
@@ -57,6 +76,8 @@ const MR_MAGPIE_SCALE = 0.34;
 const MR_MAGPIE_SPEED = 78;
 const AUTUMN_LEAF_FRAME_WIDTH = 326;
 const AUTUMN_LEAF_FRAME_HEIGHT = 326;
+const FLOWER_PETAL_FRAME_WIDTH = 385;
+const FLOWER_PETAL_FRAME_HEIGHT = 386;
 const AUTUMN_LEAF_MAX_COUNT = 21;
 const AUTUMN_LEAF_MIN_DEPTH = -10;
 const AUTUMN_LEAF_MAX_DEPTH = 31.5;
@@ -82,6 +103,15 @@ const PLATFORM_Y_OFFSET = 22;
 const FENCE_Y_OFFSET = -40;
 const PLATFORM_DEPTH = 2;
 const FENCE_DEPTH = 1;
+const HANGING_CHAIN_DEPTH = FENCE_DEPTH + 0.28;
+const HANGING_CHAIN_ROOT_DEPTH = PLATFORM_DEPTH + 0.18;
+const HANGING_CHAIN_SCALE = 0.2;
+const HANGING_CHAIN_ROOT_PLATFORM_DROP = TILE * 0.58;
+const HANGING_CHAIN_ROOT_BOTTOM_ANCHOR = { x: 37, y: 65 };
+const HANGING_CHAIN_LINK_TOP_ANCHOR = { x: 28, y: 16 };
+const HANGING_CHAIN_LINK_BOTTOM_ANCHOR = { x: 28, y: 101 };
+const HANGING_CHAIN_LINK_SPACING =
+  (HANGING_CHAIN_LINK_BOTTOM_ANCHOR.y - HANGING_CHAIN_LINK_TOP_ANCHOR.y) * HANGING_CHAIN_SCALE;
 const WATER_DEPTH = -1;
 const WALL_FOREGROUND_TILE_SPAN = 2;
 const PLATFORM_SHADOW_DEPTH = PLATFORM_DEPTH + 0.52;
@@ -92,7 +122,30 @@ const HAYSTACK_SCALE = 0.36;
 const HAYSTACK_Y_OFFSET = 10;
 const HAYSTACK_DEPTH = 4.7;
 const HAY_BURST_DEPTH = HAYSTACK_DEPTH + 0.5;
+const KEY_GARDEN_DEPTH = HAYSTACK_DEPTH + 0.12;
+const KEY_GARDEN_BURST_DEPTH = HAY_BURST_DEPTH + 0.08;
+const KEY_GARDEN_LIGHT_COUNT = [3, 6];
+const KEY_GARDEN_BUSH_FRONT_Y_OFFSET = 9;
+const KEY_GARDEN_PROP_BACK_DEPTH = 3.55;
+const GARDEN_BURST_PARTICLE_SCALE = 0.75;
+const KEY_REVEAL_PICKUP_DELAY = 3000;
+const DECORATIVE_GARDEN_DEFAULT_DENSITY = 0.54;
+const KEY_GARDEN_ASSETS = [
+  { key: "garden-arc-1", src: "./public/assets/environment/garden/arc_1.png", scale: 0.34, weight: 0.5, type: "feature" },
+  { key: "garden-bench-1", src: "./public/assets/environment/garden/bench_1.png", scale: 0.34, weight: 1, type: "feature" },
+  { key: "garden-bush-1", src: "./public/assets/environment/garden/bush_1.png", scale: 0.42, weight: 1.2, type: "bush" },
+  { key: "garden-bush-2", src: "./public/assets/environment/garden/bush_2.png", scale: 0.42, weight: 1.2, type: "bush" },
+  { key: "garden-bush-3", src: "./public/assets/environment/garden/bush_3.png", scale: 0.34, weight: 1.1, type: "bush" },
+  { key: "garden-bush-4", src: "./public/assets/environment/garden/bush_4.png", scale: 0.42, weight: 1.2, type: "bush" },
+  { key: "garden-bush-5", src: "./public/assets/environment/garden/bush_5.png", scale: 0.28, weight: 0.9, type: "bush" },
+  { key: "garden-bush-6", src: "./public/assets/environment/garden/bush_6.png", scale: 0.34, weight: 1.1, type: "bush" },
+  { key: "garden-fountain-1", src: "./public/assets/environment/garden/fountain_1.png", scale: 0.28, weight: 0.55, type: "feature" },
+  { key: "garden-fountain-2", src: "./public/assets/environment/garden/fountain_2.png", scale: 0.28, weight: 0.55, type: "feature" },
+  { key: "garden-lantern-1", src: "./public/assets/environment/garden/lantern_1.png", scale: 0.34, weight: 0.85, type: "lantern" },
+  { key: "garden-lantern-2", src: "./public/assets/environment/garden/lantern_2.png", scale: 0.38, weight: 0.85, type: "lantern" }
+];
 const HAY_BURST_COLORS = [0xc99654, 0x7d5525, 0xe6bc75, 0xca9656, 0x8a5b2e, 0xb9894a];
+const GARDEN_BURST_COLORS = [0x2e9f5b, 0x6edb7a, 0x145a38, 0x5bc7ca, 0x2c84bd, 0xa0eec3, 0x275f87];
 const HAY_BURST_MIN_TOUCH_SPEED = 44;
 const HAY_BURST_COOLDOWN_MS = 1000;
 const DIVE_JUMP_MIN_HORIZONTAL_SPEED = 70;
@@ -108,6 +161,11 @@ const DIVE_INDICATOR_TRIGGER_DISTANCE = 150;
 const DIVE_INDICATOR_SCALE = 0.105;
 const DIVE_INDICATOR_IDLE_ANGLE = -20;
 const DARKNESS_DEPTH = 30;
+const NIGHT_LANTERN_GLOW_KEY = "night-lantern-glow";
+const NIGHT_LANTERN_RADIUS = 170;
+const NIGHT_LANTERN_FRINGE = 72;
+const NIGHT_LANTERN_GLOW_DEPTH = DARKNESS_DEPTH + 0.18;
+const NIGHT_LANTERN_SPARKLE_DEPTH = DARKNESS_DEPTH + 0.22;
 const WATER_SCALE = 0.32;
 const WATER_OVERLAP = 0.25;
 const WATER_SPEED = 6;
@@ -119,6 +177,7 @@ const STARTING_BILLBOARD_DEPTH = FENCE_DEPTH + 0.5;
 const STARTING_BILLBOARD_SCALE = 0.36;
 const BILLBOARD_INTERACT_DISTANCE = 92;
 const ITEM_DEPTH = 8;
+const KEY_ITEM_DEPTH = DARKNESS_DEPTH + 2;
 const LIGHT_RAY_FRONT_DEPTH = ITEM_DEPTH + 0.75;
 const LIGHT_SPARKLE_DEPTH = ITEM_DEPTH + 1;
 const LIGHT_RAY_BLINDING_DEPTH = LIGHT_SPARKLE_DEPTH + 0.55;
@@ -156,6 +215,8 @@ const BIRD_ZOOM_OUT_SFX_KEY = "bird-zoom-out";
 const COLOSSUS_HOWL_SFX_KEY = "colossus-howl";
 const COLOSSUS_FOOTSTEP_SFX_KEY = "colossus-footstep";
 const GIANT_HAND_IMPACT_SFX_KEYS = ["giant-hand-impact-1", "giant-hand-impact-2", "giant-hand-impact-3"];
+const CHAIN_GRAB_SFX_KEY = "chain-grab";
+const KILL_SFX_VOLUME = 0.195;
 const MAGPIE_ATTACK_SFX_VOLUME = 0.19;
 const MAGPIE_AMBIENT_SFX_VOLUME = 0.17;
 const MAGPIE_AMBIENT_SFX_CHANCE = 0.125;
@@ -171,9 +232,17 @@ const GIANT_HAND_LANDED_MS = 5000;
 const GIANT_HAND_DAMAGE = 0.01;
 const GIANT_HAND_HIT_COOLDOWN_MS = 520;
 const GIANT_HAND_HEART_DROP_CHANCE = 0.3;
-const GIANT_HAND_ENEMY_SPAWN_COUNT = [2, 4];
 const GIANT_HAND_IMPACT_SHAKE_DURATION = 360;
 const GIANT_HAND_IMPACT_SHAKE_INTENSITY = 0.009;
+const GIANT_HAND_RIDE_LIFT_MS = 1150;
+const GIANT_HAND_RIDE_SHAKE_VELOCITY_Y = -170;
+const SUITCASE_BOX_DEPTH = ITEM_DEPTH + 1.35;
+const SUITCASE_BOX_START_SCALE = 0.1;
+const SUITCASE_BOX_IMPACT_SCALE = 1;
+const SUITCASE_BOX_FLIGHT_MS = 4000;
+const SUITCASE_BOX_ENEMY_SPAWN_COUNT = [2, 4];
+const SUITCASE_BOX_HEART_DROP_CHANCE = 0.28;
+const BOSS_ATTACK_MIN_GAP_MS = 2400;
 const DAMAGE_INVULNERABLE_MS = 1250;
 const THROWN_ACORN_MAX_BOUNCES = 3;
 const ROBOT_FRAME_WIDTH = 238;
@@ -259,6 +328,13 @@ const BIRD_ATTACK_SPEECH_LINES = [
   "I summon customer complaints.",
   "Weather forecast: Birds."
 ];
+const PETAL_ATTACK_SPEECH_LINES = [
+  "Botany, but hostile.",
+  "Petals with opinions.",
+  "Garden etiquette declined.",
+  "Bloom and doom.",
+  "Floral consequences."
+];
 const ENEMY_NAMES = [
   "KYC WUDB Comment and Management Tool",
   "GSI Document Upload from Email to Pharos",
@@ -281,7 +357,7 @@ const ENEMY_NAMES = [
   "OCM Tiers Case Escalation",
   "KYC WUDB Onboarding Assistant"
 ];
-const ASSET_VERSION = "20260615-boss-hand-arena";
+const ASSET_VERSION = "20260626-menu-polish-2";
 const STORY_ASSET_VERSION = ASSET_VERSION;
 
 function getSpineRuntime() {
@@ -295,9 +371,48 @@ const DIFFICULTY_EASY = "easy";
 const DIFFICULTY_HARD = "hard";
 const DEFAULT_AUDIO_SETTINGS = {
   music: true,
-  sfx: true
+  sfx: true,
+  dash: true
 };
 const EASY_DIFFICULTY_KEEP_INTERVAL = 3;
+const DIFFICULTY_PROFILES = {
+  [DIFFICULTY_EASY]: {
+    scoreMultiplier: 0.5,
+    timeMultiplier: 1.25,
+    hazardDelayMultiplier: 1.45,
+    hazardPaceMultiplier: 0.82,
+    quakeDelayMultiplier: 1.35,
+    quakeBurstMultiplier: 0.75,
+    enemyHeartDropChance: 0.42,
+    maxHeartDrops: 4,
+    giantHandHeartDropChance: 0.45,
+    suitcaseBoxHeartDropChance: 0.42,
+    suitcaseBoxEnemySpawnCount: [1, 2],
+    bossAttackGapMs: 4200,
+    giantHandTelegraphMs: 2250,
+    giantHandNextDelay: [10500, 15500],
+    suitcaseNextDelay: [8200, 13200],
+    respawnMinTime: 70
+  },
+  [DIFFICULTY_HARD]: {
+    scoreMultiplier: 1,
+    timeMultiplier: 0.9,
+    hazardDelayMultiplier: 0.78,
+    hazardPaceMultiplier: 1.12,
+    quakeDelayMultiplier: 0.82,
+    quakeBurstMultiplier: 1.2,
+    enemyHeartDropChance: 0.16,
+    maxHeartDrops: 2,
+    giantHandHeartDropChance: 0.16,
+    suitcaseBoxHeartDropChance: 0.14,
+    suitcaseBoxEnemySpawnCount: [3, 5],
+    bossAttackGapMs: 1700,
+    giantHandTelegraphMs: 1500,
+    giantHandNextDelay: [5600, 8800],
+    suitcaseNextDelay: [3900, 6800],
+    respawnMinTime: 35
+  }
+};
 const LEVEL_LOAD_TIMEOUT_MS = 30000;
 const MIN_LEVEL_TRANSITION_MS = 1400;
 const INTRO_RETRY_MS = 1000;
@@ -308,7 +423,8 @@ const MUSIC_TRACKS = [
   { key: "bgm-lv2", label: "Level 2 Theme", src: "./public/assets/sound/bgm_lv2.mp3" },
   { key: "bgm-lv3", label: "Level 3 Theme", src: "./public/assets/sound/bgm_lv3.mp3" },
   { key: "bgm-lv5", label: "Level 5 Theme", src: "./public/assets/sound/bgm_lv5.mp3" },
-  { key: "bgm-lv5-boss", label: "Level 5 Theme (Boss)", src: "./public/assets/sound/bgm_lv5_boss.mp3", volumeScale: 1.32 }
+  { key: "bgm-lv5-boss", label: "Level 5 Theme (Boss)", src: "./public/assets/sound/bgm_lv5_boss.mp3", volumeScale: 1.52 },
+  { key: "bgm-lv6", label: "Level 6 Theme", src: "./public/assets/sound/bgm_lv6.mp3" }
 ];
 const LOADING_RUNNERS = [
   {
@@ -345,6 +461,7 @@ const LEVEL_TWO_WIDTH_TILES = LEVEL_WIDTH_TILES * 2;
 const LEVEL_THREE_WIDTH_TILES = 220;
 const LEVEL_FOUR_WIDTH_TILES = 224;
 const LEVEL_FIVE_WIDTH_TILES = 720;
+const LEVEL_SIX_WIDTH_TILES = 210;
 const LEVEL_HEIGHT_TILES = 18;
 const LEVELS = [
   {
@@ -363,6 +480,7 @@ const LEVELS = [
     ],
     startSpeech: "Ugh... the world looks different...",
     showStartingHouse: true,
+    keyGarden: true,
     doorYOffset: -30,
     parallax: "parallax-city",
     platformTexture: "platform-strip",
@@ -415,11 +533,21 @@ const LEVELS = [
       fringe: 76,
       yOffset: -18
     },
+    nightLevel: true,
+    nightLanterns: [
+      { column: 54, floorRow: 14, asset: "garden-lantern-1", radius: 150 },
+      { column: 91, floorRow: 18, asset: "garden-lantern-2", radius: 168 },
+      { column: 128, floorRow: 17, asset: "garden-lantern-1", radius: 158 },
+      { column: 181, floorRow: 10, asset: "garden-lantern-2", radius: 176 },
+      { column: 230, floorRow: 8, asset: "garden-lantern-1", radius: 160 },
+      { column: 280, floorRow: 12, asset: "garden-lantern-2", radius: 170 }
+    ],
     oldLady: {
       column: 11,
       floorRow: 18,
       speech: "This tunnel is dark, young lady. Please pick up that lantern over there to proceed."
     },
+    keyGarden: true,
     introCopy: "Find the lantern, move carefully through the dark tunnel, and survive what waits just beyond the edge of the light.",
     questTasks: ["lantern", "key", "coins", "enemies"]
   },
@@ -453,6 +581,20 @@ const LEVELS = [
     catNpc: true,
     doorYOffset: -30,
     parallax: "parallax-underground",
+    hangingChains: {
+      maxChains: 18,
+      minLinks: 5,
+      maxLinks: 13,
+      candidateRate: 0.44,
+      easySecondPart: {
+        minColumn: 100,
+        maxChains: 30,
+        minLinks: 8,
+        maxLinks: 18,
+        candidateRate: 0.82
+      }
+    },
+    keyGarden: true,
     lightRayAlpha: 0.94,
     lightRays: [
       { x: 82, y: -124, topWidth: 18, bottomWidth: 92, height: 1780, lean: 310, alpha: 0.36, thickness: 4, foreground: true, frontAlpha: 0.52, blinding: true, opacityMode: "dim" },
@@ -529,6 +671,17 @@ const LEVELS = [
       exitPadding: 140,
       speed: MR_MAGPIE_SPEED
     },
+    decorativeGardens: [
+      {
+        row: 5,
+        startColumn: 180,
+        endColumn: 222,
+        density: 0.68,
+        featureRate: 0.46,
+        bushScaleBoost: 1.04,
+        featureScaleBoost: 0.96
+      }
+    ],
     parallax: "parallax-cathedral",
     platformTexture: "platform-strip",
     fenceTexture: "platform-fence",
@@ -629,6 +782,17 @@ const LEVELS = [
         jumpHitbox: { x: 60, y: 435, width: 285, height: 70 }
       }
     ],
+    suitcaseBoxAttack: {
+      key: "thrown-box",
+      src: "./public/assets/boss/colossus/thrown_box.png",
+      debris: [
+        { key: "box-debris-1", src: "./public/assets/boss/colossus/box_debris_1.png" },
+        { key: "box-debris-2", src: "./public/assets/boss/colossus/box_debris_2.png" },
+        { key: "box-debris-3", src: "./public/assets/boss/colossus/box_debris_3.png" },
+        { key: "box-debris-4", src: "./public/assets/boss/colossus/box_debris_4.png" },
+        { key: "box-debris-5", src: "./public/assets/boss/colossus/box_debris_5.png" }
+      ]
+    },
     storyFrames: [
       { key: "story-level-5-frame-1-v2", src: "./public/assets/story/level-5/frame_1_v2.png" },
       { key: "story-level-5-frame-2-v2", src: "./public/assets/story/level-5/frame_2_v2.png" },
@@ -644,6 +808,12 @@ const LEVELS = [
     doorYOffset: -30,
     parallax: "parallax-park",
     frontParallax: "parallax-park-frontlayer",
+    hangingChains: {
+      maxChains: 16,
+      minLinks: 4,
+      maxLinks: 10,
+      candidateRate: 0.26
+    },
     colossusHaze: {
       color: "#f0d2b8",
       bottomAlpha: 1,
@@ -703,7 +873,72 @@ const LEVELS = [
     ],
     introTitle: "Level 5",
     introCopy: "Listen to Mr Magpie, take the winged leap, and glide toward whatever waits below.",
-    questTasks: ["leap", "bird", "coins"]
+    questTasks: ["leap", "basket", "bird", "boss", "key", "coins", "enemies"]
+  },
+  {
+    name: "Level 6",
+    rows: createLevelSix(),
+    timeLimit: 360,
+    soundtrack: "bgm-lv6",
+    enemySprite: "robot-lv1",
+    actionAbility: "flower-petals",
+    requiresKeyForDoor: false,
+    birdSprite: "magpie-bird",
+    birdScale: 1.2,
+    birdSfx: MAGPIE_CALL_SFX_KEY,
+    ambientBirds: true,
+    startSpeech: "",
+    showStartingHouse: false,
+    showWater: true,
+    parallax: "parallax-garden",
+    platformTexture: "platform-strip",
+    fenceTexture: "platform-fence",
+    ambientLeaves: {
+      sprite: "flower-petal",
+      animation: "flower-petal-float",
+      minDelay: 180,
+      maxDelay: 460,
+      burstChance: 0.42,
+      scaleRange: [0.0175, 0.029],
+      alphaRange: [0.52, 0.82],
+      windX: [48, 108],
+      windY: [16, 46],
+      spin: [-2.8, 2.8]
+    },
+    gardenDecor: {
+      clusters: [
+        { x: 12 * TILE, row: 15, density: 0.46, width: 6, allowStructures: true },
+        { x: 22 * TILE, row: 12, density: 0.5, width: 6, allowStructures: false },
+        { x: 47 * TILE, row: 12, density: 0.58, width: 8, allowStructures: true },
+        { x: 69 * TILE, row: 9, density: 0.54, width: 7, allowStructures: false },
+        { x: 80 * TILE, row: 12, density: 0.82, width: 11, allowStructures: true, core: true },
+        { x: 108 * TILE, row: 9, density: 0.58, width: 7, allowStructures: false },
+        { x: 119 * TILE, row: 12, density: 0.62, width: 8, allowStructures: true },
+        { x: 142 * TILE, row: 3, density: 0.52, width: 7, allowStructures: false },
+        { x: 157 * TILE, row: 9, density: 0.68, width: 9, allowStructures: true },
+        { x: 183 * TILE, row: 6, density: 0.56, width: 7, allowStructures: false },
+        { x: 190 * TILE, row: 12, density: 0.58, width: 7, allowStructures: true }
+      ]
+    },
+    lightRayAlpha: 1,
+    doorYOffset: -44,
+    lightRays: [
+      { x: 170, y: -100, topWidth: 48, bottomWidth: 260, height: 920, lean: 185, alpha: 0.32, thickness: 3, layerAlpha: 1.22, foreground: true, frontAlpha: 0.22, opacityMode: "pulse" },
+      { x: 390, y: -120, topWidth: 36, bottomWidth: 188, height: 820, lean: 72, alpha: 0.22, thickness: 2, layerAlpha: 1.08, opacityMode: "dim" },
+      { x: 720, y: -132, topWidth: 64, bottomWidth: 360, height: 980, lean: -80, alpha: 0.36, thickness: 4, layerAlpha: 1.3, foreground: true, frontAlpha: 0.28, blinding: true, opacityMode: "steady" },
+      { x: 1120, y: -112, topWidth: 42, bottomWidth: 220, height: 880, lean: 118, alpha: 0.27, thickness: 2, layerAlpha: 1.16, opacityMode: "pulse" },
+      { x: 1600, y: -128, topWidth: 78, bottomWidth: 430, height: 1040, lean: -130, alpha: 0.38, thickness: 4, layerAlpha: 1.32, foreground: true, frontAlpha: 0.27, opacityMode: "dim" },
+      { x: 2020, y: -96, topWidth: 38, bottomWidth: 190, height: 820, lean: 44, alpha: 0.24, thickness: 2, layerAlpha: 1.1, opacityMode: "steady" },
+      { x: 2600, y: -126, topWidth: 58, bottomWidth: 310, height: 960, lean: 150, alpha: 0.33, thickness: 3, layerAlpha: 1.24, foreground: true, frontAlpha: 0.2, opacityMode: "pulse" },
+      { x: 3180, y: -118, topWidth: 48, bottomWidth: 270, height: 900, lean: -52, alpha: 0.3, thickness: 3, layerAlpha: 1.18, opacityMode: "dim" },
+      { x: 3820, y: -136, topWidth: 76, bottomWidth: 450, height: 1040, lean: 88, alpha: 0.37, thickness: 4, layerAlpha: 1.34, foreground: true, frontAlpha: 0.28, blinding: true, opacityMode: "steady" },
+      { x: 4560, y: -110, topWidth: 44, bottomWidth: 235, height: 860, lean: -110, alpha: 0.28, thickness: 2, layerAlpha: 1.12, opacityMode: "pulse" },
+      { x: 5480, y: -118, topWidth: 62, bottomWidth: 340, height: 950, lean: 120, alpha: 0.34, thickness: 3, layerAlpha: 1.25, foreground: true, frontAlpha: 0.22, opacityMode: "dim" },
+      { x: 6200, y: -130, topWidth: 54, bottomWidth: 300, height: 980, lean: -70, alpha: 0.32, thickness: 3, layerAlpha: 1.2, opacityMode: "steady" }
+    ],
+    introTitle: "Level 6",
+    introCopy: "Search the botanical rooftops, find the flower, and reach the exit before the garden closes in.",
+    questTasks: ["wing", "flower", "petal", "coins", "enemies"]
   }
 ];
 
@@ -776,7 +1011,7 @@ function createLevelOne() {
     [1, 109, "a"],
     [1, 121, "a"],
     [1, 134, "a"],
-    [1, 142, "k"],
+    [3, 132, "k"],
     [9, 137, "d"]
   ].forEach(([row, column, value]) => put(row, column, value));
 
@@ -933,6 +1168,11 @@ function createLevelThree() {
   run(8, 196, 4, "=");
   run(5, 202, 14);
   run(8, 210, 4, "=");
+  run(15, 162, 7);
+  run(17, 173, 8);
+  run(14, 184, 7);
+  run(16, 195, 9);
+  run(12, 205, 7);
 
   [
     [3, 4, "p"],
@@ -980,7 +1220,18 @@ function createLevelThree() {
     [4, 145, "g"],
     [7, 158, "m"],
     [10, 169, "m"],
+    [14, 166, "g"],
+    [14, 168, "m"],
+    [16, 176, "g"],
+    [16, 179, "m"],
     [7, 180, "m"],
+    [13, 187, "g"],
+    [13, 190, "m"],
+    [15, 199, "g"],
+    [15, 202, "m"],
+    [11, 208, "g"],
+    [11, 210, "m"],
+    [7, 186, "h"],
     [4, 193, "g"],
     [4, 205, "g"],
     [4, 207, "m"],
@@ -1104,6 +1355,13 @@ function createLevelFive() {
   run(151, 538, 18);
   run(154, 598, 16);
   run(150, 648, 18);
+  run(157, 72, 10);
+  run(153, 132, 10);
+  run(149, 214, 12);
+  run(157, 264, 12);
+  run(147, 372, 14);
+  run(148, 468, 12);
+  run(149, 590, 12);
   [
     [153, 276, 8],
     [152, 414, 9],
@@ -1120,27 +1378,124 @@ function createLevelFive() {
     [159, 90, "b"],
     [154, 109, "g"],
     [159, 118, "g"],
+    [156, 76, "m"],
+    [156, 80, "g"],
+    [152, 136, "m"],
+    [152, 140, "g"],
     [151, 153, "g"],
+    [151, 156, "h"],
     [159, 168, "g"],
     [155, 197, "g"],
+    [155, 199, "h"],
+    [148, 218, "g"],
+    [148, 222, "m"],
     [159, 228, "g"],
     [150, 244, "g"],
+    [156, 268, "g"],
+    [156, 272, "m"],
     [153, 299, "g"],
+    [153, 303, "h"],
     [159, 292, "g"],
     [149, 347, "g"],
+    [146, 378, "g"],
+    [146, 383, "m"],
     [159, 356, "g"],
     [155, 392, "g"],
+    [151, 420, "h"],
     [159, 424, "g"],
     [151, 439, "g"],
+    [147, 472, "h"],
+    [147, 476, "m"],
     [159, 468, "g"],
     [154, 492, "g"],
+    [154, 496, "h"],
     [159, 522, "g"],
     [150, 548, "g"],
     [159, 584, "g"],
+    [148, 594, "g"],
+    [148, 599, "m"],
     [153, 606, "g"],
+    [153, 612, "h"],
     [159, 636, "g"],
     [149, 656, "g"],
     [159, 684, "g"]
+  ].forEach(([row, column, value]) => put(row, column, value));
+
+  return rows.map((row) => row.join(""));
+}
+
+function createLevelSix() {
+  const { rows, put, run } = createLevelRows(18, LEVEL_SIX_WIDTH_TILES);
+
+  run(16, 0, 24);
+  run(16, 30, 24);
+  run(16, 62, 28);
+  run(16, 101, 22);
+  run(16, 136, 30);
+  run(16, 178, 32);
+
+  run(13, 19, 8);
+  run(13, 43, 11);
+  run(13, 74, 13);
+  run(13, 115, 10);
+  run(13, 151, 13);
+  run(13, 185, 10);
+
+  run(10, 36, 9);
+  run(10, 63, 11);
+  run(10, 96, 10);
+  run(10, 132, 12);
+  run(10, 166, 10);
+
+  run(7, 54, 9);
+  run(7, 84, 8);
+  run(7, 120, 9);
+  run(7, 153, 8);
+  run(7, 178, 11);
+
+  run(4, 70, 9);
+  run(4, 106, 8);
+  run(4, 139, 10);
+  run(4, 172, 11);
+
+  [
+    [14, 4, "p"],
+    [15, 9, "j"],
+    [15, 13, "g"],
+    [15, 21, "m"],
+    [15, 35, "g"],
+    [15, 49, "g"],
+    [15, 70, "m"],
+    [15, 82, "g"],
+    [15, 108, "g"],
+    [15, 116, "m"],
+    [15, 144, "g"],
+    [15, 158, "m"],
+    [15, 187, "g"],
+    [15, 198, "d"],
+    [12, 22, "g"],
+    [12, 46, "m"],
+    [12, 50, "g"],
+    [12, 78, "g"],
+    [12, 84, "m"],
+    [12, 119, "g"],
+    [12, 156, "m"],
+    [12, 160, "g"],
+    [12, 190, "g"],
+    [9, 40, "g"],
+    [9, 67, "g"],
+    [9, 101, "m"],
+    [9, 136, "g"],
+    [9, 171, "m"],
+    [6, 58, "g"],
+    [6, 88, "g"],
+    [6, 125, "m"],
+    [6, 157, "g"],
+    [6, 183, "m"],
+    [3, 74, "g"],
+    [3, 110, "f"],
+    [3, 144, "g"],
+    [3, 176, "g"]
   ].forEach(([row, column, value]) => put(row, column, value));
 
   return rows.map((row) => row.join(""));
@@ -1150,7 +1505,8 @@ function createQuestProgress() {
   return {
     birdAttackUsed: false,
     leapOfFaith: false,
-    elevatorRidden: false
+    elevatorRidden: false,
+    bossDefeated: false
   };
 }
 
@@ -1169,6 +1525,7 @@ const state = {
   hasBirdControl: false,
   hasAcornBasket: false,
   hasLantern: false,
+  hasFlower: false,
   running: false,
   won: false,
   resetProgressOnCreate: true,
@@ -1225,6 +1582,7 @@ const hud = {
   menuMusicBox: document.querySelector("#menu-music-box"),
   menuSettings: document.querySelector("#menu-settings"),
   menuCredits: document.querySelector("#menu-credits"),
+  menuPetals: document.querySelector("#main-menu-petals"),
   difficultyEasy: document.querySelector("#difficulty-easy"),
   difficultyHard: document.querySelector("#difficulty-hard"),
   menuPanel: document.querySelector("#menu-panel"),
@@ -1241,7 +1599,26 @@ hud.coinIcon.src = `./public/assets/environment/golden-coin.png?v=${ASSET_VERSIO
 hud.keyIcon.src = `./public/assets/environment/door_key.png?v=${ASSET_VERSION}`;
 document.title = `Crazy Gabi ${GAME_VERSION}`;
 if (hud.gameVersion) hud.gameVersion.textContent = GAME_VERSION;
+configureMainMenuScene();
 updateBestScore();
+
+function configureMainMenuScene() {
+  if (!hud.menuPetals || hud.menuPetals.children.length) return;
+  const petalCount = 26;
+  for (let index = 0; index < petalCount; index += 1) {
+    const petal = document.createElement("span");
+    petal.style.setProperty("--petal-delay", `${-Phaser.Math.FloatBetween(0, 13).toFixed(2)}s`);
+    petal.style.setProperty("--petal-duration", `${Phaser.Math.FloatBetween(7.5, 14.5).toFixed(2)}s`);
+    petal.style.setProperty("--petal-top", `${Phaser.Math.Between(-12, 88)}%`);
+    petal.style.setProperty("--petal-start", `${Phaser.Math.Between(-18, 105)}%`);
+    petal.style.setProperty("--petal-drift", `${Phaser.Math.Between(-220, 220)}px`);
+    petal.style.setProperty("--petal-scale", Phaser.Math.FloatBetween(0.013, 0.032).toFixed(3));
+    petal.style.setProperty("--petal-spin", `${Phaser.Math.Between(180, 820)}deg`);
+    petal.style.setProperty("--petal-frame", String(Phaser.Math.Between(0, 2)));
+    petal.style.setProperty("--petal-flip", Phaser.Math.Between(0, 1) ? "1" : "-1");
+    hud.menuPetals.appendChild(petal);
+  }
+}
 
 function setLoadingVisible(visible) {
   if (visible) randomizeLoadingRunner();
@@ -1265,6 +1642,69 @@ function updateLoadingProgress(progress, text = "Preparing assets...") {
   hud.loadingBar.style.width = `${Math.round(percentage * 100)}%`;
   hud.loadingText.textContent = `${text} ${Math.round(percentage * 100)}%`;
 }
+
+function serializeRuntimeError(error) {
+  if (!error) return null;
+  if (typeof error === "string") return { message: error };
+  return {
+    name: error.name || null,
+    message: error.message || String(error),
+    stack: error.stack || null
+  };
+}
+
+function getLevelLoadDiagnosticState() {
+  const scene = globalThis.__crazyGabiGame?.scene?.getScene("PlayScene");
+  return {
+    gameVersion: GAME_VERSION,
+    levelIndex: state.levelIndex,
+    levelName: LEVELS[state.levelIndex]?.name || null,
+    running: state.running,
+    won: state.won,
+    gameAssetsReady,
+    loadingHidden: hud.loading?.hidden ?? null,
+    loadingText: hud.loadingText?.textContent || null,
+    loadingBarWidth: hud.loadingBar?.style.width || null,
+    messageHidden: hud.message?.hidden ?? null,
+    messageTitle: hud.message?.querySelector("h1")?.textContent || null,
+    startDisabled: hud.startButton?.disabled ?? null,
+    storyHidden: hud.storyIntro?.hidden ?? null,
+    rootHidden: hud.root?.hidden ?? null,
+    sceneActive: Boolean(scene?.scene?.isActive?.()),
+    sceneLevelReady: scene?.levelReady ?? null,
+    sceneLoadId: scene?.levelLoadId ?? null,
+    sceneLevelName: scene?.level?.name || null,
+    textureCount: scene?.textures?.list ? Object.keys(scene.textures.list).length : null,
+    usedHeapSize: performance?.memory?.usedJSHeapSize || null,
+    totalHeapSize: performance?.memory?.totalJSHeapSize || null
+  };
+}
+
+function logRuntimeDiagnostic(kind, error, extra = {}) {
+  const payload = {
+    kind,
+    at: new Date().toISOString(),
+    error: serializeRuntimeError(error),
+    state: getLevelLoadDiagnosticState(),
+    ...extra
+  };
+  globalThis.__crazyGabiDiagnostics = globalThis.__crazyGabiDiagnostics || [];
+  globalThis.__crazyGabiDiagnostics.push(payload);
+  if (globalThis.__crazyGabiDiagnostics.length > 25) globalThis.__crazyGabiDiagnostics.shift();
+  console.error(`[CrazyGabi:${kind}] ${JSON.stringify(payload)}`);
+}
+
+window.addEventListener("error", (event) => {
+  logRuntimeDiagnostic("window-error", event.error || event.message, {
+    source: event.filename || null,
+    line: event.lineno || null,
+    column: event.colno || null
+  });
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  logRuntimeDiagnostic("unhandled-rejection", event.reason);
+});
 
 function setMessage(title, copy, button = "Start") {
   hud.message.querySelector("h1").textContent = title;
@@ -1300,17 +1740,29 @@ function updateEquippedHud() {
   } else if (state.hasLantern) {
     itemName = "LANTERN";
     itemImage = pixelatedEquippedImages.lantern || `./public/assets/environment/lantern.png?v=${ASSET_VERSION}`;
+  } else if (state.hasFlower) {
+    itemName = "FLOWER";
+    itemImage = pixelatedEquippedImages.flower || `./public/assets/environment/flower_item.png?v=${ASSET_VERSION}`;
   }
   hud.equippedName.textContent = itemName;
   hud.equippedIcon.src = itemImage;
   hud.equippedIcon.alt = itemName === "NONE" ? "" : itemName;
   hud.equippedIcon.hidden = !itemImage;
-  if (hud.itemActionKey) hud.itemActionKey.hidden = !itemImage;
+  if (hud.itemActionKey) hud.itemActionKey.hidden = !state.hasAcornBasket;
 }
 
 function setBirdCooldownVisible(visible) {
   if (!hud.birdCooldown) return;
   hud.birdCooldown.hidden = !visible;
+}
+
+function setBirdCooldownVariant(variant = "bird") {
+  if (!hud.birdCooldown) return;
+  hud.birdCooldown.dataset.variant = variant === "flower" ? "flower" : "bird";
+  hud.birdCooldown.setAttribute(
+    "aria-label",
+    variant === "flower" ? "Flower petal attack cooldown" : "Bird attack cooldown"
+  );
 }
 
 function updateBirdCooldownHud(progress = 0) {
@@ -1350,9 +1802,10 @@ function getLevelQuestDefinitions(level = getActiveLevel()) {
   const taskTypes = level.questTasks || [
     ...(levelHasQuestCell(level, "l") ? ["lantern"] : []),
     ...(levelHasQuestCell(level, "b") ? ["basket"] : []),
+    ...(levelHasQuestCell(level, "f") ? ["flower"] : []),
     ...(levelHasQuestCell(level, "k") ? ["key"] : []),
     ...(levelHasQuestCell(level, "g") || levelHasQuestCell(level, "c") ? ["coins"] : []),
-    ...(level.actionAbility === "command-birds" ? ["bird"] : []),
+    ...(level.actionAbility === "flower-petals" ? ["petal"] : level.actionAbility === "command-birds" ? ["bird"] : []),
     ...(level.manualDiveLedges?.length || level.haystacks?.length ? ["leap"] : []),
     ...(level.finalElevator ? ["elevator"] : []),
     ...(levelHasQuestCell(level, "m") ? ["enemies"] : [])
@@ -1360,9 +1813,13 @@ function getLevelQuestDefinitions(level = getActiveLevel()) {
   const definitions = {
     lantern: { label: "PICK UP THE LANTERN", complete: () => state.hasLantern },
     basket: { label: "CLAIM THE ACORN BASKET", complete: () => state.hasAcornBasket },
+    wing: { label: "FIND THE WING", complete: () => state.hasDoubleJump },
+    flower: { label: "FIND THE FLOWER", complete: () => state.hasFlower },
     key: { label: "FIND THE KEY", complete: () => state.hasKey },
     coins: { label: "COLLECT ALL COINS", complete: () => state.totalGems > 0 && state.levelGems >= state.totalGems },
     bird: { label: "USE BIRD ATTACK [SHIFT]", complete: () => Boolean(state.questProgress?.birdAttackUsed) },
+    boss: { label: "DEFEAT BU", complete: () => Boolean(state.questProgress?.bossDefeated) },
+    petal: { label: "USE PETAL ATTACK [SHIFT]", complete: () => Boolean(state.questProgress?.birdAttackUsed) },
     leap: { label: "DO A LEAP OF FAITH", complete: () => Boolean(state.questProgress?.leapOfFaith) },
     elevator: { label: "RIDE THE ELEVATOR", complete: () => Boolean(state.questProgress?.elevatorRidden) },
     enemies: { label: "DEFEAT ALL ENEMIES", complete: () => state.totalEnemies > 0 && state.enemiesDefeated >= state.totalEnemies }
@@ -1443,7 +1900,8 @@ function getAudioSettings() {
     const saved = JSON.parse(getCookieValue(AUDIO_SETTINGS_COOKIE) || "{}");
     return {
       music: saved.music !== false,
-      sfx: saved.sfx !== false
+      sfx: saved.sfx !== false,
+      dash: saved.dash !== false
     };
   } catch (_error) {
     return { ...DEFAULT_AUDIO_SETTINGS };
@@ -1465,6 +1923,10 @@ function isMusicEnabled() {
 
 function isSfxEnabled() {
   return state.audioSettings?.sfx !== false;
+}
+
+function isDashEnabled() {
+  return state.audioSettings?.dash !== false;
 }
 
 function setAudioSetting(key, enabled) {
@@ -1500,8 +1962,23 @@ function updateDifficultyToggle() {
   hud.difficultyHard.setAttribute("aria-pressed", String(!isEasy));
 }
 
+function getDifficultyProfile() {
+  return DIFFICULTY_PROFILES[state.difficulty] || DIFFICULTY_PROFILES[DIFFICULTY_HARD];
+}
+
+function getDifficultyScaledRange(range, multiplierKey, minimum = 1) {
+  const multiplier = getDifficultyProfile()[multiplierKey] ?? 1;
+  const scaled = (range || [minimum, minimum]).map((value) => Math.max(minimum, Math.round(value * multiplier)));
+  return scaled[0] <= scaled[1] ? scaled : [scaled[1], scaled[0]];
+}
+
+function getEffectiveTimeLimit(level) {
+  if (!Number.isFinite(level?.timeLimit)) return Infinity;
+  return Math.max(45, Math.round(level.timeLimit * (getDifficultyProfile().timeMultiplier ?? 1)));
+}
+
 function getScoreMultiplier() {
-  return state.difficulty === DIFFICULTY_EASY ? 0.5 : 1;
+  return getDifficultyProfile().scoreMultiplier ?? 1;
 }
 
 function awardScore(points) {
@@ -1641,6 +2118,7 @@ function resetGameProgress() {
   state.hasBirdControl = false;
   state.hasAcornBasket = false;
   state.hasLantern = false;
+  state.hasFlower = false;
   state.running = false;
   state.won = false;
   state.resetProgressOnCreate = false;
@@ -1884,6 +2362,12 @@ class PlayScene extends Phaser.Scene {
     super("PlayScene");
     this.bgm = null;
     this.ambientBgm = null;
+    this.levelTransitionInProgress = false;
+    this.pendingLevelRequest = null;
+    this.activeLevelTextureKeys = new Set();
+    this.activeLevelAudioKeys = new Set();
+    this.activeLevelJsonKeys = new Set();
+    this.activeLevelTextKeys = new Set();
   }
 
   preload() {
@@ -1938,6 +2422,7 @@ class PlayScene extends Phaser.Scene {
     const transitionStartedAt = performance.now();
     const loadId = (this.levelLoadId || 0) + 1;
     this.levelLoadId = loadId;
+    this.levelTransitionInProgress = true;
     this.levelReady = false;
     setGameAssetsReady(false);
     setMainMenuVisible(false);
@@ -1960,6 +2445,7 @@ class PlayScene extends Phaser.Scene {
       }
       if (!this.isActiveLevelLoad(loadId)) return;
       this.createLevelRuntime();
+      this.finishLevelTransition(loadId, { force: true });
     } catch (error) {
       console.error("Level load failed", error);
       if (!this.isActiveLevelLoad(loadId)) return;
@@ -1972,11 +2458,23 @@ class PlayScene extends Phaser.Scene {
       setGameOverVisible(true, {
         copy: "This level did not finish loading. Restart or return to the menu."
       });
+      this.finishLevelTransition(loadId);
     }
   }
 
   isActiveLevelLoad(loadId) {
     return this.scene.isActive("PlayScene") && this.levelLoadId === loadId;
+  }
+
+  finishLevelTransition(loadId = this.levelLoadId, { force = false } = {}) {
+    if (!force && !this.isActiveLevelLoad(loadId)) return;
+    this.levelTransitionInProgress = false;
+    const pending = this.pendingLevelRequest;
+    this.pendingLevelRequest = null;
+    if (!pending) return;
+    this.time.delayedCall(0, () => {
+      this.requestLevelStart(pending.levelIndex, { resetScore: pending.resetScore });
+    });
   }
 
   createLevelRuntime() {
@@ -2006,10 +2504,16 @@ class PlayScene extends Phaser.Scene {
     this.finalElevatorCredits = [];
     this.platformShadows = [];
     this.platformVisuals = this.add.group();
+    this.keyGardenKeys = new Set();
+    this.hangingChains = [];
+    this.chainClimb = null;
+    this.chainGrabDisabledUntil = 0;
+    this.chainGrabDisabledChain = null;
     this.gems = this.physics.add.group({ allowGravity: false, immovable: true });
     this.doubleJumps = this.physics.add.group({ allowGravity: false, immovable: true });
     this.acornBaskets = this.physics.add.group({ allowGravity: false, immovable: true });
     this.lanterns = this.physics.add.group({ allowGravity: false, immovable: true });
+    this.flowers = this.physics.add.group({ allowGravity: false, immovable: true });
     this.heartDrops = this.physics.add.group({ allowGravity: false, immovable: true });
     this.enemies = this.physics.add.group({ allowGravity: true, immovable: false });
     this.acorns = this.physics.add.group({ allowGravity: false, immovable: true });
@@ -2018,6 +2522,11 @@ class PlayScene extends Phaser.Scene {
     this.keys = this.physics.add.group({ allowGravity: false, immovable: true });
     this.doors = this.physics.add.staticGroup();
     this.haystacks = this.physics.add.group({ allowGravity: false, immovable: true });
+    this.gardenBushes = this.physics.add.group({ allowGravity: false, immovable: true });
+    this.keySprite = null;
+    this.keyPoint = null;
+    this.keyRevealed = false;
+    this.doorPoint = null;
     this.platformRuns = [];
     this.wallForegroundAnchors = new Set();
     this.enemyDirection = new Map();
@@ -2051,6 +2560,7 @@ class PlayScene extends Phaser.Scene {
     this.basketPromptActive = false;
     this.lanternPromptActive = false;
     this.wingPromptActive = false;
+    this.flowerPromptActive = false;
     this.nextQuakeAt = Infinity;
     this.quakeDropStartsAt = 0;
     this.quakeDropUntil = 0;
@@ -2058,6 +2568,9 @@ class PlayScene extends Phaser.Scene {
     this.birdFlockGroups = [];
     this.birdAttackFlocks = [];
     this.diveIndicatorBirds = [];
+    this.nightLanternLights = [];
+    this.playerLanternGlow = null;
+    this.nextNightLanternSparkleAt = 0;
     this.nextBirdFlockAt = 0;
     this.ambientLeaves = [];
     this.nextAmbientLeafAt = 0;
@@ -2074,6 +2587,7 @@ class PlayScene extends Phaser.Scene {
     this.bossExitKeySpawned = false;
     this.bossExitDoorSpawned = false;
     this.bossSoundtrackActive = false;
+    this.suitcaseBoxProjectiles = [];
     this.damageInvulnerableUntil = 0;
     this.damageFlickerTween = null;
     this.elevatorSignBubble = null;
@@ -2101,7 +2615,10 @@ class PlayScene extends Phaser.Scene {
     this.createDiveIndicatorBirds();
     this.createDiveFieldLeaves();
     this.createLightRays();
+    this.createKeyGardenIndicators();
+    this.createDecorativeGardens();
     this.createPlayer();
+    this.createNightLanternLights();
     this.createLanternOverlay();
     this.createOldLadyNpc();
     this.createCatNpc();
@@ -2122,12 +2639,13 @@ class PlayScene extends Phaser.Scene {
     this.player.body.moves = false;
     this.player.setVelocity(0, 0);
 
-    state.timeLeft = Number.isFinite(this.level.timeLimit) ? this.level.timeLimit : Infinity;
+    state.timeLeft = getEffectiveTimeLimit(this.level);
     state.hasKey = false;
     state.hasDoubleJump = false;
     state.hasBirdControl = false;
     state.hasAcornBasket = false;
     state.hasLantern = false;
+    state.hasFlower = false;
     state.running = false;
     state.won = false;
     updateHud();
@@ -2146,6 +2664,9 @@ class PlayScene extends Phaser.Scene {
       pixelatedEquippedImages.acorn = pixelateStoryFrame(this.textures.get("falling-acorn").getSourceImage());
     }
     if (this.pixelatedLanternImage) pixelatedEquippedImages.lantern = this.pixelatedLanternImage;
+    if (this.textures.exists("flower-item")) {
+      pixelatedEquippedImages.flower = pixelateStoryFrame(this.textures.get("flower-item").getSourceImage());
+    }
     this.levelReady = true;
     setGameAssetsReady(true);
     setLoadingVisible(false);
@@ -2212,27 +2733,33 @@ class PlayScene extends Phaser.Scene {
 
   loadLevelAssets(level, loadId) {
     return new Promise((resolve, reject) => {
-      if (typeof this.load.isLoading === "function" && this.load.isLoading()) {
-        this.load.reset();
-      }
+      if (typeof this.load.isLoading === "function" && this.load.isLoading()) this.safeResetLoader();
 
       let queued = 0;
+      const requiredTextureKeys = new Set();
+      const requiredAudioKeys = new Set();
+      const requiredJsonKeys = new Set();
+      const requiredTextKeys = new Set();
       const image = (key, src) => {
+        requiredTextureKeys.add(key);
         if (this.textures.exists(key)) return;
         this.load.image(key, `${src}?v=${ASSET_VERSION}`);
         queued += 1;
       };
       const storyImage = (key, src) => {
+        requiredTextureKeys.add(key);
         if (this.textures.exists(key)) return;
         this.load.image(key, `${src}?v=${STORY_ASSET_VERSION}`);
         queued += 1;
       };
       const sheet = (key, src, frameWidth, frameHeight) => {
+        requiredTextureKeys.add(key);
         if (this.textures.exists(key)) return;
         this.load.spritesheet(key, `${src}?v=${ASSET_VERSION}`, { frameWidth, frameHeight });
         queued += 1;
       };
       const audio = (key, src) => {
+        requiredAudioKeys.add(key);
         if (this.cache.audio.exists(key)) return;
         this.load.audio(key, `${src}?v=${ASSET_VERSION}`);
         queued += 1;
@@ -2242,6 +2769,8 @@ class PlayScene extends Phaser.Scene {
         if (typeof this.load.spineJson !== "function" || typeof this.load.spineAtlas !== "function") return;
         const dataKey = config.dataKey || "colossus-placeholder-data";
         const atlasKey = config.atlasKey || "colossus-placeholder-atlas";
+        requiredJsonKeys.add(dataKey);
+        requiredTextKeys.add(atlasKey);
         if (!this.cache.json.exists(dataKey)) {
           this.load.spineJson(dataKey, `${config.skeleton}?v=${ASSET_VERSION}`);
           queued += 1;
@@ -2263,7 +2792,7 @@ class PlayScene extends Phaser.Scene {
       sheet("gabi-glide-sheet", "./public/assets/character/main_char_sprite_glide.png", GABI_FRAME_WIDTH, GABI_FRAME_HEIGHT);
       sheet("gabi-air-dive-sheet", "./public/assets/character/main_char_air_dive.png", GABI_AIR_DIVE_FRAME_WIDTH, GABI_AIR_DIVE_FRAME_HEIGHT);
       sheet("gabi-dash-sheet", "./public/assets/character/main_char_sprite_dash.png", GABI_DASH_FRAME_WIDTH, GABI_DASH_FRAME_HEIGHT);
-      if (level.actionAbility === "command-birds") {
+      if (this.isCommandAttackLevel(level)) {
         sheet("gabi-point-sheet", "./public/assets/character/main_char_sprite_point.png", GABI_POINT_FRAME_WIDTH, GABI_POINT_FRAME_HEIGHT);
       }
       if (level.lanternPlayerSheet) {
@@ -2271,6 +2800,12 @@ class PlayScene extends Phaser.Scene {
       }
       sheet("platform-strip", "./public/assets/environment/platform.png", PLATFORM_FRAME_WIDTH, PLATFORM_FRAME_HEIGHT);
       sheet("platform-fence", "./public/assets/environment/platform_fence.png", PLATFORM_FRAME_WIDTH, PLATFORM_FRAME_HEIGHT);
+      if (level.hangingChains) {
+        image("chain-link-root", "./public/assets/environment/chain_link_root.png");
+        image("chain-link-main", "./public/assets/environment/chain_link_main.png");
+        sheet("gabi-climb-sheet", "./public/assets/character/main_char_sprite_climb.png", GABI_CLIMB_FRAME_WIDTH, GABI_CLIMB_FRAME_HEIGHT);
+      }
+      KEY_GARDEN_ASSETS.forEach((asset) => image(asset.key, asset.src));
       if (level.platformTexture === "platform-underground") {
         sheet("platform-underground", "./public/assets/environment/platform_underground.png", PLATFORM_FRAME_WIDTH, PLATFORM_FRAME_HEIGHT);
         sheet("platform-fence-underground", "./public/assets/environment/platform_fence_underground.png", PLATFORM_FRAME_WIDTH, PLATFORM_FRAME_HEIGHT);
@@ -2282,12 +2817,16 @@ class PlayScene extends Phaser.Scene {
         sheet("mr-magpie", "./public/assets/character/mr_magpie.png", MR_MAGPIE_FRAME_WIDTH, MR_MAGPIE_FRAME_HEIGHT);
         image("mr-magpie-jump", "./public/assets/character/mr_magpie_jump.png");
       }
-      if (level.finalElevator || level.actionAbility === "command-birds" || level.ambientBirds) {
+      if (level.finalElevator || this.isCommandAttackLevel(level) || level.ambientBirds) {
         const birdSprite = this.getBirdSpriteKey(level);
         sheet(birdSprite, this.getBirdSpritePath(birdSprite), BIRD_FRAME_WIDTH, BIRD_FRAME_HEIGHT);
       }
       if (level.ambientLeaves) {
-        sheet("autumn-leaf-1", "./public/assets/environment/autumn_leaf_1.png", AUTUMN_LEAF_FRAME_WIDTH, AUTUMN_LEAF_FRAME_HEIGHT);
+        if (level.ambientLeaves.sprite === "flower-petal") {
+          sheet("flower-petal", "./public/assets/environment/flower_petal.png", FLOWER_PETAL_FRAME_WIDTH, FLOWER_PETAL_FRAME_HEIGHT);
+        } else {
+          sheet("autumn-leaf-1", "./public/assets/environment/autumn_leaf_1.png", AUTUMN_LEAF_FRAME_WIDTH, AUTUMN_LEAF_FRAME_HEIGHT);
+        }
       }
       spineAsset(level.distantColossus);
       colossusPartAssets(level.distantColossus);
@@ -2295,12 +2834,17 @@ class PlayScene extends Phaser.Scene {
         image("falling-brick", "./public/assets/environment/brick.png");
         (level.giantHandAttacks || []).forEach((attack) => image(attack.key, attack.src));
       }
+      if (level.suitcaseBoxAttack) {
+        image(level.suitcaseBoxAttack.key, level.suitcaseBoxAttack.src);
+        (level.suitcaseBoxAttack.debris || []).forEach((debris) => image(debris.key, debris.src));
+      }
 
       image("parallax-city", "./public/assets/environment/paralax_city.png");
       if (level.parallax === "parallax-underground") image("parallax-underground", "./public/assets/environment/paralax_underground.png");
       if (level.parallax === "parallax-tunnel") image("parallax-tunnel", "./public/assets/environment/paralax_tunnel.png");
       if (level.parallax === "parallax-cathedral") image("parallax-cathedral", "./public/assets/environment/paralax_cathedral.png");
       if (level.parallax === "parallax-park") image("parallax-park", "./public/assets/environment/paralax_park.png");
+      if (level.parallax === "parallax-garden") image("parallax-garden", "./public/assets/environment/paralax_garden.png");
       if (level.frontParallax === "parallax-park-frontlayer") {
         image("parallax-park-frontlayer", "./public/assets/environment/paralax_park_frontlayer.png");
       }
@@ -2329,6 +2873,11 @@ class PlayScene extends Phaser.Scene {
         image("acorn-basket", "./public/assets/environment/acorn_basket.png");
         image("falling-acorn", "./public/assets/environment/falling_acorn.png");
       }
+      if (level.actionAbility === "flower-petals" || this.levelHasCell(level, "f")) {
+        image("flower-item", "./public/assets/environment/flower_item.png");
+        sheet("flower-petal", "./public/assets/environment/flower_petal.png", FLOWER_PETAL_FRAME_WIDTH, FLOWER_PETAL_FRAME_HEIGHT);
+      }
+      if (level.gardenDecor) this.queueGardenAssets(image);
       if (level.lanternPlayerSheet || this.levelHasCell(level, "l")) image("lantern", "./public/assets/environment/lantern.png");
       (level.storyFrames || []).forEach((frame) => {
         if (frame?.key && frame?.src) storyImage(frame.key, frame.src);
@@ -2346,7 +2895,7 @@ class PlayScene extends Phaser.Scene {
         GIANT_HAND_IMPACT_SFX_KEYS.forEach((sfxKey) => audio(sfxKey, this.getSfxPath(sfxKey)));
       }
       if (level.birdSfx) audio(level.birdSfx, this.getSfxPath(level.birdSfx));
-      if (level.haystacks?.length) {
+      if (level.haystacks?.length || level.keyGarden) {
         audio(HAYSTACK_LAND_SFX_KEY, this.getSfxPath(HAYSTACK_LAND_SFX_KEY));
         audio(HAYSTACK_WALKIN_SFX_KEY, this.getSfxPath(HAYSTACK_WALKIN_SFX_KEY));
       }
@@ -2361,10 +2910,24 @@ class PlayScene extends Phaser.Scene {
         MISC_PICKUP_SFX_KEY,
         KILL_SFX_KEY,
         BIRD_ZOOM_IN_SFX_KEY,
-        BIRD_ZOOM_OUT_SFX_KEY
+        BIRD_ZOOM_OUT_SFX_KEY,
+        CHAIN_GRAB_SFX_KEY
       ].forEach((sfxKey) => audio(sfxKey, this.getSfxPath(sfxKey)));
 
+      this.releaseRetiredLevelAssets({
+        textures: requiredTextureKeys,
+        audio: requiredAudioKeys,
+        json: requiredJsonKeys,
+        text: requiredTextKeys
+      });
+
       if (!queued) {
+        this.rememberActiveLevelAssets({
+          textures: requiredTextureKeys,
+          audio: requiredAudioKeys,
+          json: requiredJsonKeys,
+          text: requiredTextKeys
+        });
         updateLoadingProgress(1, "Level ready.");
         resolve();
         return;
@@ -2385,15 +2948,19 @@ class PlayScene extends Phaser.Scene {
         finished = true;
         cleanup();
         updateLoadingProgress(1, "Level ready.");
+        this.rememberActiveLevelAssets({
+          textures: requiredTextureKeys,
+          audio: requiredAudioKeys,
+          json: requiredJsonKeys,
+          text: requiredTextKeys
+        });
         resolve();
       };
       const fail = (file) => {
         if (finished) return;
         finished = true;
         cleanup();
-        if (typeof this.load.isLoading === "function" && this.load.isLoading()) {
-          this.load.reset();
-        }
+        if (typeof this.load.isLoading === "function" && this.load.isLoading()) this.safeResetLoader();
         reject(new Error(`Could not load ${file?.key || "level asset"}`));
       };
       const stale = () => {
@@ -2415,8 +2982,109 @@ class PlayScene extends Phaser.Scene {
     });
   }
 
+  safeResetLoader() {
+    try {
+      this.load?.reset?.();
+    } catch (error) {
+      logRuntimeDiagnostic("loader-reset-failed", error, {
+        source: "PlayScene.safeResetLoader"
+      });
+    }
+  }
+
+  getProtectedAssetKeys() {
+    return {
+      textures: new Set([
+        "__DEFAULT",
+        "__MISSING",
+        "tile-ground",
+        "tile-ground-top",
+        "tile-platform",
+        "tile-platform-top",
+        "tile-window",
+        "tile-door",
+        "tree",
+        "acorn",
+        "cloud",
+        "parallax-city",
+        "gabi-sheet",
+        "gabi-wings-sheet",
+        "gabi-glide-sheet",
+        "gabi-air-dive-sheet",
+        "gabi-dash-sheet",
+        "gabi-climb-sheet",
+        "gabi-point-sheet",
+        "gabi-lantern-sheet",
+        "grey-cat",
+        "robot-lv1",
+        "robot-shadow-ghost-lv2",
+        "robot-ghost-lv3",
+        "old-lady",
+        "mr-magpie",
+        "white-bird",
+        "magpie-bird",
+        "flower-petal"
+      ]),
+      audio: new Set(["bgm-menu"]),
+      json: new Set(),
+      text: new Set()
+    };
+  }
+
+  rememberActiveLevelAssets({ textures, audio, json, text }) {
+    this.activeLevelTextureKeys = new Set(textures || []);
+    this.activeLevelAudioKeys = new Set(audio || []);
+    this.activeLevelJsonKeys = new Set(json || []);
+    this.activeLevelTextKeys = new Set(text || []);
+  }
+
+  releaseRetiredLevelAssets({ textures, audio, json, text }) {
+    const protectedKeys = this.getProtectedAssetKeys();
+    const removeTextures = [...(this.activeLevelTextureKeys || [])]
+      .filter((key) => !textures.has(key) && !protectedKeys.textures.has(key));
+    const removeAudio = [...(this.activeLevelAudioKeys || [])]
+      .filter((key) => !audio.has(key) && !protectedKeys.audio.has(key));
+    const removeJson = [...(this.activeLevelJsonKeys || [])]
+      .filter((key) => !json.has(key) && !protectedKeys.json.has(key));
+    const removeText = [...(this.activeLevelTextKeys || [])]
+      .filter((key) => !text.has(key) && !protectedKeys.text.has(key));
+
+    removeTextures.forEach((key) => {
+      try {
+        if (this.textures.exists(key)) this.textures.remove(key);
+      } catch (error) {
+        logRuntimeDiagnostic("texture-release-failed", error, { key });
+      }
+    });
+    removeAudio.forEach((key) => {
+      try {
+        if (this.cache.audio.exists(key)) this.cache.audio.remove(key);
+      } catch (error) {
+        logRuntimeDiagnostic("audio-release-failed", error, { key });
+      }
+    });
+    removeJson.forEach((key) => {
+      try {
+        if (this.cache.json.exists(key)) this.cache.json.remove(key);
+      } catch (error) {
+        logRuntimeDiagnostic("json-release-failed", error, { key });
+      }
+    });
+    removeText.forEach((key) => {
+      try {
+        if (this.cache.text.exists(key)) this.cache.text.remove(key);
+      } catch (error) {
+        logRuntimeDiagnostic("text-release-failed", error, { key });
+      }
+    });
+  }
+
   levelHasCell(level, cell) {
     return (level.rows || []).some((row) => row.includes(cell));
+  }
+
+  isCommandAttackLevel(level = this.level) {
+    return level?.actionAbility === "command-birds" || level?.actionAbility === "flower-petals";
   }
 
   getEnemySpritePath(key = "robot-lv1") {
@@ -2444,6 +3112,37 @@ class PlayScene extends Phaser.Scene {
 
   getBirdScaleMultiplier() {
     return this.level?.birdScale || 1;
+  }
+
+  getAttackFlockSpriteKey() {
+    return this.level?.actionAbility === "flower-petals" ? "flower-petal" : this.getBirdSpriteKey();
+  }
+
+  getAttackFlockAnimationKey(key = this.getAttackFlockSpriteKey()) {
+    return key === "flower-petal" ? "flower-petal-float" : this.getBirdAnimationKey(key);
+  }
+
+  getAttackFlockScaleMultiplier(key = this.getAttackFlockSpriteKey()) {
+    if (key === "flower-petal") return this.level?.petalScale || 1;
+    return this.getBirdScaleMultiplier();
+  }
+
+  queueGardenAssets(image) {
+    const base = "./public/assets/environment/garden";
+    [
+      "arc_1",
+      "bench_1",
+      "bush_1",
+      "bush_2",
+      "bush_3",
+      "bush_4",
+      "bush_5",
+      "bush_6",
+      "fountain_1",
+      "fountain_2",
+      "lantern_1",
+      "lantern_2"
+    ].forEach((name) => image(`garden-${name}`, `${base}/${name}.png`));
   }
 
   getHazardPath(key = "falling-acorn") {
@@ -2503,7 +3202,8 @@ class PlayScene extends Phaser.Scene {
       [COLOSSUS_FOOTSTEP_SFX_KEY]: "./public/assets/sound/sfx/colossus_footstep.mp3",
       [GIANT_HAND_IMPACT_SFX_KEYS[0]]: "./public/assets/sound/sfx/giant_hand_impact_1.mp3",
       [GIANT_HAND_IMPACT_SFX_KEYS[1]]: "./public/assets/sound/sfx/giant_hand_impact_2.mp3",
-      [GIANT_HAND_IMPACT_SFX_KEYS[2]]: "./public/assets/sound/sfx/giant_hand_impact_3.mp3"
+      [GIANT_HAND_IMPACT_SFX_KEYS[2]]: "./public/assets/sound/sfx/giant_hand_impact_3.mp3",
+      [CHAIN_GRAB_SFX_KEY]: "./public/assets/sound/sfx/chains.mp3"
     }[key];
   }
 
@@ -2949,8 +3649,10 @@ class PlayScene extends Phaser.Scene {
       suitcaseAttackActive: false,
       suitcaseAttackStartedAt: 0,
       suitcaseAttackDuration: 2100,
-      nextSuitcaseAttackAt: this.time.now + Phaser.Math.Between(4200, 8200),
+      nextSuitcaseAttackAt: this.time.now + Phaser.Math.Between(...getDifficultyProfile().suitcaseNextDelay),
+      suitcaseBoxThrown: false,
       suitcaseAttackDropTriggerAt: 0,
+      bossAttackBusyUntil: 0,
       crownSlipActive: false,
       crownSlipStartedAt: 0,
       crownSlipDuration: 2100,
@@ -2958,8 +3660,8 @@ class PlayScene extends Phaser.Scene {
       freeArmHandAttackTriggered: false,
       giantHandTelegraphActive: false,
       giantHandTelegraphStartedAt: 0,
-      giantHandTelegraphDuration: GIANT_HAND_TELEGRAPH_MS,
-      nextGiantHandAttackAt: this.time.now + Phaser.Math.Between(3600, 6200),
+      giantHandTelegraphDuration: getDifficultyProfile().giantHandTelegraphMs ?? GIANT_HAND_TELEGRAPH_MS,
+      nextGiantHandAttackAt: this.time.now + Phaser.Math.Between(...getDifficultyProfile().giantHandNextDelay),
       nextGiantHandRumbleAt: 0,
       giantHandDropped: false
     };
@@ -3325,19 +4027,29 @@ class PlayScene extends Phaser.Scene {
     const blendRate = Math.min(1, Math.max(0.05, delta / 260));
     rig.walkBlend = Phaser.Math.Linear(rig.walkBlend ?? walkTarget, walkTarget, blendRate);
 
-    if (rig.parts && !isWalking && !this.bossRevealActive && state.running && !state.won) {
+    if (rig.parts && !isWalking && this.canStartBossPattern(time)) {
       if (!rig.suitcaseAttackActive && time >= (rig.nextSuitcaseAttackAt ?? 0)) {
         rig.suitcaseAttackActive = true;
         rig.suitcaseAttackStartedAt = time;
         rig.suitcaseAttackDuration = Phaser.Math.Between(1850, 2400);
+        rig.suitcaseBoxThrown = false;
+        rig.bossAttackBusyUntil = Math.max(
+          rig.bossAttackBusyUntil || 0,
+          time + SUITCASE_BOX_FLIGHT_MS + (getDifficultyProfile().bossAttackGapMs ?? BOSS_ATTACK_MIN_GAP_MS)
+        );
       }
     }
     if (rig.suitcaseAttackActive) {
       const progress = (time - rig.suitcaseAttackStartedAt) / rig.suitcaseAttackDuration;
+      if (!rig.suitcaseBoxThrown && progress >= 0.56) {
+        rig.suitcaseBoxThrown = true;
+        this.spawnSuitcaseBoxAttack();
+      }
       if (progress >= 1) {
         rig.suitcaseAttackActive = false;
         rig.suitcaseAttackDropTriggerAt = time;
-        rig.nextSuitcaseAttackAt = time + Phaser.Math.Between(5200, 9800);
+        rig.nextSuitcaseAttackAt = time + Phaser.Math.Between(...getDifficultyProfile().suitcaseNextDelay);
+        rig.nextGiantHandAttackAt = Math.max(rig.nextGiantHandAttackAt || 0, time + (getDifficultyProfile().bossAttackGapMs ?? BOSS_ATTACK_MIN_GAP_MS));
       }
     }
     if (rig.parts && isWalking && !rig.crownSlipActive && time >= (rig.nextCrownSlipAt ?? Infinity)) {
@@ -3389,10 +4101,21 @@ class PlayScene extends Phaser.Scene {
   shouldStartGiantHandTelegraph(time = this.time.now) {
     const rig = this.distantColossus;
     if (!rig?.parts || rig.giantHandTelegraphActive) return false;
-    if (!this.bossHealthVisible || this.bossRevealActive || this.bossDefeated || !state.running || state.won) return false;
+    if (!this.canStartBossPattern(time)) return false;
     if (!this.level.giantHandAttacks?.length || !this.player?.active) return false;
     if (time < (rig.nextGiantHandAttackAt ?? Infinity)) return false;
     return !this.hasActiveGiantHand();
+  }
+
+  canStartBossPattern(time = this.time.now) {
+    const rig = this.distantColossus;
+    if (!rig?.parts) return false;
+    if (!this.bossHealthVisible || this.bossRevealActive || this.bossDefeated || !state.running || state.won) return false;
+    if (time < (rig.bossAttackBusyUntil || 0)) return false;
+    if (rig.giantHandTelegraphActive || rig.suitcaseAttackActive) return false;
+    if (this.hasActiveGiantHand()) return false;
+    if ((this.suitcaseBoxProjectiles || []).some((box) => box?.active)) return false;
+    return true;
   }
 
   startGiantHandTelegraph(time = this.time.now) {
@@ -3400,11 +4123,15 @@ class PlayScene extends Phaser.Scene {
     if (!rig) return;
     rig.giantHandTelegraphActive = true;
     rig.giantHandTelegraphStartedAt = time;
-    rig.giantHandTelegraphDuration = GIANT_HAND_TELEGRAPH_MS;
+    rig.giantHandTelegraphDuration = getDifficultyProfile().giantHandTelegraphMs ?? GIANT_HAND_TELEGRAPH_MS;
     rig.nextGiantHandRumbleAt = time;
     rig.giantHandDropped = false;
     rig.suitcaseAttackActive = false;
     rig.walkBlend = 0;
+    rig.bossAttackBusyUntil = Math.max(
+      rig.bossAttackBusyUntil || 0,
+      time + rig.giantHandTelegraphDuration + GIANT_HAND_LANDED_MS + (getDifficultyProfile().bossAttackGapMs ?? BOSS_ATTACK_MIN_GAP_MS)
+    );
     this.playLevelSfx(COLOSSUS_HOWL_SFX_KEY, COLOSSUS_HOWL_VOLUME);
   }
 
@@ -3423,7 +4150,8 @@ class PlayScene extends Phaser.Scene {
     }
     if (progress >= 1) {
       rig.giantHandTelegraphActive = false;
-      rig.nextGiantHandAttackAt = time + Phaser.Math.Between(7600, 11800);
+      rig.nextGiantHandAttackAt = time + Phaser.Math.Between(...getDifficultyProfile().giantHandNextDelay);
+      rig.nextSuitcaseAttackAt = Math.max(rig.nextSuitcaseAttackAt || 0, time + (getDifficultyProfile().bossAttackGapMs ?? BOSS_ATTACK_MIN_GAP_MS));
     }
   }
 
@@ -3436,6 +4164,154 @@ class PlayScene extends Phaser.Scene {
       config.shakeIntensity ?? COLOSSUS_STEP_SHAKE_INTENSITY
     );
     this.playLevelSfx(COLOSSUS_FOOTSTEP_SFX_KEY, 0.3);
+  }
+
+  spawnSuitcaseBoxAttack() {
+    const config = this.level?.suitcaseBoxAttack;
+    const rig = this.distantColossus;
+    if (!config || !this.textures.exists(config.key) || !rig?.object?.active || !this.player?.active || this.bossDefeated) return;
+    const run = this.getPlatformRunForBossProjectile(this.player.x, this.player.y) || this.getLowestPlatformRunNear(this.player.x);
+    if (!run) return;
+
+    const camera = this.cameras.main;
+    const scaleX = rig.object.scaleX || 1;
+    const scaleY = rig.object.scaleY || 1;
+    const hand = rig.parts?.nearHand;
+    const sourceX = camera.scrollX + rig.object.x + (hand?.x ?? 0) * scaleX;
+    const sourceY = camera.scrollY + rig.object.y + (hand?.y ?? -180) * scaleY;
+    const targetX = Phaser.Math.Clamp(
+      this.player.x + Phaser.Math.Between(-150, 150),
+      run.startX + 58,
+      run.endX - 58
+    );
+    const targetCenterY = run.topY - (this.textures.get(config.key)?.getSourceImage?.()?.height || 0) * SUITCASE_BOX_IMPACT_SCALE * 0.5 + 8;
+    const box = this.add.image(sourceX, sourceY, config.key);
+    box.setOrigin(0.5);
+    box.setDepth(SUITCASE_BOX_DEPTH);
+    box.setScale(SUITCASE_BOX_START_SCALE);
+    box.setAngle(Phaser.Math.Between(-30, 30));
+    this.suitcaseBoxProjectiles?.push(box);
+    const apex = {
+      x: Phaser.Math.Linear(sourceX, targetX, Phaser.Math.FloatBetween(0.38, 0.62)) + Phaser.Math.Between(-210, 210),
+      y: Math.min(sourceY, targetCenterY) - Phaser.Math.Between(180, 360)
+    };
+    const spinDirection = Phaser.Math.RND.pick([-1, 1]);
+    const flight = { progress: 0 };
+    this.tweens.add({
+      targets: flight,
+      progress: 1,
+      duration: SUITCASE_BOX_FLIGHT_MS,
+      ease: "Quad.easeIn",
+      onUpdate: () => {
+        if (!box.active) return;
+        const t = flight.progress;
+        const inv = 1 - t;
+        box.x = inv * inv * sourceX + 2 * inv * t * apex.x + t * t * targetX;
+        box.y = inv * inv * sourceY + 2 * inv * t * apex.y + t * t * targetCenterY;
+        const scale = Phaser.Math.Linear(SUITCASE_BOX_START_SCALE, SUITCASE_BOX_IMPACT_SCALE, Phaser.Math.Easing.Sine.InOut(t));
+        box.setScale(scale);
+        box.setAngle(box.angle + spinDirection * Phaser.Math.Linear(5.2, 18, t));
+      },
+      onComplete: () => this.handleSuitcaseBoxImpact(box, run)
+    });
+  }
+
+  getPlatformRunForBossProjectile(x, y) {
+    const playerBottom = this.player?.getBounds?.().bottom ?? y;
+    const candidates = (this.platformRuns || [])
+      .filter((run) => run.endX - run.startX >= TILE * 5)
+      .filter((run) => x >= run.startX - 300 && x <= run.endX + 300)
+      .filter((run) => run.topY >= y - 90)
+      .sort((a, b) => Math.abs(a.topY - playerBottom) - Math.abs(b.topY - playerBottom));
+    return candidates[0] || null;
+  }
+
+  handleSuitcaseBoxImpact(box, run) {
+    if (!box?.active) return;
+    const impactX = box.x;
+    const impactY = run?.topY ?? box.y;
+    box.destroy();
+    this.suitcaseBoxProjectiles = (this.suitcaseBoxProjectiles || []).filter((item) => item !== box);
+    if (this.bossDefeated || !state.running || state.won) return;
+    this.cameras.main.shake(220, 0.005);
+    this.spawnSuitcaseBoxDebris(impactX, impactY);
+    this.spawnSuitcaseBoxEnemies(impactX, run);
+    this.tryDropHeartFromSuitcaseBox(impactX, run);
+  }
+
+  spawnSuitcaseBoxDebris(x, y) {
+    const debrisKeys = (this.level?.suitcaseBoxAttack?.debris || [])
+      .map((debris) => debris.key)
+      .filter((key) => this.textures.exists(key));
+    const count = 18;
+    for (let index = 0; index < count; index += 1) {
+      const key = debrisKeys.length ? Phaser.Utils.Array.GetRandom(debrisKeys) : null;
+      const piece = key
+        ? this.add.image(x + Phaser.Math.Between(-20, 20), y - Phaser.Math.Between(12, 36), key)
+        : this.add.rectangle(x, y - 18, Phaser.Math.Between(10, 24), Phaser.Math.Between(6, 14), 0x6d4b34);
+      piece.setDepth(SUITCASE_BOX_DEPTH + 0.12);
+      piece.setScale(Phaser.Math.FloatBetween(0.2, 0.52));
+      piece.setAngle(Phaser.Math.Between(0, 360));
+      const side = Phaser.Math.RND.pick([-1, 1]);
+      this.tweens.add({
+        targets: piece,
+        x: piece.x + side * Phaser.Math.Between(42, 170),
+        y: piece.y - Phaser.Math.Between(80, 210),
+        angle: piece.angle + side * Phaser.Math.Between(180, 540),
+        duration: Phaser.Math.Between(360, 620),
+        ease: "Quad.easeOut",
+        onComplete: () => {
+          this.tweens.add({
+            targets: piece,
+            x: piece.x + side * Phaser.Math.Between(22, 120),
+            y: y + Phaser.Math.Between(22, 76),
+            angle: piece.angle + side * Phaser.Math.Between(180, 620),
+            duration: Phaser.Math.Between(560, 940),
+            ease: "Quad.easeIn",
+            onComplete: () => piece.destroy()
+          });
+        }
+      });
+    }
+  }
+
+  spawnSuitcaseBoxEnemies(x, run) {
+    if (!this.enemies || !this.level?.enemySprite || !run) return;
+    const count = Phaser.Math.Between(...(getDifficultyProfile().suitcaseBoxEnemySpawnCount || SUITCASE_BOX_ENEMY_SPAWN_COUNT));
+    const usedXs = [];
+    for (let index = 0; index < count; index += 1) {
+      const side = index % 2 === 0 ? -1 : 1;
+      const rawX = x + side * Phaser.Math.Between(54, 160) + Phaser.Math.Between(-22, 22);
+      const enemyX = Phaser.Math.Clamp(rawX, run.startX + 46, run.endX - 46);
+      if (usedXs.some((usedX) => Math.abs(usedX - enemyX) < 44)) continue;
+      usedXs.push(enemyX);
+      const enemy = this.createEnemyAt(enemyX, run.topY - 42, enemyX < this.player.x ? 1 : -1);
+      enemy.setAlpha(0);
+      enemy.y -= 22;
+      this.tweens.add({
+        targets: enemy,
+        alpha: 1,
+        y: run.topY - 42,
+        duration: 260,
+        ease: "Quad.out"
+      });
+    }
+  }
+
+  tryDropHeartFromSuitcaseBox(x, run) {
+    if (!this.heartDrops || !run || Phaser.Math.FloatBetween(0, 1) > (getDifficultyProfile().suitcaseBoxHeartDropChance ?? SUITCASE_BOX_HEART_DROP_CHANCE)) return;
+    const settleX = Phaser.Math.Clamp(x + Phaser.Math.Between(-84, 84), run.startX + 34, run.endX - 34);
+    const settleY = run.topY - TILE / 2;
+    const heart = this.heartDrops.create(x, settleY - 80, "life-heart");
+    this.configureHeartPickup(heart, { armedAt: this.time.now + HEART_PICKUP_DELAY });
+    this.tweens.add({
+      targets: heart,
+      x: settleX,
+      y: settleY,
+      duration: 500,
+      ease: "Bounce.out",
+      onComplete: () => this.startHeartBob(heart)
+    });
   }
 
   updateBossReveal() {
@@ -3517,8 +4393,19 @@ class PlayScene extends Phaser.Scene {
     const camera = this.cameras?.main;
     const rig = this.distantColossus;
     if (!camera || !rig?.object?.active) return { x: 0, y: 0 };
-    const scaleX = rig.object.scaleX || 1;
-    const scaleY = rig.object.scaleY || 1;
+    const containerScaleX = rig.object.scaleX || 1;
+    const containerScaleY = rig.object.scaleY || 1;
+    const pngHead = rig.parts?.head;
+    if (pngHead?.active) {
+      const visualCenterX = pngHead.x + (0.5 - pngHead.originX) * pngHead.displayWidth;
+      const upperHeadY = pngHead.y + (0.36 - pngHead.originY) * pngHead.displayHeight;
+      return {
+        x: camera.scrollX + rig.object.x + visualCenterX * containerScaleX,
+        y: camera.scrollY + rig.object.y + upperHeadY * containerScaleY
+      };
+    }
+    const scaleX = containerScaleX;
+    const scaleY = containerScaleY;
     const head = rig.parts?.head;
     if (head?.active) {
       return {
@@ -3576,9 +4463,11 @@ class PlayScene extends Phaser.Scene {
   handleBossDefeated() {
     if (this.bossDefeated) return;
     this.bossDefeated = true;
+    state.questProgress.bossDefeated = true;
     this.bossHealth = 0;
     updateBossHealthHud({ value: 0 });
     this.stopGiantHandBossAttacks();
+    updateQuestHud();
     this.dismissDistantColossus();
     this.revealBossExitKey();
   }
@@ -3589,6 +4478,8 @@ class PlayScene extends Phaser.Scene {
       rig.giantHandTelegraphActive = false;
       rig.giantHandDropped = true;
       rig.nextGiantHandAttackAt = Infinity;
+      rig.suitcaseAttackActive = false;
+      rig.nextSuitcaseAttackAt = Infinity;
     }
     this.giantHands?.children?.iterate((hand) => {
       if (!hand?.active) return;
@@ -3626,6 +4517,322 @@ class PlayScene extends Phaser.Scene {
       this.cameras.main.roundPixels = true;
       this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
       this.cameras.main.setDeadzone(170, 110);
+    }
+  }
+
+  createKeyGardenIndicators(point = this.keyPoint) {
+    if (!point || !this.platformRuns?.length) return;
+    this.keyGardenKeys = this.keyGardenKeys || new Set();
+    const id = `${Math.round(point.x)}:${Math.round(point.y)}`;
+    if (this.keyGardenKeys.has(id)) return;
+
+    const keyRun = this.findGardenPlatformRun(point);
+    if (!keyRun) return;
+    const gardenAssets = this.getAllowedGardenAssetsForLevel();
+    const bushAssets = gardenAssets.filter((asset) => asset.type === "bush");
+    if (!gardenAssets.length || !bushAssets.length) return;
+
+    this.keyGardenKeys.add(id);
+    const keyFloorY = keyRun.topY + 2;
+    const keyCenterX = Phaser.Math.Clamp(point.x, keyRun.startX + 46, keyRun.endX - 46);
+    const keyGardenCover = this.shouldHideKeyInGardenBushes();
+    let primaryCover = null;
+
+    if (keyGardenCover) {
+      const coverAsset = this.pickGardenAsset(bushAssets, this.wallPlacementNoise(Math.floor(keyFloorY / TILE) + 91, Math.floor(keyCenterX / TILE) + 43));
+      primaryCover = this.createGardenDecorSprite(coverAsset, keyCenterX, keyFloorY, {
+        seed: 991,
+        interactive: true,
+        scaleBoost: 1.18,
+        depthBias: 0.35,
+        revealsKey: true
+      });
+      if (primaryCover) primaryCover.setData("revealsKey", true);
+      if (this.keySprite) {
+        this.keyRevealed = false;
+        this.keySprite.disableBody(true, true);
+        this.keySprite.setDepth(KEY_ITEM_DEPTH);
+        this.keySprite.setData("gardenCoverDepth", KEY_ITEM_DEPTH);
+        this.keySprite.setData("requiresGardenBushReveal", true);
+        this.keySprite.setData("gardenBushTouched", false);
+      }
+    }
+
+    const runs = this.findGardenPlatformRuns(point, keyRun);
+    runs.forEach((run, clusterIndex) => {
+      const floorY = run.topY + 2;
+      const runWidth = run.endX - run.startX;
+      const centerNoise = this.wallPlacementNoise(Math.floor(floorY / TILE) + clusterIndex * 17, Math.floor(point.x / TILE) + 29);
+      const centerX = clusterIndex === 0
+        ? keyCenterX
+        : Phaser.Math.Clamp(point.x + Phaser.Math.Linear(-260, 260, centerNoise), run.startX + 42, run.endX - 42);
+      const offsets = this.getGardenClusterOffsets(runWidth, clusterIndex);
+      const clusterAssets = clusterIndex === 0
+        ? this.getGardenAssetsForRun(gardenAssets, runWidth, clusterIndex)
+        : gardenAssets.filter((asset) => asset.type === "bush" || (asset.type === "lantern" && clusterIndex % 2 === 0));
+
+      offsets.forEach((offset, index) => {
+        const seed = clusterIndex * 101 + index * 13;
+        const noise = this.wallPlacementNoise(Math.floor(floorY / TILE) + seed, Math.floor(centerX / TILE) + seed);
+        if (clusterIndex > 0 && noise < 0.26) return;
+        const x = Phaser.Math.Clamp(centerX + offset + (noise - 0.5) * 34, run.startX + 18, run.endX - 18);
+        if (primaryCover && Math.abs(x - primaryCover.x) < 34 && Math.abs(floorY - primaryCover.y) < 10) return;
+        const assetPool = clusterIndex === 0 && Math.abs(offset) < 52
+          ? bushAssets
+          : this.getGardenAssetsForRun(clusterAssets, runWidth, clusterIndex);
+        const asset = this.pickGardenAsset(assetPool, this.wallPlacementNoise(seed + 31, Math.floor(x / TILE) + 19));
+        this.createGardenDecorSprite(asset, x, floorY, {
+          seed,
+          interactive: asset.type === "bush",
+          scaleBoost: clusterIndex === 0 ? 1 : 0.88
+        });
+      });
+    });
+
+    this.createGardenLightRays(keyCenterX, keyFloorY, id);
+  }
+
+  createDecorativeGardens() {
+    if (!this.level.decorativeGardens?.length || !this.platformRuns?.length) return;
+    const gardenAssets = this.getAllowedGardenAssetsForLevel();
+    const bushAssets = gardenAssets.filter((asset) => asset.type === "bush");
+    const featureAssets = gardenAssets.filter((asset) => asset.type === "feature" || asset.type === "lantern");
+    if (!bushAssets.length) return;
+
+    this.level.decorativeGardens.forEach((garden, gardenIndex) => {
+      const targetY = garden.row * TILE;
+      const startX = garden.startColumn * TILE;
+      const endX = garden.endColumn * TILE;
+      const run = [...(this.platformRuns || [])]
+        .filter((candidate) => Math.abs(candidate.topY - targetY) <= TILE * 0.75)
+        .filter((candidate) => candidate.endX >= startX && candidate.startX <= endX)
+        .sort((a, b) => Math.abs(a.startX - startX) - Math.abs(b.startX - startX))[0];
+      if (!run) return;
+
+      const floorY = run.topY + 2;
+      const left = Math.max(run.startX + 30, startX + 18);
+      const right = Math.min(run.endX - 30, endX - 18);
+      const width = Math.max(0, right - left);
+      if (width < TILE * 2) return;
+
+      const density = garden.density ?? DECORATIVE_GARDEN_DEFAULT_DENSITY;
+      const count = Phaser.Math.Clamp(Math.round(width / 54 * density), 8, 30);
+      for (let index = 0; index < count; index += 1) {
+        const seed = gardenIndex * 211 + index * 31 + Math.floor(left / TILE);
+        const progress = count === 1 ? 0.5 : index / (count - 1);
+        const spacingNoise = this.wallPlacementNoise(seed + 7, Math.floor(floorY / TILE) + 19);
+        const x = Phaser.Math.Clamp(
+          Phaser.Math.Linear(left, right, progress) + Phaser.Math.Linear(-24, 24, spacingNoise),
+          left,
+          right
+        );
+        const featureNoise = this.wallPlacementNoise(seed + 37, Math.floor(x / TILE) + 83);
+        const pool = featureAssets.length && featureNoise < (garden.featureRate ?? 0.34)
+          ? featureAssets
+          : bushAssets;
+        const asset = this.pickGardenAsset(pool, this.wallPlacementNoise(seed + 61, Math.floor(x / TILE) + 3));
+        this.createGardenDecorSprite(asset, x, floorY, {
+          seed,
+          interactive: asset?.type === "bush",
+          scaleBoost: asset?.type === "bush"
+            ? (garden.bushScaleBoost ?? 1)
+            : (garden.featureScaleBoost ?? 1)
+        });
+      }
+    });
+  }
+
+  findGardenPlatformRun(point) {
+    return [...(this.platformRuns || [])]
+      .filter((run) => point.x >= run.startX - TILE * 4 && point.x <= run.endX + TILE * 4)
+      .filter((run) => run.topY >= point.y - TILE * 2)
+      .sort((a, b) => {
+        const aDistance = Math.abs(a.topY - point.y) + Math.abs(Phaser.Math.Clamp(point.x, a.startX, a.endX) - point.x) * 0.25;
+        const bDistance = Math.abs(b.topY - point.y) + Math.abs(Phaser.Math.Clamp(point.x, b.startX, b.endX) - point.x) * 0.25;
+        return aDistance - bDistance;
+      })[0];
+  }
+
+  findGardenPlatformRuns(point, primaryRun) {
+    const seen = new Set();
+    const runs = [primaryRun];
+    seen.add(primaryRun.id);
+    [...(this.platformRuns || [])]
+      .filter((run) => !seen.has(run.id))
+      .filter((run) => run.endX - run.startX >= TILE * 3)
+      .filter((run) => Math.abs(run.topY - primaryRun.topY) <= TILE * 8)
+      .filter((run) => point.x >= run.startX - TILE * 14 && point.x <= run.endX + TILE * 14)
+      .sort((a, b) => {
+        const aDistance = Math.abs(a.topY - primaryRun.topY) + Math.abs(Phaser.Math.Clamp(point.x, a.startX, a.endX) - point.x) * 0.45;
+        const bDistance = Math.abs(b.topY - primaryRun.topY) + Math.abs(Phaser.Math.Clamp(point.x, b.startX, b.endX) - point.x) * 0.45;
+        return aDistance - bDistance;
+      })
+      .slice(0, 3)
+      .forEach((run) => {
+        seen.add(run.id);
+        runs.push(run);
+      });
+    return runs;
+  }
+
+  getGardenClusterOffsets(runWidth, clusterIndex) {
+    const maxSpread = Math.max(42, runWidth / 2 - 34);
+    const count = clusterIndex === 0
+      ? Phaser.Math.Clamp(Math.floor(runWidth / 58), 3, 7)
+      : Phaser.Math.Clamp(Math.floor(runWidth / 78), 2, 4);
+    if (count <= 1) return [0];
+    return Array.from({ length: count }, (_value, index) => {
+      const progress = count === 1 ? 0.5 : index / (count - 1);
+      return Phaser.Math.Linear(-maxSpread, maxSpread, progress);
+    });
+  }
+
+  getGardenAssetsForRun(assets, runWidth, clusterIndex) {
+    const pool = assets.filter((asset) => {
+      if (asset.type !== "feature") return true;
+      if (state.levelIndex !== 0 && state.levelIndex !== 3) return false;
+      return clusterIndex === 0 && runWidth >= TILE * 11;
+    });
+    return pool.length ? pool : assets.filter((asset) => asset.type === "bush" || asset.type === "lantern");
+  }
+
+  getAllowedGardenAssetsForLevel() {
+    return KEY_GARDEN_ASSETS.filter((asset) => {
+      if (!this.textures.exists(asset.key)) return false;
+      if (state.levelIndex === 0 || state.levelIndex === 3 || state.levelIndex === 5) return true;
+      if (state.levelIndex === 1 || state.levelIndex === 2) return asset.type === "bush" || asset.type === "lantern";
+      return asset.type === "bush";
+    });
+  }
+
+  shouldHideKeyInGardenBushes() {
+    return state.levelIndex >= 0 && state.levelIndex <= 2;
+  }
+
+  pickGardenAsset(assets, noise = 0) {
+    const pool = assets.filter((asset) => this.textures.exists(asset.key));
+    if (!pool.length) return null;
+    const totalWeight = pool.reduce((sum, asset) => sum + asset.weight, 0);
+    let cursor = noise * totalWeight;
+    for (const asset of pool) {
+      cursor -= asset.weight;
+      if (cursor <= 0) return asset;
+    }
+    return pool[pool.length - 1];
+  }
+
+  createGardenDecorSprite(asset, x, y, options = {}) {
+    if (!asset || !this.textures.exists(asset.key)) return null;
+    const sprite = options.interactive
+      ? this.gardenBushes.create(x, y, asset.key)
+      : this.add.image(x, y, asset.key);
+    const seed = options.seed ?? 0;
+    const noise = this.wallPlacementNoise(Math.floor(y / TILE) + seed + 7, Math.floor(x / TILE) + seed + 23);
+    const rawDepth = Phaser.Math.Linear(3.32, 4.86, noise) + (options.depthBias ?? 0);
+    const isGardenProp = asset.type === "lantern" || asset.type === "feature";
+    const depth = isGardenProp ? KEY_GARDEN_PROP_BACK_DEPTH : rawDepth;
+    const visualY = asset.type === "bush" && depth > 4 ? y + KEY_GARDEN_BUSH_FRONT_Y_OFFSET : y;
+    const scale = asset.scale * (options.scaleBoost ?? 1) * Phaser.Math.Linear(0.9, 1.08, this.wallPlacementNoise(seed + 41, Math.floor(x / TILE) + 83));
+    sprite.setOrigin(0.5, 1);
+    sprite.setDepth(depth);
+    sprite.setY(visualY);
+    sprite.setScale(scale);
+    sprite.setFlipX(this.wallPlacementNoise(seed + 11, Math.floor(y / TILE) + 37) > 0.5);
+    if (options.interactive && sprite.body) {
+      sprite.body.allowGravity = false;
+      sprite.body.immovable = true;
+      sprite.body.setSize(Math.max(36, sprite.width * 0.72), Math.max(24, sprite.height * 0.36));
+      sprite.body.setOffset(sprite.width * 0.14, sprite.height * 0.56);
+      sprite.setData("lastBurstAt", -Infinity);
+    } else {
+      this.platformVisuals?.add(sprite);
+    }
+    return sprite;
+  }
+
+  createGardenLightRays(centerX, floorY, id) {
+    if (!this.textures.exists("light-sparkle")) return;
+    const seedBase = id.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    const countNoise = this.wallPlacementNoise(seedBase + 7, seedBase + 31);
+    const count = Phaser.Math.Clamp(
+      Math.round(Phaser.Math.Linear(KEY_GARDEN_LIGHT_COUNT[0], KEY_GARDEN_LIGHT_COUNT[1], countNoise)),
+      KEY_GARDEN_LIGHT_COUNT[0],
+      KEY_GARDEN_LIGHT_COUNT[1]
+    );
+
+    for (let index = 0; index < count; index += 1) {
+      const noiseA = this.wallPlacementNoise(seedBase + index * 17, seedBase + 61);
+      const noiseB = this.wallPlacementNoise(seedBase + index * 29, seedBase + 97);
+      const noiseC = this.wallPlacementNoise(seedBase + index * 43, seedBase + 131);
+      const impactX = centerX + Phaser.Math.Linear(-170, 170, noiseA);
+      const height = Phaser.Math.Linear(320, 760, noiseB);
+      const lean = Phaser.Math.Linear(-230, 230, noiseC);
+      const topY = floorY - height - Phaser.Math.Linear(34, 120, noiseA);
+      const topX = impactX - lean;
+      const foreground = noiseB > 0.58;
+      const ray = {
+        x: topX,
+        y: topY,
+        topWidth: Phaser.Math.Linear(26, 78, noiseC),
+        bottomWidth: Phaser.Math.Linear(190, 430, noiseA),
+        height: floorY - topY + Phaser.Math.Linear(26, 90, noiseB),
+        lean,
+        alpha: Phaser.Math.Linear(0.32, 0.56, noiseB),
+        thickness: Phaser.Math.Clamp(Math.round(Phaser.Math.Linear(1, 4, noiseA)), 1, 4),
+        foreground,
+        frontAlpha: foreground ? Phaser.Math.Linear(0.14, 0.32, noiseC) : undefined,
+        opacityMode: noiseC > 0.68 ? "dim" : (noiseC < 0.24 ? "steady" : "pulse"),
+        beamBoost: Phaser.Math.Linear(1.55, 2.55, noiseA),
+        skipCrackGlow: true,
+        impacts: [
+          {
+            x: impactX,
+            y: floorY,
+            width: Phaser.Math.Linear(95, 230, noiseA),
+            alpha: Phaser.Math.Linear(0.34, 0.66, noiseB)
+          }
+        ],
+        seed: seedBase + index
+      };
+      [
+        { suffix: "base", ray, alphaScale: foreground ? 0.92 : 1.05 },
+        {
+          suffix: "core",
+          alphaScale: foreground ? 0.74 : 0.88,
+          ray: {
+            ...ray,
+            topWidth: ray.topWidth * 0.42,
+            bottomWidth: ray.bottomWidth * 0.34,
+            alpha: ray.alpha * 0.82,
+            beamBoost: ray.beamBoost * 1.18,
+            impacts: ray.impacts.map((impact) => ({
+              ...impact,
+              width: impact.width * 0.46,
+              alpha: impact.alpha * 0.72
+            }))
+          }
+        }
+      ].forEach((variant, variantIndex) => {
+        const bounds = this.getLightRayBounds(variant.ray);
+        const resolvedRay = {
+          ...variant.ray,
+          ...bounds,
+          localX: variant.ray.x - bounds.textureX,
+          localY: variant.ray.y - bounds.textureY
+        };
+        const textureKey = `key-garden-ray-${state.levelIndex}-${this.keyGardenKeys.size}-${index}-${variant.suffix}`;
+        if (this.textures.exists(textureKey)) this.textures.remove(textureKey);
+        this.textures.addCanvas(textureKey, this.createLightRayCanvas(resolvedRay));
+        const layer = this.add.image(resolvedRay.textureX, resolvedRay.textureY, textureKey);
+        layer.setOrigin(0, 0);
+        layer.setScrollFactor(1);
+        layer.setDepth(foreground ? LIGHT_RAY_FRONT_DEPTH : LIGHT_RAY_DEPTH);
+        layer.setAlpha((this.level.lightRayAlpha ?? 0.82) * variant.alphaScale);
+        layer.setBlendMode(Phaser.BlendModes.SCREEN ?? Phaser.BlendModes.ADD);
+        this.trackLightRayLayer(layer, resolvedRay, seedBase + index + variantIndex * 59);
+        this.resolvedLightRays?.push(resolvedRay);
+        this.createLightImpactGlows(resolvedRay, seedBase + index + variantIndex * 59);
+      });
     }
   }
 
@@ -3672,6 +4879,98 @@ class PlayScene extends Phaser.Scene {
     });
 
     this.lightRayLayer = this.lightRayLayers[0]?.layer || null;
+  }
+
+  createNightLanternLights() {
+    this.nightLanternLights = [];
+    this.playerLanternGlow = null;
+    this.nextNightLanternSparkleAt = 0;
+    if (!this.level.nightLevel) return;
+    this.ensureNightLanternGlowTexture();
+
+    (this.level.nightLanterns || []).forEach((config, index) => {
+      const assetKey = config.asset || (index % 2 ? "garden-lantern-2" : "garden-lantern-1");
+      if (!this.textures.exists(assetKey)) return;
+      const x = (config.column ?? 0) * TILE + TILE / 2;
+      const floorY = (config.floorRow ?? 0) * TILE;
+      const lantern = this.add.image(x, floorY + 2, assetKey);
+      lantern.setOrigin(0.5, 1);
+      lantern.setScale((config.scale ?? 0.34) * Phaser.Math.Linear(0.92, 1.08, this.wallPlacementNoise(index + 13, config.column ?? 0)));
+      lantern.setDepth(KEY_GARDEN_PROP_BACK_DEPTH);
+      this.platformVisuals?.add(lantern);
+
+      const radius = config.radius ?? NIGHT_LANTERN_RADIUS;
+      const lanternHeight = (lantern.height || 0) * Math.abs(lantern.scaleY || 1);
+      const light = {
+        x,
+        y: floorY - (config.yOffset ?? 82) + lanternHeight * 0.75,
+        radius,
+        fringe: config.fringe ?? NIGHT_LANTERN_FRINGE,
+        foreground: index % 3 === 1,
+        phase: this.wallPlacementNoise(index + 31, index + 77) * Math.PI * 2
+      };
+      const glow = this.add.image(light.x, light.y, NIGHT_LANTERN_GLOW_KEY);
+      glow.setScale(radius / 128);
+      glow.setDepth(NIGHT_LANTERN_GLOW_DEPTH);
+      glow.setBlendMode(Phaser.BlendModes.ADD);
+      glow.setAlpha(0.46);
+      this.nightLanternLights.push({ ...light, lantern, glow });
+    });
+
+    this.playerLanternGlow = null;
+  }
+
+  ensureNightLanternGlowTexture() {
+    if (this.textures.exists(NIGHT_LANTERN_GLOW_KEY)) return;
+    const size = 256;
+    const center = size / 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext("2d");
+    context.clearRect(0, 0, size, size);
+    context.globalCompositeOperation = "lighter";
+
+    [
+      { radius: 124, alpha: 0.24 },
+      { radius: 82, alpha: 0.34 },
+      { radius: 34, alpha: 0.42 }
+    ].forEach((pass) => {
+      const gradient = context.createRadialGradient(center, center, 1, center, center, pass.radius);
+      gradient.addColorStop(0, this.lightRayRgba(pass.alpha));
+      gradient.addColorStop(0.35, this.lightRayRgba(pass.alpha * 0.56));
+      gradient.addColorStop(0.72, this.lightRayRgba(pass.alpha * 0.16));
+      gradient.addColorStop(1, "rgba(255, 239, 198, 0)");
+      context.fillStyle = gradient;
+      context.beginPath();
+      context.arc(center, center, pass.radius, 0, Math.PI * 2);
+      context.fill();
+    });
+
+    for (let streak = 0; streak < 10; streak += 1) {
+      const angle = (Math.PI * 2 * streak) / 10 + (streak % 2) * 0.17;
+      const inner = 18 + (streak % 3) * 8;
+      const outer = 86 + (streak % 4) * 13;
+      const alpha = 0.028 + (streak % 3) * 0.012;
+      const gradient = context.createLinearGradient(
+        center + Math.cos(angle) * inner,
+        center + Math.sin(angle) * inner,
+        center + Math.cos(angle) * outer,
+        center + Math.sin(angle) * outer
+      );
+      gradient.addColorStop(0, "rgba(255, 247, 220, 0)");
+      gradient.addColorStop(0.4, this.lightRayRgba(alpha));
+      gradient.addColorStop(1, "rgba(255, 247, 220, 0)");
+      context.strokeStyle = gradient;
+      context.lineWidth = 10 + (streak % 4) * 3;
+      context.lineCap = "round";
+      context.beginPath();
+      context.moveTo(center + Math.cos(angle) * inner, center + Math.sin(angle) * inner);
+      context.lineTo(center + Math.cos(angle) * outer, center + Math.sin(angle) * outer);
+      context.stroke();
+    }
+
+    this.textures.addCanvas(NIGHT_LANTERN_GLOW_KEY, canvas);
   }
 
   trackLightRayLayer(layer, ray, seed = 0) {
@@ -4019,118 +5318,97 @@ class PlayScene extends Phaser.Scene {
 
   updateLanternOverlay() {
     if (!this.lanternOverlay || !this.player || !this.lanternOverlayConfig) return;
-
-    if (this.level.darkness?.requiresLantern !== false && !state.hasLantern) {
-      this.updateLanternThresholdDarkness();
-      return;
-    }
-
-    const { alpha, radius, fringe, yOffset } = this.lanternOverlayConfig;
+    const { alpha } = this.lanternOverlayConfig;
     const camera = this.cameras.main;
-    const centerX = Phaser.Math.Clamp(this.player.x - camera.scrollX + (this.player.flipX ? -18 : 18), -radius, VIEW_WIDTH + radius);
-    const centerY = Phaser.Math.Clamp(this.player.y - camera.scrollY + yOffset, radius, PLAY_HEIGHT - radius);
-    const clearRadius = Math.max(0, radius - fringe);
     const graphics = this.lanternOverlay;
+    const lights = this.getVisibleLanternLightCircles();
 
     graphics.clear();
     for (let y = 0; y < PLAY_HEIGHT; y += 4) {
       const midY = y + 2;
-      const dy = midY - centerY;
-      if (Math.abs(dy) >= radius) {
-        graphics.fillStyle(0x000000, 1);
-        graphics.fillRect(0, y, VIEW_WIDTH, 4);
-        continue;
-      }
-
-      const outerHalfWidth = Math.sqrt(Math.max(0, radius * radius - dy * dy));
-      const outerLeft = Phaser.Math.Clamp(centerX - outerHalfWidth, 0, VIEW_WIDTH);
-      const outerRight = Phaser.Math.Clamp(centerX + outerHalfWidth, 0, VIEW_WIDTH);
-
-      graphics.fillStyle(0x000000, 1);
-      graphics.fillRect(0, y, outerLeft, 4);
-      graphics.fillRect(outerRight, y, VIEW_WIDTH - outerRight, 4);
-
-      for (let x = outerLeft; x < outerRight; x += 4) {
+      for (let x = 0; x < VIEW_WIDTH; x += 4) {
         const midX = x + 2;
-        const dx = midX - centerX;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance <= clearRadius) continue;
-        const progress = Phaser.Math.Clamp((distance - clearRadius) / Math.max(1, fringe), 0, 1);
-        graphics.fillStyle(0x000000, alpha * progress * progress);
+        const baseAlpha = this.getLanternDarknessBaseAlpha(midX, midY, camera, alpha);
+        if (baseAlpha <= 0.002) continue;
+        const lightFactor = this.getLanternDarknessLightFactor(midX, midY, lights);
+        const fillAlpha = baseAlpha * lightFactor;
+        if (fillAlpha <= 0.002) continue;
+        graphics.fillStyle(0x000000, fillAlpha);
         graphics.fillRect(x, y, 4, 4);
       }
     }
-
-    for (let offset = 0; offset < fringe; offset += 5) {
-      const progress = 1 - offset / fringe;
-      const ringAlpha = Phaser.Math.Clamp(alpha * progress * progress * 0.72, 0, alpha);
-      graphics.lineStyle(6, 0x000000, ringAlpha);
-      graphics.strokeCircle(centerX, centerY, radius - offset);
-    }
   }
 
-  updateLanternThresholdDarkness() {
-    if (this.level.darkness?.thresholdMode === "diagonal") {
-      this.updateDiagonalLanternThresholdDarkness();
-      return;
+  getLanternDarknessBaseAlpha(screenX, screenY, camera, alpha) {
+    if (this.level.darkness?.requiresLantern === false || state.hasLantern) return alpha;
+    if (this.level.darkness?.thresholdMode !== "diagonal") {
+      const startX = this.level.darkness?.startX ?? 0;
+      const fadeWidth = this.level.darkness?.thresholdFade ?? 180;
+      const screenStart = startX - camera.scrollX;
+      if (screenX < screenStart - fadeWidth) return 0;
+      if (screenX >= screenStart) return alpha;
+      const progress = Phaser.Math.Clamp((screenX - (screenStart - fadeWidth)) / Math.max(1, fadeWidth), 0, 1);
+      return alpha * progress * progress;
     }
 
-    const camera = this.cameras.main;
-    const startX = this.level.darkness?.startX ?? 0;
-    const fadeWidth = this.level.darkness?.thresholdFade ?? 180;
-    const screenStart = startX - camera.scrollX;
-    const graphics = this.lanternOverlay;
-
-    graphics.clear();
-    if (screenStart >= VIEW_WIDTH) return;
-
-    const fadeStart = Phaser.Math.Clamp(screenStart - fadeWidth, 0, VIEW_WIDTH);
-    const fadeEnd = Phaser.Math.Clamp(screenStart, 0, VIEW_WIDTH);
-
-    for (let x = fadeStart; x < fadeEnd; x += 4) {
-      const progress = Phaser.Math.Clamp((x - fadeStart) / Math.max(1, fadeEnd - fadeStart), 0, 1);
-      graphics.fillStyle(0x000000, progress * progress);
-      graphics.fillRect(x, 0, 4, PLAY_HEIGHT);
-    }
-
-    graphics.fillStyle(0x000000, 1);
-    graphics.fillRect(fadeEnd, 0, VIEW_WIDTH - fadeEnd, PLAY_HEIGHT);
-  }
-
-  updateDiagonalLanternThresholdDarkness() {
-    const camera = this.cameras.main;
     const darkness = this.level.darkness || {};
     const startX = darkness.lineStartX ?? 0;
     const startY = darkness.lineStartY ?? 0;
     const endX = darkness.lineEndX ?? VIEW_WIDTH;
     const endY = darkness.lineEndY ?? PLAY_HEIGHT;
     const fadeWidth = darkness.thresholdFade ?? 64;
-    const alpha = darkness.alpha ?? 1;
-    const graphics = this.lanternOverlay;
     const dx = Math.max(1, endX - startX);
+    const worldX = camera.scrollX + screenX;
+    const t = Phaser.Math.Clamp((worldX - startX) / dx, -0.35, 1.35);
+    const worldBoundaryY = Phaser.Math.Linear(startY, endY, t);
+    const screenBoundaryY = worldBoundaryY - camera.scrollY;
+    const solidBottom = Phaser.Math.Clamp(screenBoundaryY - fadeWidth * 0.5, 0, PLAY_HEIGHT);
+    const fadeBottom = Phaser.Math.Clamp(screenBoundaryY + fadeWidth * 0.5, 0, PLAY_HEIGHT);
+    if (screenY < solidBottom) return alpha;
+    if (screenY >= fadeBottom) return 0;
+    const progress = 1 - Phaser.Math.Clamp((screenY - solidBottom) / Math.max(1, fadeBottom - solidBottom), 0, 1);
+    return alpha * progress * progress;
+  }
 
-    graphics.clear();
-    for (let x = 0; x < VIEW_WIDTH; x += 4) {
-      const worldX = camera.scrollX + x;
-      const t = Phaser.Math.Clamp((worldX - startX) / dx, -0.35, 1.35);
-      const worldBoundaryY = Phaser.Math.Linear(startY, endY, t);
-      const screenBoundaryY = worldBoundaryY - camera.scrollY;
-      const solidBottom = Phaser.Math.Clamp(screenBoundaryY - fadeWidth * 0.5, 0, PLAY_HEIGHT);
-      const fadeBottom = Phaser.Math.Clamp(screenBoundaryY + fadeWidth * 0.5, 0, PLAY_HEIGHT);
-
-      if (solidBottom > 0) {
-        graphics.fillStyle(0x000000, alpha);
-        graphics.fillRect(x, 0, 4, solidBottom);
-      }
-
-      if (fadeBottom > solidBottom) {
-        for (let y = solidBottom; y < fadeBottom; y += 4) {
-          const progress = 1 - Phaser.Math.Clamp((y - solidBottom) / Math.max(1, fadeBottom - solidBottom), 0, 1);
-          graphics.fillStyle(0x000000, alpha * progress * progress);
-          graphics.fillRect(x, y, 4, 4);
-        }
-      }
+  getVisibleLanternLightCircles() {
+    const camera = this.cameras.main;
+    const lights = [];
+    if (this.level.nightLevel) {
+      (this.nightLanternLights || []).forEach((light) => {
+        lights.push({
+          kind: "static",
+          x: light.x - camera.scrollX,
+          y: light.y - camera.scrollY,
+          radius: light.radius,
+          fringe: light.fringe
+        });
+      });
     }
+    if (state.hasLantern) {
+      const { radius, fringe, yOffset } = this.lanternOverlayConfig;
+      lights.push({
+        kind: "player",
+        x: Phaser.Math.Clamp(this.player.x - camera.scrollX + (this.player.flipX ? -18 : 18), -radius, VIEW_WIDTH + radius),
+        y: Phaser.Math.Clamp(this.player.y - camera.scrollY + yOffset, -radius, PLAY_HEIGHT + radius),
+        radius,
+        fringe
+      });
+    }
+    return lights;
+  }
+
+  getLanternDarknessLightFactor(screenX, screenY, lights) {
+    let lightStrength = 0;
+    lights.forEach((light) => {
+      const dx = screenX - light.x;
+      const dy = screenY - light.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance >= light.radius) return;
+      const clearRadius = Math.max(0, light.radius - light.fringe);
+      const progress = Phaser.Math.Clamp((distance - clearRadius) / Math.max(1, light.fringe), 0, 1);
+      lightStrength += 1 - progress * progress;
+    });
+    return Phaser.Math.Clamp(1 - lightStrength, 0, 1);
   }
 
   createStartingHouse() {
@@ -4285,6 +5563,14 @@ class PlayScene extends Phaser.Scene {
         repeat: 0
       });
     }
+    if (this.textures.exists("gabi-climb-sheet") && !this.anims.exists("gabi-climb")) {
+      this.anims.create({
+        key: "gabi-climb",
+        frames: this.anims.generateFrameNumbers("gabi-climb-sheet", { frames: [0, 1, 2] }),
+        frameRate: 7,
+        repeat: -1
+      });
+    }
     if (this.textures.exists("gabi-point-sheet") && !this.anims.exists("gabi-point")) {
       this.anims.create({
         key: "gabi-point",
@@ -4380,6 +5666,14 @@ class PlayScene extends Phaser.Scene {
         repeat: -1
       });
     });
+    if (this.textures.exists("flower-petal") && !this.anims.exists("flower-petal-float")) {
+      this.anims.create({
+        key: "flower-petal-float",
+        frames: this.anims.generateFrameNumbers("flower-petal", { frames: [0, 1, 2] }),
+        frameRate: 8,
+        repeat: -1
+      });
+    }
     if (this.textures.exists("mr-magpie") && !this.anims.exists("mr-magpie-idle")) {
       this.anims.create({
         key: "mr-magpie-idle",
@@ -4421,6 +5715,10 @@ class PlayScene extends Phaser.Scene {
           state.totalGems += 1;
           this.tweens.add({ targets: gem, y: y - 6, duration: 900, yoyo: true, repeat: -1, ease: "Sine.inOut" });
         }
+        if (cell === "h") {
+          const heart = this.heartDrops.create(x, y, "life-heart");
+          this.configureHeartPickup(heart, { armedAt: 0, bob: true });
+        }
         if (cell === "j") {
           const doubleJump = this.doubleJumps.create(x, y, "jump-item");
           doubleJump.setScale(ITEM_SCALE);
@@ -4443,6 +5741,14 @@ class PlayScene extends Phaser.Scene {
           lantern.setCircle(70, 49, 55);
           this.tweens.add({ targets: lantern, y: y - 7, duration: 820, yoyo: true, repeat: -1, ease: "Sine.inOut" });
         }
+        if (cell === "f") {
+          const flower = this.flowers.create(x, y, "flower-item");
+          flower.setScale(0.055);
+          flower.setDepth(ITEM_DEPTH);
+          flower.setCircle(430, 80, 80);
+          this.flowerPoint = { x, y };
+          this.tweens.add({ targets: flower, y: y - 8, angle: 5, duration: 920, yoyo: true, repeat: -1, ease: "Sine.inOut" });
+        }
         if (cell === "m") {
           this.createEnemyAt(x, y, columnIndex % 2 ? -1 : 1);
         }
@@ -4455,8 +5761,8 @@ class PlayScene extends Phaser.Scene {
           acorn.body.allowGravity = false;
           acorn.body.immovable = false;
           acorn.setData("homeX", x);
-          acorn.setData("nextDrop", this.time.now + Phaser.Math.Between(...this.level.acornDelay));
-          acorn.setData("pace", Phaser.Math.Between(...this.level.acornPace));
+          acorn.setData("nextDrop", this.time.now + Phaser.Math.Between(...getDifficultyScaledRange(this.level.acornDelay, "hazardDelayMultiplier", 60)));
+          acorn.setData("pace", Phaser.Math.Between(...getDifficultyScaledRange(this.level.acornPace, "hazardPaceMultiplier", 80)));
           acorn.setVelocity(0, 0);
           acorn.setVisible(false);
           acorn.body.enable = false;
@@ -4464,7 +5770,7 @@ class PlayScene extends Phaser.Scene {
         if (cell === "k") {
           const key = this.keys.create(x, y, "door-key");
           key.setScale(ITEM_SCALE);
-          key.setDepth(ITEM_DEPTH);
+          key.setDepth(KEY_ITEM_DEPTH);
           key.setCircle(58, 59, 59);
           this.keyPoint = { x, y };
           this.keySprite = key;
@@ -4491,9 +5797,12 @@ class PlayScene extends Phaser.Scene {
       });
     });
     this.createPlatformVisuals();
+    this.snapSpawnPointToPlatform();
+    this.createHangingChains();
     this.createMovingPlatforms();
     this.createFinalElevator();
     this.createPlatformShadows();
+    this.createGardenDecorations();
   }
 
   createWallTileVisual(x, y, rowIndex, columnIndex) {
@@ -4657,6 +5966,385 @@ class PlayScene extends Phaser.Scene {
         this.addPlatformRun(start, columnIndex - start, rowIndex);
       }
     });
+  }
+
+  snapSpawnPointToPlatform() {
+    if (!this.platformRuns?.length || !this.spawnPoint) return;
+    const spawnX = this.spawnPoint.x;
+    const nearestRun = [...this.platformRuns]
+      .filter((run) => spawnX >= run.startX - TILE && spawnX <= run.endX + TILE && run.topY >= this.spawnPoint.y)
+      .sort((a, b) => Math.abs(a.topY - this.spawnPoint.y) - Math.abs(b.topY - this.spawnPoint.y))[0];
+    if (!nearestRun) return;
+    this.spawnPoint = {
+      x: Phaser.Math.Clamp(spawnX, nearestRun.startX + TILE, nearestRun.endX - TILE),
+      y: nearestRun.topY - TILE * 1.35
+    };
+  }
+
+  createHangingChains() {
+    const config = this.level.hangingChains;
+    if (!config || !this.textures.exists("chain-link-root") || !this.textures.exists("chain-link-main")) return;
+    const easySecondPartConfig = state.difficulty === DIFFICULTY_EASY ? config.easySecondPart : null;
+    const minLinks = config.minLinks ?? 4;
+    const maxLinks = config.maxLinks ?? 10;
+    const maxChains = easySecondPartConfig?.maxChains ?? config.maxChains ?? 12;
+    const candidateRate = config.candidateRate ?? 0.28;
+    const candidates = [];
+
+    (this.platformRuns || []).forEach((run) => {
+      const width = run.endX - run.startX;
+      if (width < TILE * 3) return;
+      if (run.topY > this.levelHeight - TILE * 4) return;
+      const centerColumn = Math.floor(((run.startX + run.endX) / 2) / TILE);
+      const easySecondPart = Boolean(
+        easySecondPartConfig &&
+        centerColumn >= (easySecondPartConfig.minColumn ?? 0)
+      );
+      const effectiveCandidateRate = easySecondPart
+        ? easySecondPartConfig.candidateRate ?? candidateRate
+        : candidateRate;
+      const keepNoise = this.wallPlacementNoise(run.rowIndex + 131, centerColumn + 47);
+      if (keepNoise > effectiveCandidateRate) return;
+      const edgeInset = Math.min(TILE * 0.34, width * 0.16);
+      const sideNoise = this.wallPlacementNoise(run.rowIndex + 211, centerColumn + 13);
+      const edgeJitter = (this.wallPlacementNoise(run.rowIndex + 241, centerColumn + 37) - 0.5) * TILE * 0.36;
+      const anchorX = sideNoise > 0.5
+        ? run.endX - edgeInset + edgeJitter
+        : run.startX + edgeInset + edgeJitter;
+      const belowTopY = this.findNearestPlatformTopBelow(anchorX, run.topY);
+      const availableDrop = Math.min((belowTopY || this.levelHeight + TILE * 3) - run.topY - TILE, TILE * 12);
+      const effectiveMinLinks = easySecondPart ? easySecondPartConfig.minLinks ?? minLinks : minLinks;
+      if (availableDrop < effectiveMinLinks * HANGING_CHAIN_LINK_SPACING + TILE) return;
+      candidates.push({
+        run,
+        width,
+        anchorX: Phaser.Math.Clamp(anchorX, run.startX + TILE * 0.24, run.endX - TILE * 0.24),
+        availableDrop,
+        easySecondPart,
+        score: this.wallPlacementNoise(run.rowIndex + 17, centerColumn + 89)
+      });
+    });
+
+    candidates
+      .sort((a, b) => a.score - b.score)
+      .slice(0, maxChains)
+      .forEach((candidate, index) => {
+        const { run, anchorX, availableDrop, easySecondPart } = candidate;
+        const localMinLinks = easySecondPart ? easySecondPartConfig.minLinks ?? minLinks : minLinks;
+        const localMaxLinks = easySecondPart ? easySecondPartConfig.maxLinks ?? maxLinks : maxLinks;
+        const maxLinksForGap = Math.max(localMinLinks, Math.floor((availableDrop - TILE * 0.6) / HANGING_CHAIN_LINK_SPACING));
+        const lengthNoise = this.wallPlacementNoise(run.rowIndex + 307, Math.floor(anchorX / TILE) + 19);
+        const linkCount = Phaser.Math.Clamp(
+          Math.round(Phaser.Math.Linear(localMinLinks, localMaxLinks, lengthNoise)),
+          localMinLinks,
+          Math.min(localMaxLinks, maxLinksForGap)
+        );
+        this.createHangingChain(anchorX, run.topY + HANGING_CHAIN_ROOT_PLATFORM_DROP, linkCount, index, run);
+      });
+  }
+
+  findNearestPlatformTopBelow(x, y) {
+    let nearest = Infinity;
+    (this.platformRuns || []).forEach((run) => {
+      if (x < run.startX + TILE * 0.25 || x > run.endX - TILE * 0.25) return;
+      if (run.topY <= y + TILE) return;
+      nearest = Math.min(nearest, run.topY);
+    });
+    return Number.isFinite(nearest) ? nearest : null;
+  }
+
+  createHangingChain(anchorX, anchorY, linkCount, index = 0, run = null) {
+    const root = this.add.image(anchorX, anchorY, "chain-link-root");
+    root.setScale(HANGING_CHAIN_SCALE);
+    root.setOrigin(
+      HANGING_CHAIN_ROOT_BOTTOM_ANCHOR.x / 75,
+      HANGING_CHAIN_ROOT_BOTTOM_ANCHOR.y / 75
+    );
+    root.setDepth(HANGING_CHAIN_ROOT_DEPTH);
+
+    const links = [];
+    for (let linkIndex = 0; linkIndex < linkCount; linkIndex += 1) {
+      const link = this.add.image(anchorX, anchorY, "chain-link-main");
+      link.setScale(HANGING_CHAIN_SCALE);
+      link.setOrigin(
+        HANGING_CHAIN_LINK_TOP_ANCHOR.x / 57,
+        HANGING_CHAIN_LINK_TOP_ANCHOR.y / 113
+      );
+      link.setDepth(HANGING_CHAIN_DEPTH + linkIndex * 0.001);
+      links.push(link);
+    }
+
+    this.hangingChains.push({
+      anchorX,
+      anchorY,
+      run,
+      side: run && anchorX > (run.startX + run.endX) / 2 ? 1 : -1,
+      root,
+      links,
+      points: [{ x: anchorX, y: anchorY }],
+      phase: this.wallPlacementNoise(index + 31, Math.floor(anchorX / TILE) + 71) * Math.PI * 2,
+      speed: 0.75 + this.wallPlacementNoise(index + 59, Math.floor(anchorY / TILE) + 13) * 0.42,
+      amplitude: Phaser.Math.DegToRad(4.5 + this.wallPlacementNoise(index + 83, Math.floor(anchorX / TILE) + 29) * 4.5),
+      impactAngle: 0,
+      impactVelocity: 0
+    });
+  }
+
+  updateHangingChains(time = 0, delta = 16) {
+    if (!this.hangingChains?.length) return;
+    const seconds = time / 1000;
+    const dt = Phaser.Math.Clamp(delta / 1000, 1 / 120, 1 / 30);
+    this.hangingChains.forEach((chain) => {
+      if (Math.abs(chain.impactAngle) > 0.0001 || Math.abs(chain.impactVelocity) > 0.0001) {
+        chain.impactVelocity += -chain.impactAngle * HANGING_CHAIN_IMPACT_SPRING * dt;
+        chain.impactVelocity *= Math.pow(HANGING_CHAIN_IMPACT_DAMPING, dt * 60);
+        chain.impactAngle = Phaser.Math.Clamp(
+          chain.impactAngle + chain.impactVelocity * dt,
+          -HANGING_CHAIN_IMPACT_MAX_ANGLE,
+          HANGING_CHAIN_IMPACT_MAX_ANGLE
+        );
+      } else {
+        chain.impactAngle = 0;
+        chain.impactVelocity = 0;
+      }
+      const baseSwing =
+        Math.sin(seconds * chain.speed + chain.phase) * chain.amplitude +
+        Math.sin(seconds * chain.speed * 0.47 + chain.phase * 1.8) * chain.amplitude * 0.32 +
+        chain.impactAngle;
+      let jointX = chain.anchorX;
+      let jointY = chain.anchorY;
+      const points = [{ x: jointX, y: jointY }];
+      chain.root.setRotation(baseSwing * 0.08);
+      chain.links.forEach((link, index) => {
+        const t = (index + 1) / chain.links.length;
+        const lag = index * 0.34;
+        const angle =
+          baseSwing * (0.22 + t * 0.9) +
+          Math.sin(seconds * chain.speed * 1.35 + chain.phase - lag) * chain.amplitude * 0.16 * t;
+        link.setPosition(jointX, jointY);
+        link.setRotation(angle);
+        jointX += Math.sin(angle) * HANGING_CHAIN_LINK_SPACING;
+        jointY += Math.cos(angle) * HANGING_CHAIN_LINK_SPACING;
+        points.push({ x: jointX, y: jointY });
+      });
+      chain.points = points;
+    });
+  }
+
+  updateChainClimb({
+    climbUp = false,
+    climbDown = false,
+    left = false,
+    right = false,
+    jump = false,
+    delta = 0,
+    autoGrab = false
+  } = {}) {
+    if (!this.player?.body || !this.hangingChains?.length || !this.anims.exists("gabi-climb")) return false;
+    if (this.chainClimb?.chain && !this.chainClimb.chain.root?.active) this.stopChainClimb();
+
+    let grabbedThisFrame = false;
+    if (!this.chainClimb && (climbUp || climbDown || autoGrab)) {
+      const target = this.findNearestClimbChainPoint({
+        grabDistance: autoGrab && !climbUp && !climbDown ? GABI_CHAIN_AUTO_GRAB_DISTANCE : GABI_CHAIN_GRAB_DISTANCE
+      });
+      if (target) {
+        this.startChainClimb(target);
+        grabbedThisFrame = true;
+      }
+    }
+    if (!this.chainClimb) return false;
+
+    if (left !== right) {
+      this.chainClimb.side = left ? -1 : 1;
+      this.setGabiFlip(this.chainClimb.side < 0);
+      this.applyChainSwingInput(this.chainClimb.chain, this.chainClimb.side, delta);
+    }
+
+    if (jump && !grabbedThisFrame) {
+      const direction = left !== right ? (left ? -1 : 1) : this.chainClimb.side || (this.player.flipX ? -1 : 1);
+      this.stopChainClimb({ jump: true, direction });
+      return true;
+    }
+
+    const target = this.getClimbPointOnChain(this.chainClimb.chain, this.player.y);
+    if (!target) {
+      this.stopChainClimb();
+      return false;
+    }
+
+    const verticalInput = climbUp === climbDown ? 0 : climbUp ? -1 : 1;
+    const minY = this.chainClimb.chain.anchorY + GABI_CHAIN_TOP_DISMOUNT_Y;
+    const bottomY = this.getChainBottomY(this.chainClimb.chain);
+    const maxY = bottomY - GABI_CHAIN_BOTTOM_DISMOUNT_Y;
+    if (verticalInput < 0 && this.player.y <= minY + 2) {
+      this.dismountChainToPlatform(this.chainClimb.chain);
+      return true;
+    }
+    const intendedY = this.player.y + verticalInput * GABI_CHAIN_CLIMB_SPEED * (delta / 1000);
+    if (verticalInput > 0 && intendedY >= maxY - 1) {
+      this.stopChainClimb({ drop: true });
+      return true;
+    }
+
+    this.player.body.setAllowGravity(false);
+    this.player.setAcceleration(0, 0);
+    this.player.setVelocity(0, 0);
+    const nextY = Phaser.Math.Clamp(intendedY, minY, maxY);
+    const updatedTarget = this.getClimbPointOnChain(this.chainClimb.chain, nextY) || target;
+    const sideOffset = (this.chainClimb.side || 1) * GABI_CHAIN_SIDE_OFFSET;
+    const nextX = Phaser.Math.Linear(this.player.x, updatedTarget.x + sideOffset, GABI_CHAIN_HORIZONTAL_LERP);
+    this.player.setPosition(nextX, nextY);
+    this.player.body.reset(nextX, nextY);
+    this.setGabiAnimation("climb");
+    const swayAngle = Phaser.Math.Clamp(
+      -Phaser.Math.RadToDeg(updatedTarget.angle || 0) * 0.72,
+      -GABI_CHAIN_BODY_SWAY_DEGREES,
+      GABI_CHAIN_BODY_SWAY_DEGREES
+    );
+    this.player.setAngle(swayAngle);
+    if (verticalInput === 0) {
+      this.player.anims.pause();
+    } else if (this.player.anims.isPaused) {
+      this.player.anims.resume();
+    }
+    return true;
+  }
+
+  findNearestClimbChainPoint({ grabDistance = GABI_CHAIN_GRAB_DISTANCE } = {}) {
+    let nearest = null;
+    const playerX = this.player.x;
+    const playerY = this.player.y - 8;
+    const releasedChainLocked =
+      this.chainGrabDisabledChain &&
+      this.time.now < (this.chainGrabDisabledUntil || 0);
+    (this.hangingChains || []).forEach((chain) => {
+      if (releasedChainLocked && chain === this.chainGrabDisabledChain) return;
+      const point = this.getClimbPointOnChain(chain, playerY);
+      if (!point) return;
+      const distanceX = Math.abs(point.x - playerX);
+      const distanceY = Math.max(0, chain.anchorY - playerY, playerY - this.getChainBottomY(chain));
+      const distance = Math.hypot(distanceX, distanceY * 0.6);
+      if (distance > grabDistance) return;
+      if (!nearest || distance < nearest.distance) nearest = { chain, point, distance };
+    });
+    return nearest;
+  }
+
+  getClimbPointOnChain(chain, y) {
+    const points = chain?.points || [];
+    if (points.length < 2) return null;
+    const top = points[0];
+    const bottom = points[points.length - 1];
+    if (y < top.y - GABI_CHAIN_GRAB_DISTANCE || y > bottom.y + GABI_CHAIN_GRAB_DISTANCE) return null;
+    let best = null;
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const start = points[index];
+      const end = points[index + 1];
+      const segmentMinY = Math.min(start.y, end.y) - HANGING_CHAIN_LINK_SPACING;
+      const segmentMaxY = Math.max(start.y, end.y) + HANGING_CHAIN_LINK_SPACING;
+      if (y < segmentMinY || y > segmentMaxY) continue;
+      const denominator = end.y - start.y;
+      const t = Math.abs(denominator) < 0.001 ? 0 : Phaser.Math.Clamp((y - start.y) / denominator, 0, 1);
+      const x = Phaser.Math.Linear(start.x, end.x, t);
+      const projectedY = Phaser.Math.Linear(start.y, end.y, t);
+      const angle = Math.atan2(end.x - start.x, end.y - start.y);
+      const distance = Math.abs(projectedY - y);
+      if (!best || distance < best.distance) best = { x, y: projectedY, distance, angle };
+    }
+    return best || { x: bottom.x, y: bottom.y, distance: Math.abs(bottom.y - y), angle: 0 };
+  }
+
+  getChainBottomY(chain) {
+    const points = chain?.points || [];
+    return points.length ? points[points.length - 1].y : chain?.anchorY || 0;
+  }
+
+  startChainClimb(target) {
+    if (!target?.chain || !this.player?.body) return;
+    const incomingVelocityX = this.player.body.velocity.x || 0;
+    const incomingVelocityY = this.player.body.velocity.y || 0;
+    const side = this.player.x < target.point.x ? -1 : 1;
+    this.chainClimb = { chain: target.chain, side };
+    this.applyChainGrabImpulse(target.chain, target.point, incomingVelocityX, incomingVelocityY);
+    this.airJumpsUsed = 0;
+    this.usingWingJump = false;
+    this.resetGlideState();
+    this.resetGabiDiveState();
+    this.resetGabiDashState();
+    this.player.body.setAllowGravity(false);
+    this.player.setAcceleration(0, 0);
+    this.player.setVelocity(0, 0);
+    this.player.setPosition(
+      target.point.x + side * GABI_CHAIN_SIDE_OFFSET,
+      Phaser.Math.Clamp(this.player.y, target.chain.anchorY + GABI_CHAIN_TOP_DISMOUNT_Y, this.getChainBottomY(target.chain) - GABI_CHAIN_BOTTOM_DISMOUNT_Y)
+    );
+    this.setGabiFlip(side < 0);
+    this.currentGabiAnimation = null;
+    this.setGabiAnimation("climb");
+    this.playLevelSfx(CHAIN_GRAB_SFX_KEY, 0.42);
+  }
+
+  applyChainGrabImpulse(chain, point, incomingVelocityX = 0, incomingVelocityY = 0) {
+    if (!chain) return;
+    const fallbackDirection = Math.sign((point?.x || chain.anchorX) - this.player.x) || chain.side || 1;
+    const direction = Math.abs(incomingVelocityX) > 24 ? Math.sign(incomingVelocityX) : fallbackDirection;
+    const horizontalForce = Phaser.Math.Clamp(Math.abs(incomingVelocityX) / 420, 0.25, 1.25);
+    const verticalForce = Phaser.Math.Clamp(Math.abs(incomingVelocityY) / 900, 0, 0.42);
+    const impulse = direction * (horizontalForce + verticalForce);
+    chain.impactVelocity = Phaser.Math.Clamp((chain.impactVelocity || 0) + impulse * 7.5, -11, 11);
+    chain.impactAngle = Phaser.Math.Clamp(
+      (chain.impactAngle || 0) + impulse * 0.045,
+      -HANGING_CHAIN_IMPACT_MAX_ANGLE,
+      HANGING_CHAIN_IMPACT_MAX_ANGLE
+    );
+  }
+
+  applyChainSwingInput(chain, direction = 0, delta = 16) {
+    if (!chain || !direction) return;
+    const dt = Phaser.Math.Clamp(delta / 1000, 1 / 120, 1 / 30);
+    chain.impactVelocity = Phaser.Math.Clamp(
+      (chain.impactVelocity || 0) + direction * HANGING_CHAIN_INPUT_FORCE * dt,
+      -HANGING_CHAIN_INPUT_MAX_VELOCITY,
+      HANGING_CHAIN_INPUT_MAX_VELOCITY
+    );
+  }
+
+  stopChainClimb({ jump = false, drop = false, direction = 0 } = {}) {
+    if (!this.chainClimb || !this.player?.body) return;
+    const releasedChain = this.chainClimb.chain;
+    this.chainClimb = null;
+    this.chainGrabDisabledChain = releasedChain;
+    this.chainGrabDisabledUntil = this.time.now + GABI_CHAIN_RELEASE_LOCK_MS;
+    this.player.body.setAllowGravity(true);
+    this.player.anims.resume();
+    this.currentGabiAnimation = null;
+    if (jump) {
+      this.player.setVelocity(direction * GABI_CHAIN_JUMP_SPEED_X, GABI_CHAIN_JUMP_SPEED_Y);
+      this.setGabiFlip(direction < 0);
+      this.setGabiAnimation("jump");
+    } else if (drop) {
+      this.player.y += GABI_CHAIN_GRAB_DISTANCE * 0.45;
+      this.player.body.reset(this.player.x, this.player.y);
+      this.player.setVelocity(0, 185);
+      this.setGabiAnimation("jump");
+    }
+  }
+
+  dismountChainToPlatform(chain) {
+    const run = chain?.run;
+    if (!run || !this.player?.body) {
+      this.stopChainClimb();
+      return;
+    }
+    const x = chain.side > 0 ? run.endX - TILE * 1.15 : run.startX + TILE * 1.15;
+    const y = run.topY - 58;
+    this.stopChainClimb();
+    this.player.setPosition(x, y);
+    this.player.body.reset(x, y);
+    this.player.setVelocity(0, 0);
+    this.player.setAcceleration(0, 0);
+    this.setGabiAnimation("idle");
   }
 
   createMovingPlatforms() {
@@ -4913,6 +6601,69 @@ class PlayScene extends Phaser.Scene {
     this.updatePlatformShadows();
   }
 
+  createGardenDecorations() {
+    const config = this.level.gardenDecor;
+    if (!config?.clusters?.length) return;
+    const gardenAssets = this.getAllowedGardenAssetsForLevel();
+    const bushAssets = gardenAssets.filter((asset) => asset.type === "bush");
+    const featureAssets = gardenAssets.filter((asset) => asset.type === "feature");
+    const lanternAssets = gardenAssets.filter((asset) => asset.type === "lantern");
+    if (!bushAssets.length) return;
+
+    config.clusters.forEach((cluster, clusterIndex) => {
+      const run = this.getNearestPlatformRun(cluster.x, cluster.row * TILE);
+      if (!run) return;
+      const width = Math.max(3, cluster.width || 7);
+      const density = Phaser.Math.Clamp(cluster.density ?? 0.6, 0.25, 1);
+      const startX = Phaser.Math.Clamp(cluster.x - width * TILE * 0.5, run.startX + 14, run.endX - 14);
+      const endX = Phaser.Math.Clamp(cluster.x + width * TILE * 0.5, run.startX + 14, run.endX - 14);
+      const count = Phaser.Math.Clamp(Math.round(width * density), 2, Math.max(3, Math.floor(width * 0.85)));
+      for (let index = 0; index < count; index += 1) {
+        const seed = clusterIndex * 157 + index * 29 + Math.floor(run.topY / TILE);
+        const progress = count === 1 ? 0.5 : index / (count - 1);
+        const noise = this.wallPlacementNoise(seed + 17, Math.floor(cluster.x / TILE) + 71);
+        const x = Phaser.Math.Clamp(
+          Phaser.Math.Linear(startX, endX, progress) + Phaser.Math.Linear(-18, 18, noise),
+          run.startX + 16,
+          run.endX - 16
+        );
+        const asset = this.pickGardenAsset(bushAssets, this.wallPlacementNoise(seed + 43, Math.floor(x / TILE) + 19));
+        this.createGardenDecorSprite(asset, x, run.topY + 2, {
+          seed,
+          interactive: true,
+          scaleBoost: cluster.core ? 1.08 : 0.92
+        });
+      }
+
+      const ornamentAssets = [
+        ...(cluster.allowStructures ? featureAssets : []),
+        ...lanternAssets
+      ];
+      const ornamentCount = Phaser.Math.Clamp(cluster.core ? 3 : cluster.allowStructures ? 2 : 1, 0, ornamentAssets.length);
+      for (let index = 0; index < ornamentCount; index += 1) {
+        const seed = clusterIndex * 211 + index * 53 + Math.floor(cluster.x / TILE);
+        const asset = this.pickGardenAsset(ornamentAssets, this.wallPlacementNoise(seed + 13, Math.floor(run.topY / TILE) + 37));
+        const x = Phaser.Math.Clamp(
+          cluster.x + (index - (ornamentCount - 1) / 2) * TILE * 2.2 + Phaser.Math.Linear(-12, 12, this.wallPlacementNoise(seed + 31, index + 7)),
+          run.startX + 20,
+          run.endX - 20
+        );
+        this.createGardenDecorSprite(asset, x, run.topY + 2, {
+          seed,
+          interactive: false,
+          scaleBoost: asset?.type === "lantern" ? 0.78 : 0.86
+        });
+      }
+    });
+  }
+
+  getNearestPlatformRun(x, y = 0) {
+    if (!this.platformRuns?.length) return null;
+    return this.platformRuns
+      .filter((run) => x >= run.startX - TILE * 3 && x <= run.endX + TILE * 3)
+      .sort((a, b) => Math.abs(a.topY - y) - Math.abs(b.topY - y))[0] || null;
+  }
+
   getPlatformShadowRuns() {
     const staticRuns = this.platformRuns.map((run, index) => ({
       ...run,
@@ -4972,10 +6723,17 @@ class PlayScene extends Phaser.Scene {
     this.lastDashTapAt = -Infinity;
     this.lastDashAt = -Infinity;
     this.gabiDash = null;
+    this.chainClimb = null;
+    this.chainGrabDisabledUntil = 0;
+    this.chainGrabDisabledChain = null;
     this.setGabiAnimation("idle");
   }
 
   createCatNpc() {
+    if (this.cat) {
+      this.cat.destroy();
+      this.cat = null;
+    }
     if (!this.level.catNpc) return;
     this.cat = this.physics.add.sprite(this.spawnPoint.x + 220, this.spawnPoint.y, "grey-cat", 8);
     this.cat.setScale(CAT_SCALE);
@@ -5211,6 +6969,7 @@ class PlayScene extends Phaser.Scene {
     this.keysInput = this.input.keyboard.addKeys({
       left: Phaser.Input.Keyboard.KeyCodes.A,
       right: Phaser.Input.Keyboard.KeyCodes.D,
+      down: Phaser.Input.Keyboard.KeyCodes.S,
       jump: Phaser.Input.Keyboard.KeyCodes.SPACE,
       jumpW: Phaser.Input.Keyboard.KeyCodes.W,
       action: Phaser.Input.Keyboard.KeyCodes.ENTER,
@@ -5364,12 +7123,14 @@ class PlayScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.doubleJumps, this.collectDoubleJump, null, this);
     this.physics.add.overlap(this.player, this.acornBaskets, this.collectAcornBasket, null, this);
     this.physics.add.overlap(this.player, this.lanterns, this.collectLantern, null, this);
+    this.physics.add.overlap(this.player, this.flowers, this.collectFlower, null, this);
     this.physics.add.overlap(this.player, this.heartDrops, this.collectHeart, null, this);
     this.physics.add.overlap(this.player, this.keys, this.collectKey, null, this);
     this.physics.add.overlap(this.player, this.enemies, this.hitEnemy, null, this);
     this.physics.add.overlap(this.player, this.acorns, this.hitAcorn, null, this);
     this.physics.add.overlap(this.player, this.giantHands, this.hitGiantHand, null, this);
     this.physics.add.overlap(this.player, this.haystacks, this.landInHaystack, null, this);
+    this.physics.add.overlap(this.player, this.gardenBushes, this.passThroughGardenBush, null, this);
     this.physics.add.overlap(this.player, this.doors, this.enterDoor, null, this);
   }
 
@@ -5397,6 +7158,7 @@ class PlayScene extends Phaser.Scene {
     this.basketPromptActive = false;
     this.lanternPromptActive = false;
     this.wingPromptActive = false;
+    this.flowerPromptActive = false;
     this.nextQuakeAt = Infinity;
     this.quakeDropStartsAt = 0;
     this.quakeDropUntil = 0;
@@ -5486,7 +7248,9 @@ class PlayScene extends Phaser.Scene {
     this.updateBossReveal(time);
     this.updateBossHealthBar(delta);
     this.updateLightRays(time);
+    this.updateNightLanternLights(time);
     this.updateWater(delta);
+    this.updateHangingChains(time, delta);
     this.updateLanternOverlay();
     this.updateCatNpc(time, delta);
     this.updateBirdFlocks(time, delta);
@@ -5523,11 +7287,13 @@ class PlayScene extends Phaser.Scene {
     const right = this.cursors.right.isDown || this.keysInput.right.isDown || mobileDirection > 0;
     const leftPressed = Phaser.Input.Keyboard.JustDown(this.cursors.left) || Phaser.Input.Keyboard.JustDown(this.keysInput.left);
     const rightPressed = Phaser.Input.Keyboard.JustDown(this.cursors.right) || Phaser.Input.Keyboard.JustDown(this.keysInput.right);
-    const jump =
-      Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
-      Phaser.Input.Keyboard.JustDown(this.keysInput.jump) ||
-      Phaser.Input.Keyboard.JustDown(this.keysInput.jumpW) ||
-      this.consumeMobileJump();
+    const jumpSpace = Phaser.Input.Keyboard.JustDown(this.keysInput.jump);
+    const jumpUp = Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.keysInput.jumpW);
+    const mobileJump = this.consumeMobileJump();
+    const jump = jumpUp || jumpSpace || mobileJump;
+    const chainJump = jumpSpace || (mobileJump && left !== right);
+    const climbUp = this.cursors.up.isDown || this.keysInput.jumpW.isDown || jump;
+    const climbDown = this.cursors.down.isDown || this.keysInput.down.isDown;
     const action = Phaser.Input.Keyboard.JustDown(this.keysInput.action) || this.consumeMobileAction();
     const birdAttack = Phaser.Input.Keyboard.JustDown(this.keysInput.birdAttack);
     const onFloor = this.player.body.blocked.down;
@@ -5537,6 +7303,13 @@ class PlayScene extends Phaser.Scene {
       this.player.setVelocity(0, 0);
       this.setGabiAnimation("idle");
       if (action) this.handleItemPickupOk(time);
+      return;
+    }
+
+    const chainAutoGrab = !onFloor || Boolean(this.gabiDash?.active);
+    if (this.updateChainClimb({ climbUp, climbDown, left, right, jump: chainJump, delta, autoGrab: chainAutoGrab })) {
+      if (this.player.y > this.levelHeight + 56) this.loseLife({ respawn: true });
+      this.updateDiveCameraZoom();
       return;
     }
 
@@ -5622,7 +7395,7 @@ class PlayScene extends Phaser.Scene {
   }
 
   isItemPromptActive() {
-    return Boolean(this.basketPromptActive || this.lanternPromptActive || this.wingPromptActive);
+    return Boolean(this.basketPromptActive || this.lanternPromptActive || this.wingPromptActive || this.flowerPromptActive);
   }
 
   handleItemPickupOk(time = this.time?.now || 0) {
@@ -5637,6 +7410,14 @@ class PlayScene extends Phaser.Scene {
       this.wingPromptActive = false;
       state.hasBirdControl = true;
       this.lastBirdAttackAt = -Infinity;
+      updateBirdCooldownHud(0);
+      setItemPickupVisible(false);
+      this.releaseBasketPromptControlLock();
+      return;
+    }
+
+    if (this.flowerPromptActive) {
+      this.flowerPromptActive = false;
       updateBirdCooldownHud(0);
       setItemPickupVisible(false);
       this.releaseBasketPromptControlLock();
@@ -5670,7 +7451,7 @@ class PlayScene extends Phaser.Scene {
   }
 
   commandBirdAttack(time = 0) {
-    if (this.level.actionAbility !== "command-birds") return false;
+    if (!this.isCommandAttackLevel()) return false;
     if (!state.hasBirdControl) return false;
     if (time - this.lastBirdAttackAt < BIRD_ATTACK_COOLDOWN) return false;
     if (!this.player.body.blocked.down && !this.player.body.touching.down) return false;
@@ -5685,7 +7466,10 @@ class PlayScene extends Phaser.Scene {
     this.spawnAttackBirdFlock(target, time);
     this.playBirdAttackCameraZoom(target);
     if (this.level.birdSfx) this.playLevelSfx(this.level.birdSfx, MAGPIE_ATTACK_SFX_VOLUME);
-    this.showGabiSpeech(Phaser.Math.RND.pick(BIRD_ATTACK_SPEECH_LINES));
+    const speechLines = this.level.actionAbility === "flower-petals"
+      ? PETAL_ATTACK_SPEECH_LINES
+      : BIRD_ATTACK_SPEECH_LINES;
+    this.showGabiSpeech(Phaser.Math.RND.pick(speechLines));
     return true;
   }
 
@@ -5834,10 +7618,11 @@ class PlayScene extends Phaser.Scene {
   }
 
   updateBirdAttackCooldown(time = 0) {
-    if (this.level.actionAbility !== "command-birds" || !state.hasBirdControl) {
+    if (!this.isCommandAttackLevel() || !state.hasBirdControl) {
       setBirdCooldownVisible(false);
       return;
     }
+    setBirdCooldownVariant(this.level?.actionAbility === "flower-petals" ? "flower" : "bird");
     setBirdCooldownVisible(state.running && !state.won);
     const remaining = Math.max(0, BIRD_ATTACK_COOLDOWN - (time - this.lastBirdAttackAt));
     updateBirdCooldownHud(remaining / BIRD_ATTACK_COOLDOWN);
@@ -6493,9 +8278,60 @@ class PlayScene extends Phaser.Scene {
     }
   }
 
+  passThroughGardenBush(_player, bush) {
+    if (!bush?.active || !this.player?.body) return;
+    const now = this.time.now;
+    const touchSpeed = Phaser.Math.Distance.Between(
+      this.player.body.velocity.x,
+      this.player.body.velocity.y,
+      0,
+      0
+    );
+    if (touchSpeed < HAY_BURST_MIN_TOUCH_SPEED * 0.55) return;
+    if (now - (bush.getData("lastBurstAt") || -Infinity) < HAY_BURST_COOLDOWN_MS) return;
+    bush.setData("lastBurstAt", now);
+    this.playLevelSfx(HAYSTACK_WALKIN_SFX_KEY, 0.32);
+    this.spawnGardenBurst(bush.x, bush.y - bush.displayHeight * 0.34);
+    if (bush.getData("revealsKey") && !this.keyRevealed) {
+      this.keySprite?.setData("gardenBushTouched", true);
+      this.revealKey();
+    }
+  }
+
+  spawnGardenBurst(x, y) {
+    const pieces = 38;
+    for (let index = 0; index < pieces; index += 1) {
+      const color = Phaser.Math.RND.pick(GARDEN_BURST_COLORS);
+      const width = Math.max(1, Math.round(Phaser.Math.Between(5, 18) * GARDEN_BURST_PARTICLE_SCALE));
+      const height = Math.max(1, Math.round(Phaser.Math.Between(1, 4) * GARDEN_BURST_PARTICLE_SCALE));
+      const piece = this.add.rectangle(
+        x + Phaser.Math.Between(-54, 54),
+        y + Phaser.Math.Between(-16, 14),
+        width,
+        height,
+        color,
+        Phaser.Math.FloatBetween(0.7, 0.96)
+      );
+      const direction = index % 2 === 0 ? -1 : 1;
+      const lift = Phaser.Math.Between(36, 124);
+      piece.setDepth(KEY_GARDEN_BURST_DEPTH + Phaser.Math.FloatBetween(0, 0.28));
+      piece.setRotation(Phaser.Math.FloatBetween(-1.2, 1.2));
+      this.tweens.add({
+        targets: piece,
+        x: piece.x + direction * Phaser.Math.Between(42, 144) + Phaser.Math.Between(-28, 28),
+        y: piece.y - lift,
+        angle: Phaser.Math.Between(-260, 260),
+        alpha: 0,
+        duration: Phaser.Math.Between(660, 1040),
+        ease: "Quad.easeOut",
+        onComplete: () => piece.destroy()
+      });
+    }
+  }
+
   spawnAttackBirdFlock(target, time = 0) {
-    const birdSprite = this.getBirdSpriteKey();
-    const birdAnimation = this.getBirdAnimationKey(birdSprite);
+    const birdSprite = this.getAttackFlockSpriteKey();
+    const birdAnimation = this.getAttackFlockAnimationKey(birdSprite);
     if (!this.textures.exists(birdSprite) || !this.anims.exists(birdAnimation)) return;
     const camera = this.cameras.main;
     const directionX = target?.active ? (target.x >= this.player.x ? 1 : -1) : (this.player.flipX ? -1 : 1);
@@ -6518,30 +8354,50 @@ class PlayScene extends Phaser.Scene {
       target,
       targetPoint: { x: targetX, y: targetY },
       hitTriggered: false,
+      hitTargets: new Set(),
       startedAt: time,
       startDistance,
+      spriteKey: birdSprite,
       rotation: Phaser.Math.Clamp(Math.atan2(baseVy, Math.abs(baseSpeed)) * 0.18, -0.16, 0.16) * directionX,
       birds: []
     };
-    const count = Phaser.Math.Between(BIRD_MIN_FLOCK_SIZE, BIRD_MAX_FLOCK_SIZE);
+    const isPetalFlock = birdSprite === "flower-petal";
+    const count = isPetalFlock
+      ? Phaser.Math.Between(BIRD_MAX_FLOCK_SIZE + 10, BIRD_MAX_FLOCK_SIZE + 22)
+      : Phaser.Math.Between(BIRD_MIN_FLOCK_SIZE, BIRD_MAX_FLOCK_SIZE);
 
     for (let index = 0; index < count; index += 1) {
       const bird = this.add.sprite(
         baseX,
         baseY,
         birdSprite,
-        Phaser.Math.Between(0, 3)
+        isPetalFlock ? Phaser.Math.Between(0, 2) : Phaser.Math.Between(0, 3)
       );
-      bird.setScale(Phaser.Math.FloatBetween(0.055, 0.088) * this.getBirdScaleMultiplier());
+      const scale = isPetalFlock
+        ? Phaser.Math.FloatBetween(0.02, 0.032) * this.getAttackFlockScaleMultiplier(birdSprite)
+        : Phaser.Math.FloatBetween(0.055, 0.088) * this.getAttackFlockScaleMultiplier(birdSprite);
+      const mirrorX = isPetalFlock && Phaser.Math.Between(0, 1) === 1 ? -1 : 1;
+      const mirrorY = isPetalFlock && Phaser.Math.Between(0, 1) === 1 ? -1 : 1;
+      bird.setScale(scale * mirrorX, scale * mirrorY);
       bird.setDepth(BIRD_ATTACK_DEPTH);
-      bird.setAlpha(Phaser.Math.FloatBetween(0.58, 0.86));
-      bird.setFlipX(directionX < 0);
+      bird.setAlpha(isPetalFlock ? Phaser.Math.FloatBetween(0.48, 0.9) : Phaser.Math.FloatBetween(0.58, 0.86));
+      bird.setFlipX(isPetalFlock ? Phaser.Math.Between(0, 1) === 1 : directionX < 0);
+      bird.setFlipY(isPetalFlock && Phaser.Math.Between(0, 1) === 1);
       bird.play(birdAnimation, true);
-      bird.formationX = Phaser.Math.Between(-74, 74);
-      bird.formationY = Phaser.Math.Between(-24, 24);
-      bird.wobble = Phaser.Math.FloatBetween(2.2, 6.5);
+      bird.spin = isPetalFlock ? Phaser.Math.FloatBetween(-10.5, 10.5) : 0;
+      const clustered = isPetalFlock && Phaser.Math.FloatBetween(0, 1) < 0.68;
+      bird.formationX = isPetalFlock
+        ? (clustered ? Phaser.Math.Between(-52, 52) : Phaser.Math.Between(-160, 160))
+        : Phaser.Math.Between(-74, 74);
+      bird.formationY = isPetalFlock
+        ? (clustered ? Phaser.Math.Between(-30, 30) : Phaser.Math.Between(-92, 92))
+        : Phaser.Math.Between(-24, 24);
+      bird.wobble = isPetalFlock ? Phaser.Math.FloatBetween(8, 28) : Phaser.Math.FloatBetween(2.2, 6.5);
       bird.phase = Phaser.Math.FloatBetween(0, Math.PI * 2);
-      bird.rotation = flock.rotation;
+      bird.driftX = isPetalFlock ? Phaser.Math.FloatBetween(-18, 18) : 0;
+      bird.driftY = isPetalFlock ? Phaser.Math.FloatBetween(-24, 24) : 0;
+      bird.flutter = isPetalFlock ? Phaser.Math.FloatBetween(0.65, 1.8) : 1;
+      bird.rotation = isPetalFlock ? Phaser.Math.FloatBetween(-Math.PI, Math.PI) : flock.rotation;
       bird.x = flock.x + bird.formationX;
       bird.y = flock.y + bird.formationY;
       flock.birds.push(bird);
@@ -6603,6 +8459,12 @@ class PlayScene extends Phaser.Scene {
       this.player.play("gabi-dash", true);
       return;
     }
+    if (name === "climb" && this.anims.exists("gabi-climb")) {
+      this.player.setScale(GABI_CLIMB_SCALE);
+      this.player.setAngle(0);
+      this.player.play("gabi-climb", true);
+      return;
+    }
     this.player.setScale(name === "glide" ? GABI_GLIDE_SCALE : GABI_SCALE);
     this.player.setAngle(0);
     const animationKey = name === "wing-jump"
@@ -6615,6 +8477,10 @@ class PlayScene extends Phaser.Scene {
 
   updateGabiAnimation(isMoving, onFloor) {
     if (this.gabiActionUntil && this.time.now < this.gabiActionUntil) return;
+    if (this.chainClimb) {
+      this.setGabiAnimation("climb");
+      return;
+    }
     if (this.gabiDash?.active) {
       this.setGabiAnimation("dash");
       return;
@@ -6640,8 +8506,10 @@ class PlayScene extends Phaser.Scene {
 
   canStartGabiDash(time = 0) {
     if (!this.player?.body || !state.running || state.won) return false;
+    if (!isDashEnabled()) return false;
     if (this.isItemPromptActive()) return false;
     if (this.gabiDash?.active) return false;
+    if (this.chainClimb) return false;
     if (this.gabiDiveActive || this.scriptedHaystackDive || this.isGliding) return false;
     if (this.finalElevatorActive && this.isPlayerInsideFinalElevatorCabin()) return false;
     if (this.gabiActionUntil && time < this.gabiActionUntil) return false;
@@ -6802,6 +8670,9 @@ class PlayScene extends Phaser.Scene {
 
   resetPlayerToSpawn() {
     this.stopScriptedHaystackDive();
+    this.stopChainClimb();
+    this.chainGrabDisabledUntil = 0;
+    this.chainGrabDisabledChain = null;
     this.damageFlickerTween?.remove?.();
     this.damageFlickerTween = null;
     this.resetPlayerMotion();
@@ -7340,7 +9211,11 @@ class PlayScene extends Phaser.Scene {
         const wobbleY = Math.cos(age * 0.0028 + bird.phase * 0.7) * bird.wobble * 0.38;
         bird.x = flock.x + bird.formationX + wobbleX;
         bird.y = flock.y + bird.formationY + wobbleY;
-        bird.rotation = Phaser.Math.Linear(bird.rotation, flock.rotation, 0.05);
+        if (flock.spriteKey === "flower-petal") {
+          bird.rotation += (bird.spin || 0) * seconds;
+        } else {
+          bird.rotation = Phaser.Math.Linear(bird.rotation, flock.rotation, 0.05);
+        }
         return true;
       });
 
@@ -7367,35 +9242,32 @@ class PlayScene extends Phaser.Scene {
       }
       flock.vx = (flock.baseVx ?? flock.vx) * speedFactor;
       flock.vy = (flock.baseVy ?? flock.vy) * speedFactor;
+      const previousX = flock.x;
+      const previousY = flock.y;
       flock.x += flock.vx * seconds;
       flock.y += flock.vy * seconds;
       const age = Math.max(0, time - flock.startedAt);
       flock.birds = flock.birds.filter((bird) => {
         if (!bird?.active) return false;
-        const wobbleX = Math.sin(age * 0.0022 + bird.phase) * bird.wobble;
-        const wobbleY = Math.cos(age * 0.0028 + bird.phase * 0.7) * bird.wobble * 0.38;
-        bird.x = flock.x + bird.formationX + wobbleX;
-        bird.y = flock.y + bird.formationY + wobbleY;
-        bird.rotation = Phaser.Math.Linear(bird.rotation, flock.rotation, 0.05);
+        if (flock.spriteKey === "flower-petal") {
+          const flutter = bird.flutter || 1;
+          const wobbleX = Math.sin(age * 0.0048 * flutter + bird.phase) * bird.wobble;
+          const wobbleY = Math.cos(age * 0.0062 * flutter + bird.phase * 0.7) * bird.wobble * 0.8;
+          const driftAge = age / 1000;
+          bird.x = flock.x + bird.formationX + wobbleX + (bird.driftX || 0) * driftAge;
+          bird.y = flock.y + bird.formationY + wobbleY + (bird.driftY || 0) * Math.sin(driftAge * 1.7 + bird.phase);
+          bird.rotation += (bird.spin || 0) * seconds;
+        } else {
+          const wobbleX = Math.sin(age * 0.0022 + bird.phase) * bird.wobble;
+          const wobbleY = Math.cos(age * 0.0028 + bird.phase * 0.7) * bird.wobble * 0.38;
+          bird.x = flock.x + bird.formationX + wobbleX;
+          bird.y = flock.y + bird.formationY + wobbleY;
+          bird.rotation = Phaser.Math.Linear(bird.rotation, flock.rotation, 0.05);
+        }
         return true;
       });
 
-      if (!flock.hitTriggered && target?.active && !target.getData("dying") && this.isBirdAttackTargetVisible(target)) {
-        const hitPoint = this.getBirdAttackTargetPoint(target);
-        const distance = Phaser.Math.Distance.Between(flock.x, flock.y, hitPoint.x, hitPoint.y);
-        if (distance < BIRD_ATTACK_HIT_RADIUS) {
-          flock.hitTriggered = true;
-          flock.vx = flock.baseVx ?? flock.vx;
-          flock.vy = flock.baseVy ?? flock.vy;
-          if (this.isGiantHandBirdAttackTarget(target)) {
-            this.damageGiantHand(target);
-          } else {
-            this.defeatEnemy(target);
-            awardScore(300);
-          }
-          updateHud();
-        }
-      }
+      this.applyBirdAttackSweepHits(flock, previousX, previousY);
 
       const camera = this.cameras.main;
       const outside =
@@ -7408,6 +9280,50 @@ class PlayScene extends Phaser.Scene {
       return false;
     });
     this.birdFlocks = this.birdFlockGroups.flatMap((flock) => flock.birds);
+  }
+
+  applyBirdAttackSweepHits(flock, previousX, previousY) {
+    if (!flock?.hitTargets) return;
+    let scored = false;
+    const tryHit = (target) => {
+      if (!target?.active || flock.hitTargets.has(target)) return;
+      if (target.getData?.("dying")) return;
+      if (!this.isBirdAttackTargetVisible(target)) return;
+      const point = this.getBirdAttackTargetPoint(target);
+      const distance = this.distancePointToSegment(point.x, point.y, previousX, previousY, flock.x, flock.y);
+      if (distance > BIRD_ATTACK_HIT_RADIUS) return;
+      flock.hitTargets.add(target);
+      if (target === flock.target) {
+        flock.hitTriggered = true;
+        flock.vx = flock.baseVx ?? flock.vx;
+        flock.vy = flock.baseVy ?? flock.vy;
+      }
+      if (this.isGiantHandBirdAttackTarget(target)) {
+        this.damageGiantHand(target);
+      } else {
+        this.defeatEnemy(target);
+        awardScore(300);
+        scored = true;
+      }
+    };
+
+    this.enemies?.children.iterate((enemy) => {
+      if (!enemy?.active || !enemy.body?.enable || enemy.getData("dying")) return;
+      tryHit(enemy);
+    });
+    this.giantHands?.children.iterate((hand) => {
+      if (this.isGiantHandBirdAttackTarget(hand)) tryHit(hand);
+    });
+    if (scored) updateHud();
+  }
+
+  distancePointToSegment(px, py, ax, ay, bx, by) {
+    const dx = bx - ax;
+    const dy = by - ay;
+    const lengthSq = dx * dx + dy * dy;
+    if (lengthSq <= 0.0001) return Phaser.Math.Distance.Between(px, py, ax, ay);
+    const t = Phaser.Math.Clamp(((px - ax) * dx + (py - ay) * dy) / lengthSq, 0, 1);
+    return Phaser.Math.Distance.Between(px, py, ax + dx * t, ay + dy * t);
   }
 
   scheduleNextBirdFlock(time = 0) {
@@ -7624,20 +9540,26 @@ class PlayScene extends Phaser.Scene {
     const x = camera.scrollX + (fromLeft ? Phaser.Math.Between(-170, -34) : Phaser.Math.Between(20, VIEW_WIDTH - 40));
     const y = camera.scrollY + Phaser.Math.Between(-130, Math.max(-120, Math.floor(PLAY_HEIGHT * 0.42)));
     const leaf = this.add.sprite(x, y, config.sprite, Phaser.Math.Between(0, 2));
-    const scale = Phaser.Math.FloatBetween(0.048, 0.09);
+    const [minScale, maxScale] = config.scaleRange || [0.048, 0.09];
+    const [minAlpha, maxAlpha] = config.alphaRange || [0.45, 0.82];
+    const [minVx, maxVx] = config.windX || [78, 148];
+    const [minVy, maxVy] = config.windY || [28, 72];
+    const [minSpin, maxSpin] = config.spin || [-3.8, 3.8];
+    const scale = Phaser.Math.FloatBetween(minScale, maxScale);
     const mirrored = Phaser.Math.Between(0, 1) === 1 ? -1 : 1;
     leaf.setScale(scale * mirrored, scale * (Phaser.Math.Between(0, 1) === 1 ? -1 : 1));
     leaf.setFlipX(Phaser.Math.Between(0, 1) === 1);
     leaf.setFlipY(Phaser.Math.Between(0, 1) === 1);
     leaf.setDepth(Phaser.Math.FloatBetween(AUTUMN_LEAF_MIN_DEPTH, AUTUMN_LEAF_MAX_DEPTH));
-    leaf.setAlpha(Phaser.Math.FloatBetween(0.45, 0.82));
+    leaf.setAlpha(Phaser.Math.FloatBetween(minAlpha, maxAlpha));
     leaf.setAngle(Phaser.Math.Between(0, 359));
+    if (config.animation && this.anims.exists(config.animation)) leaf.play(config.animation, true);
     this.ambientLeaves.push({
       leaf,
       startedAt,
-      vx: Phaser.Math.FloatBetween(78, 148),
-      vy: Phaser.Math.FloatBetween(28, 72),
-      spin: Phaser.Math.FloatBetween(-3.8, 3.8),
+      vx: Phaser.Math.FloatBetween(minVx, maxVx),
+      vy: Phaser.Math.FloatBetween(minVy, maxVy),
+      spin: Phaser.Math.FloatBetween(minSpin, maxSpin),
       phase: Phaser.Math.FloatBetween(0, Math.PI * 2),
       gustFrequency: Phaser.Math.FloatBetween(2.1, 4.6),
       gustStrength: Phaser.Math.FloatBetween(16, 58),
@@ -7794,7 +9716,19 @@ class PlayScene extends Phaser.Scene {
   }
 
   resetCatNpc() {
-    if (!this.cat) return;
+    if (!this.level.catNpc) {
+      if (this.cat) {
+        this.cat.destroy();
+        this.cat = null;
+      }
+      return;
+    }
+    if (!this.cat || !this.cat.active || !this.cat.body || typeof this.cat.body.reset !== "function") {
+      this.cat?.destroy?.();
+      this.cat = null;
+      this.createCatNpc();
+    }
+    if (!this.cat?.body) return;
     this.cat.enableBody(true, this.spawnPoint.x + CAT_START_OFFSET, this.spawnPoint.y, true, true);
     this.cat.body.allowGravity = false;
     this.cat.body.moves = false;
@@ -8737,7 +10671,7 @@ class PlayScene extends Phaser.Scene {
       return;
     }
 
-    this.nextQuakeAt = fromTime + Phaser.Math.Between(quake.minDelay, quake.maxDelay);
+    this.nextQuakeAt = fromTime + Phaser.Math.Between(...getDifficultyScaledRange([quake.minDelay, quake.maxDelay], "quakeDelayMultiplier", 1000));
   }
 
   updateEnvironmentalQuake(time) {
@@ -8746,15 +10680,15 @@ class PlayScene extends Phaser.Scene {
     if (time < this.nextQuakeAt) return;
 
     this.nextQuakeAt = Infinity;
-    this.quakeDropStartsAt = time + quake.brickDelay;
-    this.quakeDropUntil = this.quakeDropStartsAt + quake.burstDuration;
+    this.quakeDropStartsAt = time + Math.max(120, Math.round(quake.brickDelay * (getDifficultyProfile().hazardDelayMultiplier ?? 1)));
+    this.quakeDropUntil = this.quakeDropStartsAt + Math.max(500, Math.round(quake.burstDuration * (getDifficultyProfile().quakeBurstMultiplier ?? 1)));
     this.cameras.main.shake(quake.shakeDuration, quake.shakeIntensity);
     this.playLevelSfx(quake.sfx, 0.68);
     this.positionQuakeBricksNearLightImpacts();
     this.acorns.children.iterate((acorn) => {
       if (!acorn || !acorn.active) return;
-      acorn.setData("nextDrop", this.quakeDropStartsAt + Phaser.Math.Between(...quake.brickDropDelay));
-      acorn.setData("pace", Phaser.Math.Between(...quake.brickPace));
+      acorn.setData("nextDrop", this.quakeDropStartsAt + Phaser.Math.Between(...getDifficultyScaledRange(quake.brickDropDelay, "hazardDelayMultiplier", 40)));
+      acorn.setData("pace", Phaser.Math.Between(...getDifficultyScaledRange(quake.brickPace, "hazardPaceMultiplier", 80)));
     });
     this.scheduleNextQuake(this.quakeDropUntil);
   }
@@ -8888,6 +10822,63 @@ class PlayScene extends Phaser.Scene {
     this.updateLightSparkles(time);
   }
 
+  updateNightLanternLights(time = 0) {
+    if (!this.level.nightLevel) return;
+    (this.nightLanternLights || []).forEach((light, index) => {
+      const pulse = 0.42 + Math.sin(time * 0.0012 + light.phase) * 0.045 + Math.sin(time * 0.00047 + index) * 0.025;
+      light.glow?.setAlpha(Phaser.Math.Clamp(pulse, 0.34, 0.52));
+      light.glow?.setScale((light.radius / 128) * (1 + Math.sin(time * 0.001 + light.phase) * 0.018));
+    });
+
+    if (!this.textures.exists("light-sparkle") || time < this.nextNightLanternSparkleAt) return;
+    const lightPool = [...(this.nightLanternLights || [])];
+    if (state.hasLantern && this.player?.active) {
+      lightPool.push({
+        x: this.player.x + (this.player.flipX ? -18 : 18),
+        y: this.player.y + (this.level.darkness?.yOffset ?? -18),
+        radius: this.level.darkness?.radius ?? NIGHT_LANTERN_RADIUS,
+        foreground: true
+      });
+    }
+    const visibleLights = lightPool.filter((light) => {
+      const camera = this.cameras.main;
+      return light.x > camera.scrollX - light.radius &&
+        light.x < camera.scrollX + VIEW_WIDTH + light.radius &&
+        light.y > camera.scrollY - light.radius &&
+        light.y < camera.scrollY + PLAY_HEIGHT + light.radius;
+    });
+    if (!visibleLights.length) return;
+    const sparkleCount = Phaser.Math.Between(5, 12);
+    for (let index = 0; index < sparkleCount; index += 1) {
+      const light = Phaser.Utils.Array.GetRandom(visibleLights);
+      this.spawnNightLanternSparkle(light);
+    }
+    this.nextNightLanternSparkleAt = time + Phaser.Math.Between(170, 360);
+  }
+
+  spawnNightLanternSparkle(light) {
+    const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+    const distance = Math.sqrt(Phaser.Math.FloatBetween(0.02, 0.92)) * (light.radius || NIGHT_LANTERN_RADIUS) * 0.86;
+    const sparkle = this.add.image(light.x + Math.cos(angle) * distance, light.y + Math.sin(angle) * distance, "light-sparkle");
+    const scale = Phaser.Math.FloatBetween(0.08, 0.22);
+    sparkle.setScale(scale);
+    sparkle.setDepth(light.foreground ? NIGHT_LANTERN_SPARKLE_DEPTH + 0.18 : NIGHT_LANTERN_SPARKLE_DEPTH);
+    sparkle.setBlendMode(Phaser.BlendModes.ADD);
+    sparkle.setAlpha(0);
+    this.tweens.add({
+      targets: sparkle,
+      alpha: Phaser.Math.FloatBetween(0.18, 0.46),
+      scale: scale * Phaser.Math.FloatBetween(1.08, 1.42),
+      y: sparkle.y + Phaser.Math.FloatBetween(-7, 9),
+      x: sparkle.x + Phaser.Math.FloatBetween(-6, 6),
+      duration: Phaser.Math.Between(320, 560),
+      yoyo: true,
+      hold: Phaser.Math.Between(40, 170),
+      ease: "Sine.inOut",
+      onComplete: () => sparkle.destroy()
+    });
+  }
+
   updateLightSparkles(time = 0) {
     if (!this.resolvedLightRays?.length || time < this.nextLightSparkleAt) return;
     const sparkleCount = Phaser.Math.Between(20, 60);
@@ -8943,7 +10934,8 @@ class PlayScene extends Phaser.Scene {
 
   startTimer() {
     if (this.timerEvent) this.timerEvent.remove(false);
-    if (!Number.isFinite(this.level.timeLimit)) {
+    const effectiveTimeLimit = getEffectiveTimeLimit(this.level);
+    if (!Number.isFinite(effectiveTimeLimit)) {
       this.timerEvent = null;
       state.timeLeft = Infinity;
       updateHud();
@@ -8980,7 +10972,7 @@ class PlayScene extends Phaser.Scene {
     }
     this.bossSoundtrackActive = false;
     if (!isMusicEnabled()) {
-      if (this.bgm?.isPlaying) this.bgm.stop();
+      this.safeStopSound(this.bgm);
       this.stopAmbientMusic({ destroy: false });
       return;
     }
@@ -8993,7 +10985,7 @@ class PlayScene extends Phaser.Scene {
         this.startAmbientMusic();
         return;
       }
-      this.sound.stopAll();
+      this.safeStopAllSounds();
       if (this.bgm && this.bgm.key === soundtrack) {
         this.bgm.setVolume(volume);
         this.bgm.play();
@@ -9015,7 +11007,7 @@ class PlayScene extends Phaser.Scene {
     if (!soundtrack) return;
     this.bossSoundtrackActive = true;
     if (!isMusicEnabled()) {
-      if (this.bgm?.isPlaying) this.bgm.stop();
+      this.safeStopSound(this.bgm);
       return;
     }
     const volume = this.getSoundtrackVolume(soundtrack, 0.35);
@@ -9025,7 +11017,7 @@ class PlayScene extends Phaser.Scene {
         this.bgm.setVolume(volume);
         return;
       }
-      if (this.bgm?.isPlaying) this.bgm.stop();
+      this.safeStopSound(this.bgm);
       if (this.bgm && this.bgm.key !== soundtrack) {
         this.bgm.destroy();
         this.bgm = null;
@@ -9067,7 +11059,7 @@ class PlayScene extends Phaser.Scene {
   }
 
   stopAmbientMusic({ destroy = false } = {}) {
-    if (this.ambientBgm?.isPlaying) this.ambientBgm.stop();
+    this.safeStopSound(this.ambientBgm);
     if (destroy && this.ambientBgm) {
       this.ambientBgm.destroy();
       this.ambientBgm = null;
@@ -9087,7 +11079,7 @@ class PlayScene extends Phaser.Scene {
 
   startMenuMusic() {
     if (!isMusicEnabled()) {
-      if (this.bgm?.isPlaying) this.bgm.stop();
+      this.safeStopSound(this.bgm);
       this.stopAmbientMusic({ destroy: true });
       return;
     }
@@ -9097,7 +11089,7 @@ class PlayScene extends Phaser.Scene {
         this.stopAmbientMusic({ destroy: true });
         return;
       }
-      this.sound.stopAll();
+      this.safeStopAllSounds();
       this.stopAmbientMusic({ destroy: true });
       if (this.bgm && this.bgm.key !== "bgm-menu") {
         this.bgm.destroy();
@@ -9116,7 +11108,7 @@ class PlayScene extends Phaser.Scene {
     const volume = this.getSoundtrackVolume(track.key, 0.32);
     const play = () => {
       this.resumeAudioContext();
-      this.sound.stopAll();
+      this.safeStopAllSounds();
       this.stopAmbientMusic({ destroy: true });
       if (this.bgm && this.bgm.key !== track.key) {
         this.bgm.destroy();
@@ -9146,7 +11138,7 @@ class PlayScene extends Phaser.Scene {
   applyAudioSettings() {
     if (!isSfxEnabled()) this.stopDiveWindSfx();
     if (!isMusicEnabled()) {
-      if (this.bgm?.isPlaying) this.bgm.stop();
+      this.safeStopSound(this.bgm);
       this.stopAmbientMusic({ destroy: false });
       return;
     }
@@ -9167,7 +11159,9 @@ class PlayScene extends Phaser.Scene {
     };
 
     this.handlePageVisible = () => {
-      if (!this.wasMusicPlayingBeforeHidden) return;
+      const shouldRestoreMusic = this.wasMusicPlayingBeforeHidden;
+      this.wasMusicPlayingBeforeHidden = false;
+      if (!shouldRestoreMusic) return;
       this.resumeAudioContext();
       if (this.levelReady && state.running && !state.won) {
         this.startActiveLevelMusic();
@@ -9241,6 +11235,8 @@ class PlayScene extends Phaser.Scene {
     this.speechBubble = null;
     this.catSpeechBubble?.destroy(true);
     this.catSpeechBubble = null;
+    this.cat?.destroy?.();
+    this.cat = null;
     this.mysteriousManSpeechBubble?.destroy(true);
     this.mysteriousManSpeechBubble = null;
     this.elevatorSignBubble?.destroy(true);
@@ -9255,6 +11251,11 @@ class PlayScene extends Phaser.Scene {
     this.birdFlockGroups = [];
     this.birdAttackFlocks?.forEach((flock) => flock.birds?.forEach((bird) => bird?.destroy?.()));
     this.birdAttackFlocks = [];
+    this.suitcaseBoxProjectiles?.forEach((box) => {
+      this.tweens?.killTweensOf?.(box);
+      box?.destroy?.();
+    });
+    this.suitcaseBoxProjectiles = [];
     this.giantHands?.clear?.(true, true);
     this.giantHands = null;
     this.damageFlickerTween?.remove?.();
@@ -9265,31 +11266,65 @@ class PlayScene extends Phaser.Scene {
     this.distantColossus = null;
     this.clearDiveIndicatorBirds();
     this.clearDiveFieldLeaves();
+    this.nightLanternLights?.forEach((light) => {
+      light.glow?.destroy?.();
+      light.lantern?.destroy?.();
+    });
+    this.nightLanternLights = [];
+    this.playerLanternGlow?.destroy?.();
+    this.playerLanternGlow = null;
+    this.nextNightLanternSparkleAt = 0;
     this.stopDiveWindSfx();
     this.clearDiveWindLines();
     this.ambientLeaves?.forEach((entry) => entry.leaf?.destroy?.());
     this.ambientLeaves = [];
     this.nextAmbientLeafAt = 0;
+    this.stopChainClimb();
+    this.chainGrabDisabledUntil = 0;
+    this.chainGrabDisabledChain = null;
+    this.hangingChains?.forEach((chain) => {
+      chain.root?.destroy?.();
+      chain.links?.forEach((link) => link?.destroy?.());
+    });
+    this.hangingChains = [];
     this.gabiActionRestoreTimer?.remove?.(false);
     this.gabiActionRestoreTimer = null;
     this.gabiActionUntil = 0;
     this.clearOldLadyNpc();
+    this.keySprite = null;
+    this.keyPoint = null;
+    this.keyRevealed = false;
+    this.doorPoint = null;
     this.basketPromptActive = false;
     this.lanternPromptActive = false;
     this.wingPromptActive = false;
+    this.flowerPromptActive = false;
     state.hasBirdControl = false;
+    state.hasFlower = false;
     this.releaseBasketPromptControlLock();
     if (this.timerEvent) {
       this.timerEvent.remove(false);
       this.timerEvent = null;
     }
+    this.time?.removeAllEvents?.();
+    this.tweens?.killAll?.();
   }
 
   stopGameAudio() {
     this.stopDiveWindSfx();
-    if (this.bgm?.isPlaying) this.bgm.stop();
-    if (this.ambientBgm?.isPlaying) this.ambientBgm.stop();
-    if (this.sound?.context?.state === "running") this.sound.context.suspend();
+    this.safeStopSound(this.bgm);
+    this.safeStopSound(this.ambientBgm);
+    if (this.sound?.context?.state === "running") this.sound.context.suspend().catch?.(() => {});
+  }
+
+  safeStopSound(sound) {
+    try {
+      if (sound?.isPlaying && typeof sound.stop === "function") sound.stop();
+    } catch (error) {
+      logRuntimeDiagnostic("sound-stop-failed", error, {
+        key: sound?.key || null
+      });
+    }
   }
 
   resumeAudioContext() {
@@ -9369,17 +11404,40 @@ class PlayScene extends Phaser.Scene {
     updateHud();
   }
 
+  collectFlower(_player, flower) {
+    flower.disableBody(true, true);
+    state.hasFlower = true;
+    state.hasBirdControl = true;
+    awardScore(500);
+    this.flowerPromptActive = true;
+    this.lastBirdAttackAt = -Infinity;
+    this.lockPlayerForBasketPrompt();
+    this.playLevelSfx(MISC_PICKUP_SFX_KEY, 0.5);
+    const flowerImage = this.textures.exists("flower-item")
+      ? pixelateStoryFrame(this.textures.get("flower-item").getSourceImage())
+      : `./public/assets/environment/flower_item.png?v=${ASSET_VERSION}`;
+    setItemPickupVisible(true, {
+      name: "Flower",
+      instruction: "Petals now answer you. Press [ SHIFT ] to use them offensively.",
+      image: flowerImage
+    });
+    updateBirdCooldownHud(0);
+    updateHud();
+  }
+
   resetKeyReveal() {
-    if (!this.keySprite || !this.keyPoint || !this.level.catNpc) return;
+    if (!this.keySprite || !this.keyPoint || !this.level.catNpc || !this.keySprite.body) return;
     this.keyRevealed = false;
     this.keySprite.disableBody(true, true);
   }
 
   revealKey() {
     if (!this.keySprite || !this.keyPoint || this.keyRevealed) return;
+    if (this.keySprite.getData("requiresGardenBushReveal") && !this.keySprite.getData("gardenBushTouched")) return;
     this.keyRevealed = true;
     this.keySprite.enableBody(true, this.keyPoint.x, this.keyPoint.y, true, true);
-    this.keySprite.setDepth(ITEM_DEPTH);
+    this.keySprite.setDepth(KEY_ITEM_DEPTH);
+    this.keySprite.setData("armedAt", this.time.now + KEY_REVEAL_PICKUP_DELAY);
     this.tweens.add({
       targets: this.keySprite,
       scale: ITEM_SCALE * 1.18,
@@ -9390,6 +11448,7 @@ class PlayScene extends Phaser.Scene {
   }
 
   collectKey(_player, key) {
+    if ((key.getData("armedAt") || 0) > this.time.now) return;
     key.disableBody(true, true);
     state.hasKey = true;
     awardScore(500);
@@ -9405,13 +11464,15 @@ class PlayScene extends Phaser.Scene {
     const targetY = run ? run.topY - TILE / 2 : this.player.y - 24;
     const key = this.keys.create(this.player.x, this.player.y - 76, "door-key");
     key.setScale(ITEM_SCALE);
-    key.setDepth(ITEM_DEPTH);
+    key.setDepth(KEY_ITEM_DEPTH);
     key.setCircle(58, 59, 59);
     key.setData("bossExitKey", true);
+    key.setData("armedAt", this.time.now + KEY_REVEAL_PICKUP_DELAY);
     this.keyPoint = { x: targetX, y: targetY };
     this.keySprite = key;
     this.keyRevealed = true;
     this.bossExitKeySpawned = true;
+    this.createKeyGardenIndicators(this.keyPoint);
     this.tweens.add({ targets: key, angle: 8, duration: 650, yoyo: true, repeat: -1, ease: "Sine.inOut" });
     this.tweens.add({
       targets: key,
@@ -9466,7 +11527,7 @@ class PlayScene extends Phaser.Scene {
   defeatEnemy(enemy) {
     if (!enemy?.active || enemy.getData("dying")) return;
     state.enemiesDefeated = Math.min(state.totalEnemies, state.enemiesDefeated + 1);
-    this.playLevelSfx(KILL_SFX_KEY, 0.39);
+    this.playLevelSfx(KILL_SFX_KEY, KILL_SFX_VOLUME);
     this.tryDropHeart(enemy.x, enemy.y);
     enemy.setData("dying", true);
     enemy.setVelocity(0, 0);
@@ -9515,8 +11576,8 @@ class PlayScene extends Phaser.Scene {
   }
 
   tryDropHeart(x, y) {
-    if (this.heartDropsCreated >= MAX_HEART_DROPS_PER_LEVEL) return;
-    if (Phaser.Math.FloatBetween(0, 1) > HEART_DROP_CHANCE) return;
+    if (this.heartDropsCreated >= (getDifficultyProfile().maxHeartDrops ?? MAX_HEART_DROPS_PER_LEVEL)) return;
+    if (Phaser.Math.FloatBetween(0, 1) > (getDifficultyProfile().enemyHeartDropChance ?? HEART_DROP_CHANCE)) return;
 
     this.heartDropsCreated += 1;
     const settleY = this.findPickupYOnPlatform(x, y);
@@ -9525,12 +11586,7 @@ class PlayScene extends Phaser.Scene {
       settleY + Phaser.Math.Between(-4, 4),
       "life-heart"
     );
-    heart.setScale(HEART_SCALE);
-    heart.setDepth(ITEM_DEPTH);
-    heart.setCircle(58, 61, 58);
-    heart.body.allowGravity = false;
-    heart.body.immovable = true;
-    heart.setData("armedAt", this.time.now + HEART_PICKUP_DELAY);
+    this.configureHeartPickup(heart, { armedAt: this.time.now + HEART_PICKUP_DELAY });
     const settleX = heart.x + Phaser.Math.RND.pick([-1, 1]) * Phaser.Math.Between(42, 64);
     this.tweens.add({
       targets: heart,
@@ -9551,6 +11607,31 @@ class PlayScene extends Phaser.Scene {
     });
   }
 
+  configureHeartPickup(heart, { armedAt = this.time.now, bob = false } = {}) {
+    if (!heart) return heart;
+    heart.setScale(HEART_SCALE);
+    heart.setDepth(ITEM_DEPTH);
+    heart.setCircle(58, 61, 58);
+    heart.body.allowGravity = false;
+    heart.body.immovable = true;
+    heart.setData("armedAt", armedAt);
+    if (bob) this.startHeartBob(heart);
+    return heart;
+  }
+
+  startHeartBob(heart) {
+    if (!heart?.active || heart.getData("bobbing")) return;
+    heart.setData("bobbing", true);
+    this.tweens.add({
+      targets: heart,
+      y: heart.y - 9,
+      duration: 520,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.inOut"
+    });
+  }
+
   findPickupYOnPlatform(x, y) {
     const platform = this.platformRuns
       .filter((run) => x >= run.startX - 10 && x <= run.endX + 10 && run.topY >= y - 24)
@@ -9567,7 +11648,7 @@ class PlayScene extends Phaser.Scene {
       updateHud();
       return;
     }
-    this.loseLife();
+    this.loseLife({ damageSource: "enemy" });
   }
 
   hitGiantHand(player, hand) {
@@ -9623,7 +11704,6 @@ class PlayScene extends Phaser.Scene {
     this.playLevelSfx(Phaser.Utils.Array.GetRandom(GIANT_HAND_IMPACT_SFX_KEYS), 0.576);
     this.spawnGiantHandDebris(hand);
     this.tryDropHeartFromGiantHand(hand);
-    this.spawnGiantHandImpactEnemies(hand);
     if (this.playerIntersectsGiantHandHarm(hand)) this.loseLife();
   }
 
@@ -9645,7 +11725,11 @@ class PlayScene extends Phaser.Scene {
         if (time >= (hand.getData("retractAt") || Infinity)) this.retractGiantHand(hand);
         return;
       }
+      if (phase === "retracting") {
+        this.updateGiantHandRider(hand, time);
+      }
       if (phase === "retracting" && hand.getBounds().bottom < this.cameras.main.scrollY - 120) {
+        this.releaseGiantHandRider(hand, { shake: false });
         hand.setData("done", true);
         hand.destroy();
       }
@@ -9663,10 +11747,60 @@ class PlayScene extends Phaser.Scene {
   retractGiantHand(hand) {
     if (!hand?.active || hand.getData("phase") === "retracting") return;
     hand.setData("phase", "retracting");
+    hand.setData("rideStartedAt", this.time.now);
+    hand.setData("rideShakeOffAt", this.time.now + GIANT_HAND_RIDE_LIFT_MS);
     hand.body.moves = true;
     hand.body.enable = true;
     hand.body.checkCollision.none = true;
     hand.setVelocity(0, -GIANT_HAND_RETRACT_SPEED);
+    if (this.canRideRetractingGiantHand(hand)) this.attachGabiToGiantHand(hand);
+  }
+
+  canRideRetractingGiantHand(hand) {
+    if (!this.player?.active || !hand?.active) return false;
+    const jumpHitbox = this.getGiantHandWorldHitbox(hand, "jump");
+    const bounds = this.player.getBounds();
+    const playerCenterX = bounds.centerX;
+    return bounds.bottom >= jumpHitbox.top - 36 &&
+      bounds.bottom <= jumpHitbox.bottom + 36 &&
+      playerCenterX >= jumpHitbox.left - 36 &&
+      playerCenterX <= jumpHitbox.right + 36;
+  }
+
+  attachGabiToGiantHand(hand) {
+    if (!this.player?.body || !hand?.active) return;
+    hand.setData("rider", this.player);
+    this.player.setData("giantHandRide", hand);
+    this.player.body.setAllowGravity(false);
+    this.player.setVelocity(0, 0);
+    this.setGabiAnimation("idle");
+  }
+
+  updateGiantHandRider(hand, time = this.time.now) {
+    const rider = hand?.getData("rider");
+    if (rider !== this.player || !rider?.active) return;
+    if (time >= (hand.getData("rideShakeOffAt") || -Infinity) || !state.running || state.won) {
+      this.releaseGiantHandRider(hand, { shake: true });
+      return;
+    }
+    const jumpHitbox = this.getGiantHandWorldHitbox(hand, "jump");
+    const targetX = Phaser.Math.Clamp(rider.x, jumpHitbox.left + 32, jumpHitbox.right - 32);
+    const targetY = jumpHitbox.top - rider.displayHeight * 0.5 + 8;
+    rider.setPosition(targetX, targetY);
+    rider.setVelocity(0, 0);
+    rider.body.updateFromGameObject?.();
+    this.setGabiAnimation("idle");
+  }
+
+  releaseGiantHandRider(hand, { shake = false } = {}) {
+    const rider = hand?.getData("rider");
+    if (rider !== this.player || !rider?.active) return;
+    hand.setData("rider", null);
+    rider.setData("giantHandRide", null);
+    if (rider.body) rider.body.setAllowGravity(true);
+    const direction = rider.x <= hand.x ? -1 : 1;
+    rider.setVelocity(direction * 155, GIANT_HAND_RIDE_SHAKE_VELOCITY_Y);
+    if (shake) this.cameras.main.shake(130, 0.004);
   }
 
   hitGiantHandWithThrownItem(item, hand) {
@@ -9700,7 +11834,7 @@ class PlayScene extends Phaser.Scene {
     const now = this.time.now;
     if (now - (hand.getData("lastHitAt") || -Infinity) < GIANT_HAND_HIT_COOLDOWN_MS) return;
     hand.setData("lastHitAt", now);
-    this.playLevelSfx(KILL_SFX_KEY, 0.39);
+    this.playLevelSfx(KILL_SFX_KEY, KILL_SFX_VOLUME);
     this.damageBoss(GIANT_HAND_DAMAGE);
     const originX = hand.x;
     hand.setTint(0xff2f2f);
@@ -9790,60 +11924,21 @@ class PlayScene extends Phaser.Scene {
   }
 
   tryDropHeartFromGiantHand(hand) {
-    if (!this.heartDrops || Phaser.Math.FloatBetween(0, 1) > GIANT_HAND_HEART_DROP_CHANCE) return;
+    if (!this.heartDrops || Phaser.Math.FloatBetween(0, 1) > (getDifficultyProfile().giantHandHeartDropChance ?? GIANT_HAND_HEART_DROP_CHANCE)) return;
     const run = this.getLowestPlatformRunNear(hand.x);
     if (!run) return;
     const settleX = Phaser.Math.Clamp(hand.x + Phaser.Math.Between(-92, 92), run.startX + 34, run.endX - 34);
     const settleY = run.topY - TILE / 2;
     const heart = this.heartDrops.create(settleX, hand.getBounds().bottom - 70, "life-heart");
-    heart.setScale(HEART_SCALE);
-    heart.setDepth(ITEM_DEPTH);
-    heart.setCircle(58, 61, 58);
-    heart.body.allowGravity = false;
-    heart.body.immovable = true;
-    heart.setData("armedAt", this.time.now + HEART_PICKUP_DELAY);
+    this.configureHeartPickup(heart, { armedAt: this.time.now + HEART_PICKUP_DELAY });
     this.tweens.add({
       targets: heart,
       x: settleX,
       y: settleY,
       duration: 520,
       ease: "Bounce.out",
-      onComplete: () => {
-        this.tweens.add({
-          targets: heart,
-          y: heart.y - 9,
-          duration: 520,
-          yoyo: true,
-          repeat: -1,
-          ease: "Sine.inOut"
-        });
-      }
+      onComplete: () => this.startHeartBob(heart)
     });
-  }
-
-  spawnGiantHandImpactEnemies(hand) {
-    if (!this.enemies || !this.level?.enemySprite) return;
-    const run = this.getLowestPlatformRunNear(hand.x);
-    if (!run) return;
-    const count = Phaser.Math.Between(...GIANT_HAND_ENEMY_SPAWN_COUNT);
-    const usedXs = [];
-    for (let index = 0; index < count; index += 1) {
-      const side = index % 2 === 0 ? -1 : 1;
-      const rawX = hand.x + side * Phaser.Math.Between(90, 230) + Phaser.Math.Between(-26, 26);
-      const x = Phaser.Math.Clamp(rawX, run.startX + 46, run.endX - 46);
-      if (usedXs.some((usedX) => Math.abs(usedX - x) < 44)) continue;
-      usedXs.push(x);
-      const enemy = this.createEnemyAt(x, run.topY - 42, x < this.player.x ? 1 : -1);
-      enemy.setAlpha(0);
-      enemy.y -= 18;
-      this.tweens.add({
-        targets: enemy,
-        alpha: 1,
-        y: run.topY - 42,
-        duration: 260,
-        ease: "Quad.out"
-      });
-    }
   }
 
   getLowestPlatformRunNear(x) {
@@ -9877,28 +11972,32 @@ class PlayScene extends Phaser.Scene {
     acorn.setPosition(acorn.getData("homeX"), this.cameras.main.scrollY - FALLING_OBJECT_SPAWN_OFFSET);
     acorn.setVisible(false);
     acorn.body.enable = false;
-    acorn.setData("nextDrop", this.time.now + Phaser.Math.Between(...this.level.acornDelay));
-    acorn.setData("pace", Phaser.Math.Between(...this.level.acornPace));
+    acorn.setData("nextDrop", this.time.now + Phaser.Math.Between(...getDifficultyScaledRange(this.level.acornDelay, "hazardDelayMultiplier", 60)));
+    acorn.setData("pace", Phaser.Math.Between(...getDifficultyScaledRange(this.level.acornPace, "hazardPaceMultiplier", 80)));
   }
 
-  loseLife({ respawn = false } = {}) {
+  loseLife({ respawn = false, damageSource = null } = {}) {
     if (!state.running) return;
     const now = this.time?.now || 0;
     if (!respawn && now < (this.damageInvulnerableUntil || 0)) return;
+    const hardEnemyRespawn = damageSource === "enemy" &&
+      state.difficulty === DIFFICULTY_HARD &&
+      !this.level?.bossHealthGate;
+    const shouldRespawn = respawn || hardEnemyRespawn;
     this.damageInvulnerableUntil = now + DAMAGE_INVULNERABLE_MS;
     this.cancelBirdAttackCameraZoom();
     this.cancelDiveCameraZoom();
     state.lives -= 1;
     updateHud();
-    this.cameras.main.shake(respawn ? 180 : 120, respawn ? 0.012 : 0.006);
+    this.cameras.main.shake(shouldRespawn ? 180 : 120, shouldRespawn ? 0.012 : 0.006);
     if (state.lives <= 0) {
       this.showGameOverScreen({
         copy: "Gabi ran out of chances. The city was too demanding."
       });
       return;
     }
-    if (Number.isFinite(state.timeLeft)) state.timeLeft = Math.max(45, state.timeLeft);
-    if (respawn) {
+    if (Number.isFinite(state.timeLeft)) state.timeLeft = Math.max(getDifficultyProfile().respawnMinTime ?? 45, state.timeLeft);
+    if (shouldRespawn) {
       this.resetFinalElevator();
       this.resetMysteriousMan();
       this.resetPlayerToSpawn();
@@ -9912,9 +12011,10 @@ class PlayScene extends Phaser.Scene {
     this.basketPromptActive = false;
     this.lanternPromptActive = false;
     this.wingPromptActive = false;
+    this.flowerPromptActive = false;
     setItemPickupVisible(false);
     this.releaseBasketPromptControlLock();
-    if (respawn) {
+    if (shouldRespawn) {
       this.thrownItems.clear(true, true);
       if (!state.hasKey) this.resetKeyReveal();
       this.resetCatNpc();
@@ -9941,7 +12041,8 @@ class PlayScene extends Phaser.Scene {
   }
 
   enterDoor() {
-    if (!state.running || !state.hasKey) return;
+    if (!state.running) return;
+    if (this.level.requiresKeyForDoor !== false && !state.hasKey) return;
     if (this.level.finalElevator && !this.finalElevatorCompleted) return;
     this.completeLevel();
   }
@@ -9978,7 +12079,7 @@ class PlayScene extends Phaser.Scene {
     state.running = false;
     this.resetPlayerMotion({ freeze: true });
     this.setGabiAnimation("idle");
-    this.sound.stopAll();
+    this.safeStopAllSounds();
     this.stopAmbientMusic({ destroy: true });
     setCheatMenuVisible(false);
     setStoryIntroVisible(false);
@@ -9990,6 +12091,11 @@ class PlayScene extends Phaser.Scene {
   requestLevelStart(levelIndex = 0, { resetScore = true } = {}) {
     const safeIndex = Phaser.Math.Clamp(levelIndex, 0, LEVELS.length - 1);
     const level = LEVELS[safeIndex] || LEVELS[0];
+    if (this.levelTransitionInProgress) {
+      this.pendingLevelRequest = { levelIndex: safeIndex, resetScore };
+      return;
+    }
+    this.levelTransitionInProgress = true;
     this.cancelLevelRuntime();
     setGameAssetsReady(false);
     hud.message.hidden = true;
@@ -10009,6 +12115,7 @@ class PlayScene extends Phaser.Scene {
     state.hasBirdControl = false;
     state.hasAcornBasket = false;
     state.hasLantern = false;
+    state.hasFlower = false;
     state.totalEnemies = 0;
     state.enemiesDefeated = 0;
     state.questProgress = createQuestProgress();
@@ -10025,9 +12132,17 @@ class PlayScene extends Phaser.Scene {
       this.timerEvent.remove(false);
       this.timerEvent = null;
     }
-    this.sound.stopAll();
+    this.safeStopAllSounds();
     this.stopAmbientMusic({ destroy: true });
     this.scene.restart();
+  }
+
+  safeStopAllSounds() {
+    try {
+      this.sound?.stopAll?.();
+    } catch (error) {
+      logRuntimeDiagnostic("sound-stop-all-failed", error);
+    }
   }
 }
 
@@ -10058,6 +12173,7 @@ const game = new Phaser.Game({
   },
   scene: [PlayScene]
 });
+globalThis.__crazyGabiGame = game;
 
 hud.startButton.addEventListener("click", () => {
   if (!gameAssetsReady) return;
@@ -10127,7 +12243,7 @@ function returnToMainMenu() {
   resetGameProgress();
   state.autoStartLevel = false;
   state.resetProgressOnCreate = false;
-  scene.sound.stopAll();
+  scene.safeStopAllSounds?.();
   scene.stopAmbientMusic?.({ destroy: true });
   scene.scene.restart();
 }
@@ -10217,8 +12333,8 @@ function createSettingsToggle(key, label, description) {
 }
 
 function updateAudioSettingsPanel() {
-  hud.menuPanelContent
-    ?.querySelectorAll(".settings-toggle-row")
+  document
+    .querySelectorAll(".settings-toggle-row")
     .forEach((row) => {
       const key = row.dataset.setting;
       const enabled = state.audioSettings?.[key] !== false;
@@ -10231,12 +12347,27 @@ function updateAudioSettingsPanel() {
 }
 
 function showSettingsPanel() {
-  showMenuPanel("Settings", "Choose which audio layers should play. Your preferences are saved in this browser.", "settings");
+  showMenuPanel("Settings", "Choose which audio layers and movement assists should be active. Your preferences are saved in this browser.", "settings");
   hud.menuPanelContent.append(
     createSettingsToggle("music", "Music", "Menu themes, level soundtracks, music box tracks, and ambient loops."),
-    createSettingsToggle("sfx", "Sound Effects", "Pickups, attacks, dialogue sounds, impacts, and environmental effects.")
+    createSettingsToggle("sfx", "Sound Effects", "Pickups, attacks, dialogue sounds, impacts, and environmental effects."),
+    createSettingsToggle("dash", "Dash", "Double-tap left or right to dash when enabled.")
   );
   updateAudioSettingsPanel();
+}
+
+function createCheatSettingsControls() {
+  const wrapper = document.createElement("div");
+  wrapper.className = "cheat-settings";
+  const heading = document.createElement("h2");
+  heading.textContent = "Settings";
+  wrapper.append(
+    heading,
+    createSettingsToggle("music", "Music", "Toggle all music layers."),
+    createSettingsToggle("sfx", "Sound Effects", "Toggle pickups, attacks, impacts, and ambience."),
+    createSettingsToggle("dash", "Dash", "Toggle double-tap dash movement.")
+  );
+  return wrapper;
 }
 
 function showCreditsPanel() {
@@ -10275,6 +12406,8 @@ returnToMenuButton.type = "button";
 returnToMenuButton.textContent = "Return to Menu";
 returnToMenuButton.addEventListener("click", returnToMainMenu);
 hud.cheatLevels.appendChild(returnToMenuButton);
+hud.cheatLevels.after(createCheatSettingsControls());
+updateAudioSettingsPanel();
 
 window.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !hud.mainMenu.hidden) {
