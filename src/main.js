@@ -1,5 +1,5 @@
 const TILE = 32;
-const GAME_VERSION = "v0.59.3";
+const GAME_VERSION = "v0.59.6";
 const VIEW_WIDTH = 960;
 const VIEW_HEIGHT = 540;
 const PLAY_HEIGHT = VIEW_HEIGHT;
@@ -128,7 +128,7 @@ const KEY_GARDEN_LIGHT_COUNT = [3, 6];
 const KEY_GARDEN_BUSH_FRONT_Y_OFFSET = 9;
 const KEY_GARDEN_PROP_BACK_DEPTH = 3.55;
 const GARDEN_BURST_PARTICLE_SCALE = 0.75;
-const KEY_REVEAL_PICKUP_DELAY = 3000;
+const KEY_REVEAL_PICKUP_DELAY = 2000;
 const DECORATIVE_GARDEN_DEFAULT_DENSITY = 0.54;
 const KEY_GARDEN_ASSETS = [
   { key: "garden-arc-1", src: "./public/assets/environment/garden/arc_1.png", scale: 0.34, weight: 0.5, type: "feature" },
@@ -357,7 +357,7 @@ const ENEMY_NAMES = [
   "OCM Tiers Case Escalation",
   "KYC WUDB Onboarding Assistant"
 ];
-const ASSET_VERSION = "20260626-menu-polish-2";
+const ASSET_VERSION = "20260626-level6-door-petals";
 const STORY_ASSET_VERSION = ASSET_VERSION;
 
 function getSpineRuntime() {
@@ -921,7 +921,7 @@ const LEVELS = [
       ]
     },
     lightRayAlpha: 1,
-    doorYOffset: -44,
+    doorYOffset: -32,
     lightRays: [
       { x: 170, y: -100, topWidth: 48, bottomWidth: 260, height: 920, lean: 185, alpha: 0.32, thickness: 3, layerAlpha: 1.22, foreground: true, frontAlpha: 0.22, opacityMode: "pulse" },
       { x: 390, y: -120, topWidth: 36, bottomWidth: 188, height: 820, lean: 72, alpha: 0.22, thickness: 2, layerAlpha: 1.08, opacityMode: "dim" },
@@ -1612,7 +1612,7 @@ function configureMainMenuScene() {
     petal.style.setProperty("--petal-top", `${Phaser.Math.Between(-12, 88)}%`);
     petal.style.setProperty("--petal-start", `${Phaser.Math.Between(-18, 105)}%`);
     petal.style.setProperty("--petal-drift", `${Phaser.Math.Between(-220, 220)}px`);
-    petal.style.setProperty("--petal-scale", Phaser.Math.FloatBetween(0.013, 0.032).toFixed(3));
+    petal.style.setProperty("--petal-scale", Phaser.Math.FloatBetween(0.03, 0.072).toFixed(3));
     petal.style.setProperty("--petal-spin", `${Phaser.Math.Between(180, 820)}deg`);
     petal.style.setProperty("--petal-frame", String(Phaser.Math.Between(0, 2)));
     petal.style.setProperty("--petal-flip", Phaser.Math.Between(0, 1) ? "1" : "-1");
@@ -11959,7 +11959,7 @@ class PlayScene extends Phaser.Scene {
   hitAcorn(_player, acorn) {
     if (!state.running || this.isItemPromptActive() || acorn.getData("armed")) return;
     this.resetAcorn(acorn);
-    this.loseLife();
+    this.loseLife({ damageSource: "hazard" });
   }
 
   resetAcorn(acorn) {
@@ -11980,10 +11980,10 @@ class PlayScene extends Phaser.Scene {
     if (!state.running) return;
     const now = this.time?.now || 0;
     if (!respawn && now < (this.damageInvulnerableUntil || 0)) return;
-    const hardEnemyRespawn = damageSource === "enemy" &&
+    const hardDamageRespawn = Boolean(damageSource) &&
       state.difficulty === DIFFICULTY_HARD &&
       !this.level?.bossHealthGate;
-    const shouldRespawn = respawn || hardEnemyRespawn;
+    const shouldRespawn = respawn || hardDamageRespawn;
     this.damageInvulnerableUntil = now + DAMAGE_INVULNERABLE_MS;
     this.cancelBirdAttackCameraZoom();
     this.cancelDiveCameraZoom();

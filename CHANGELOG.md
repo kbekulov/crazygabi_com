@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.59.6
+
+- Lowered the Level 6 exit door again.
+- Enlarged the main menu petals again.
+
+## v0.59.5
+
+- Lowered the Level 6 exit door slightly.
+
+## v0.59.4
+
+- Made main menu petals larger after the menu redesign.
+- Made hard-mode falling acorns and bricks respawn Gabi like other non-boss damage.
+- Shortened the key pickup delay after discovery.
+
 ## v0.59.3
 
 - Removed the cat from the main menu scene.
