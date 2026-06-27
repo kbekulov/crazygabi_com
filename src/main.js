@@ -1,5 +1,5 @@
 const TILE = 32;
-const GAME_VERSION = "v0.60.0";
+const GAME_VERSION = "v0.62.3";
 const VIEW_WIDTH = 960;
 const VIEW_HEIGHT = 540;
 const PLAY_HEIGHT = VIEW_HEIGHT;
@@ -139,10 +139,16 @@ const KEY_GARDEN_ASSETS = [
   { key: "garden-bush-4", src: "./public/assets/environment/garden/bush_4.png", scale: 0.42, weight: 1.2, type: "bush" },
   { key: "garden-bush-5", src: "./public/assets/environment/garden/bush_5.png", scale: 0.28, weight: 0.9, type: "bush" },
   { key: "garden-bush-6", src: "./public/assets/environment/garden/bush_6.png", scale: 0.34, weight: 1.1, type: "bush" },
+  { key: "garden-bush-7", src: "./public/assets/environment/garden/bush_7.png", scale: 0.36, weight: 1.05, type: "bush" },
+  { key: "garden-bush-8", src: "./public/assets/environment/garden/bush_8.png", scale: 0.38, weight: 1.05, type: "bush" },
+  { key: "garden-flowerpot-1", src: "./public/assets/environment/garden/flowerpot_1.png", scale: 0.3, weight: 0.72, type: "feature" },
   { key: "garden-fountain-1", src: "./public/assets/environment/garden/fountain_1.png", scale: 0.28, weight: 0.55, type: "feature" },
   { key: "garden-fountain-2", src: "./public/assets/environment/garden/fountain_2.png", scale: 0.28, weight: 0.55, type: "feature" },
+  { key: "garden-statue-1", src: "./public/assets/environment/garden/statue_1.png", scale: 0.51, weight: 0.58, type: "feature" },
+  { key: "garden-tree-3", src: "./public/assets/environment/garden/tree_3.png", scale: 0.32, weight: 0.5, type: "feature" },
   { key: "garden-lantern-1", src: "./public/assets/environment/garden/lantern_1.png", scale: 0.34, weight: 0.85, type: "lantern" },
-  { key: "garden-lantern-2", src: "./public/assets/environment/garden/lantern_2.png", scale: 0.38, weight: 0.85, type: "lantern" }
+  { key: "garden-lantern-2", src: "./public/assets/environment/garden/lantern_2.png", scale: 0.38, weight: 0.85, type: "lantern" },
+  { key: "garden-lantern-3", src: "./public/assets/environment/garden/lantern_3.png", scale: 0.36, weight: 0.8, type: "lantern" }
 ];
 const HAY_BURST_COLORS = [0xc99654, 0x7d5525, 0xe6bc75, 0xca9656, 0x8a5b2e, 0xb9894a];
 const GARDEN_BURST_COLORS = [0x2e9f5b, 0x6edb7a, 0x145a38, 0x5bc7ca, 0x2c84bd, 0xa0eec3, 0x275f87];
@@ -357,7 +363,7 @@ const ENEMY_NAMES = [
   "OCM Tiers Case Escalation",
   "KYC WUDB Onboarding Assistant"
 ];
-const ASSET_VERSION = "20260626-mobile-joystick";
+const ASSET_VERSION = "20260627-admin-settings";
 const STORY_ASSET_VERSION = ASSET_VERSION;
 
 function getSpineRuntime() {
@@ -372,8 +378,11 @@ const DIFFICULTY_HARD = "hard";
 const DEFAULT_AUDIO_SETTINGS = {
   music: true,
   sfx: true,
-  dash: false
+  dash: false,
+  admin: false
 };
+const ADMIN_PASSWORD = "0000";
+const ADMIN_HEART_REGEN_DELAY_MS = 2000;
 const EASY_DIFFICULTY_KEEP_INTERVAL = 3;
 const DIFFICULTY_PROFILES = {
   [DIFFICULTY_EASY]: {
@@ -424,7 +433,8 @@ const MUSIC_TRACKS = [
   { key: "bgm-lv3", label: "Level 3 Theme", src: "./public/assets/sound/bgm_lv3.mp3" },
   { key: "bgm-lv5", label: "Level 5 Theme", src: "./public/assets/sound/bgm_lv5.mp3" },
   { key: "bgm-lv5-boss", label: "Level 5 Theme (Boss)", src: "./public/assets/sound/bgm_lv5_boss.mp3", volumeScale: 1.52 },
-  { key: "bgm-lv6", label: "Level 6 Theme", src: "./public/assets/sound/bgm_lv6.mp3" }
+  { key: "bgm-lv6", label: "Level 6 Theme", src: "./public/assets/sound/bgm_lv6.mp3" },
+  { key: "bgm-lv7", label: "Level 7 Theme", src: "./public/assets/sound/bgm_lv7.mp3" }
 ];
 const LOADING_RUNNERS = [
   {
@@ -461,7 +471,8 @@ const LEVEL_TWO_WIDTH_TILES = LEVEL_WIDTH_TILES * 2;
 const LEVEL_THREE_WIDTH_TILES = 220;
 const LEVEL_FOUR_WIDTH_TILES = 224;
 const LEVEL_FIVE_WIDTH_TILES = 720;
-const LEVEL_SIX_WIDTH_TILES = 210;
+const LEVEL_SIX_WIDTH_TILES = 420;
+const LEVEL_SEVEN_WIDTH_TILES = 520;
 const LEVEL_HEIGHT_TILES = 18;
 const LEVELS = [
   {
@@ -878,7 +889,7 @@ const LEVELS = [
   {
     name: "Level 6",
     rows: createLevelSix(),
-    timeLimit: 360,
+    timeLimit: 620,
     soundtrack: "bgm-lv6",
     enemySprite: "robot-lv1",
     actionAbility: "flower-petals",
@@ -917,7 +928,22 @@ const LEVELS = [
         { x: 142 * TILE, row: 3, density: 0.52, width: 7, allowStructures: false },
         { x: 157 * TILE, row: 9, density: 0.68, width: 9, allowStructures: true },
         { x: 183 * TILE, row: 6, density: 0.56, width: 7, allowStructures: false },
-        { x: 190 * TILE, row: 12, density: 0.58, width: 7, allowStructures: true }
+        { x: 190 * TILE, row: 12, density: 0.58, width: 7, allowStructures: true },
+        { x: 232 * TILE, row: 12, density: 0.56, width: 8, allowStructures: false },
+        { x: 258 * TILE, row: 9, density: 0.68, width: 9, allowStructures: true },
+        { x: 292 * TILE, row: 6, density: 0.54, width: 7, allowStructures: false },
+        { x: 320 * TILE, row: 12, density: 0.76, width: 10, allowStructures: true, core: true },
+        { x: 354 * TILE, row: 9, density: 0.58, width: 8, allowStructures: false },
+        { x: 390 * TILE, row: 12, density: 0.64, width: 9, allowStructures: true }
+      ],
+      fixedOrnaments: [
+        { asset: "garden-statue-1", x: 47 * TILE, row: 12, scaleBoost: 0.92 },
+        { asset: "garden-statue-1", x: 119 * TILE, row: 12, scaleBoost: 0.95 },
+        { asset: "garden-statue-1", x: 157 * TILE, row: 9, scaleBoost: 0.9 },
+        { asset: "garden-statue-1", x: 190 * TILE, row: 12, scaleBoost: 0.92 },
+        { asset: "garden-statue-1", x: 258 * TILE, row: 9, scaleBoost: 0.9 },
+        { asset: "garden-statue-1", x: 320 * TILE, row: 12, scaleBoost: 0.94 },
+        { asset: "garden-statue-1", x: 390 * TILE, row: 12, scaleBoost: 0.9 }
       ]
     },
     lightRayAlpha: 1,
@@ -934,11 +960,106 @@ const LEVELS = [
       { x: 3820, y: -136, topWidth: 76, bottomWidth: 450, height: 1040, lean: 88, alpha: 0.37, thickness: 4, layerAlpha: 1.34, foreground: true, frontAlpha: 0.28, blinding: true, opacityMode: "steady" },
       { x: 4560, y: -110, topWidth: 44, bottomWidth: 235, height: 860, lean: -110, alpha: 0.28, thickness: 2, layerAlpha: 1.12, opacityMode: "pulse" },
       { x: 5480, y: -118, topWidth: 62, bottomWidth: 340, height: 950, lean: 120, alpha: 0.34, thickness: 3, layerAlpha: 1.25, foreground: true, frontAlpha: 0.22, opacityMode: "dim" },
-      { x: 6200, y: -130, topWidth: 54, bottomWidth: 300, height: 980, lean: -70, alpha: 0.32, thickness: 3, layerAlpha: 1.2, opacityMode: "steady" }
+      { x: 6200, y: -130, topWidth: 54, bottomWidth: 300, height: 980, lean: -70, alpha: 0.32, thickness: 3, layerAlpha: 1.2, opacityMode: "steady" },
+      { x: 7240, y: -118, topWidth: 72, bottomWidth: 420, height: 1040, lean: 135, alpha: 0.37, thickness: 4, layerAlpha: 1.34, foreground: true, frontAlpha: 0.26, blinding: true, opacityMode: "pulse" },
+      { x: 8420, y: -126, topWidth: 44, bottomWidth: 250, height: 880, lean: -92, alpha: 0.29, thickness: 2, layerAlpha: 1.14, opacityMode: "dim" },
+      { x: 9680, y: -132, topWidth: 66, bottomWidth: 380, height: 1000, lean: 74, alpha: 0.35, thickness: 3, layerAlpha: 1.28, foreground: true, frontAlpha: 0.22, opacityMode: "steady" },
+      { x: 11040, y: -108, topWidth: 52, bottomWidth: 295, height: 920, lean: -145, alpha: 0.31, thickness: 3, layerAlpha: 1.18, opacityMode: "pulse" },
+      { x: 12480, y: -138, topWidth: 82, bottomWidth: 470, height: 1080, lean: 100, alpha: 0.39, thickness: 4, layerAlpha: 1.36, foreground: true, frontAlpha: 0.27, blinding: true, opacityMode: "dim" }
     ],
     introTitle: "Level 6",
     introCopy: "Search the botanical rooftops, find the flower, and reach the exit before the garden closes in.",
     questTasks: ["wing", "flower", "petal", "coins", "enemies"]
+  },
+  {
+    name: "Level 7",
+    rows: createLevelSeven(),
+    timeLimit: 680,
+    soundtrack: "bgm-lv7",
+    enemySprite: "robot-shadow-ghost-lv2",
+    actionAbility: "flower-petals",
+    petalScale: 0.72,
+    startSpeech: "",
+    showStartingHouse: false,
+    showWater: true,
+    doorYOffset: -30,
+    parallax: "parallax-inner-garden-night",
+    platformTexture: "platform-underground",
+    fenceTexture: "platform-fence-underground",
+    wallTiles: {
+      backdropSheet: "level2-wall-backdrop",
+      backdropFrames: 30,
+      foreground: [
+        "underground-wall-1",
+        "underground-wall-2",
+        "underground-wall-3",
+        "underground-wall-4",
+        "underground-wall-5"
+      ]
+    },
+    lanternPlayerSheet: "gabi-lantern-sheet",
+    lanternAnimationPrefix: "gabi-lantern",
+    darkness: {
+      alpha: 0.96,
+      requiresLantern: false,
+      radius: 208,
+      fringe: 92,
+      yOffset: -18
+    },
+    nightLevel: true,
+    nightLanterns: [
+      { column: 20, floorRow: 16, asset: "garden-lantern-1", radius: 178 },
+      { column: 51, floorRow: 13, asset: "garden-lantern-2", radius: 190 },
+      { column: 83, floorRow: 15, asset: "garden-lantern-1", radius: 182 },
+      { column: 116, floorRow: 11, asset: "garden-lantern-3", radius: 198 },
+      { column: 150, floorRow: 14, asset: "garden-lantern-1", radius: 188 },
+      { column: 188, floorRow: 10, asset: "garden-lantern-2", radius: 204 },
+      { column: 224, floorRow: 13, asset: "garden-lantern-3", radius: 190 },
+      { column: 286, floorRow: 16, asset: "garden-lantern-1", radius: 192 },
+      { column: 334, floorRow: 10, asset: "garden-lantern-2", radius: 206 },
+      { column: 386, floorRow: 13, asset: "garden-lantern-3", radius: 198 },
+      { column: 438, floorRow: 8, asset: "garden-lantern-1", radius: 188 },
+      { column: 492, floorRow: 13, asset: "garden-lantern-2", radius: 210 }
+    ],
+    keyGarden: true,
+    decorativeGardens: [
+      { row: 20, startColumn: 9, endColumn: 27, density: 0.6, featureRate: 0.28, bushScaleBoost: 0.96, featureScaleBoost: 0.88 },
+      { row: 17, startColumn: 43, endColumn: 60, density: 0.7, featureRate: 0.24, bushScaleBoost: 1.02, featureScaleBoost: 0.88 },
+      { row: 20, startColumn: 76, endColumn: 94, density: 0.66, featureRate: 0.22, bushScaleBoost: 0.98, featureScaleBoost: 0.86 },
+      { row: 14, startColumn: 108, endColumn: 128, density: 0.74, featureRate: 0.28, bushScaleBoost: 1.04, featureScaleBoost: 0.9 },
+      { row: 17, startColumn: 142, endColumn: 164, density: 0.78, featureRate: 0.24, bushScaleBoost: 1.02, featureScaleBoost: 0.88 },
+      { row: 11, startColumn: 180, endColumn: 202, density: 0.82, featureRate: 0.3, bushScaleBoost: 1.08, featureScaleBoost: 0.92 },
+      { row: 20, startColumn: 214, endColumn: 239, density: 0.86, featureRate: 0.28, bushScaleBoost: 1.08, featureScaleBoost: 0.9 },
+      { row: 17, startColumn: 270, endColumn: 292, density: 0.78, featureRate: 0.24, bushScaleBoost: 1.04, featureScaleBoost: 0.9 },
+      { row: 11, startColumn: 324, endColumn: 348, density: 0.84, featureRate: 0.3, bushScaleBoost: 1.08, featureScaleBoost: 0.92 },
+      { row: 14, startColumn: 374, endColumn: 398, density: 0.76, featureRate: 0.24, bushScaleBoost: 1.02, featureScaleBoost: 0.9 },
+      { row: 8, startColumn: 430, endColumn: 454, density: 0.72, featureRate: 0.26, bushScaleBoost: 1.02, featureScaleBoost: 0.88 },
+      { row: 20, startColumn: 476, endColumn: 510, density: 0.88, featureRate: 0.3, bushScaleBoost: 1.08, featureScaleBoost: 0.9 }
+    ],
+    lightRayAlpha: 1,
+    lightColor: "#dcecff",
+    lightRays: [
+      { x: 155, y: -118, topWidth: 46, bottomWidth: 270, height: 980, lean: 120, alpha: 0.34, thickness: 3, layerAlpha: 1.34, foreground: true, frontAlpha: 0.25, opacityMode: "pulse", beamBoost: 2.05, color: "#dcecff" },
+      { x: 420, y: -128, topWidth: 30, bottomWidth: 180, height: 760, lean: -80, alpha: 0.22, thickness: 2, layerAlpha: 1.18, opacityMode: "dim", beamBoost: 1.72, color: "#c8e2ff" },
+      { x: 840, y: -132, topWidth: 62, bottomWidth: 380, height: 1060, lean: 95, alpha: 0.39, thickness: 4, layerAlpha: 1.42, foreground: true, frontAlpha: 0.3, blinding: true, opacityMode: "steady", beamBoost: 2.18, color: "#edf6ff" },
+      { x: 1240, y: -104, topWidth: 38, bottomWidth: 228, height: 840, lean: -160, alpha: 0.28, thickness: 2, layerAlpha: 1.22, opacityMode: "pulse", beamBoost: 1.86, color: "#d6eaff" },
+      { x: 1720, y: -136, topWidth: 76, bottomWidth: 470, height: 1120, lean: 170, alpha: 0.42, thickness: 4, layerAlpha: 1.46, foreground: true, frontAlpha: 0.34, blinding: true, opacityMode: "dim", beamBoost: 2.32, color: "#eef7ff" },
+      { x: 2140, y: -114, topWidth: 34, bottomWidth: 210, height: 900, lean: 50, alpha: 0.3, thickness: 2, layerAlpha: 1.2, opacityMode: "steady", beamBoost: 1.92, color: "#c6ddff" },
+      { x: 2620, y: -126, topWidth: 58, bottomWidth: 340, height: 1040, lean: -115, alpha: 0.36, thickness: 3, layerAlpha: 1.34, foreground: true, frontAlpha: 0.24, opacityMode: "pulse", beamBoost: 2.12, color: "#e3f0ff" },
+      { x: 3180, y: -116, topWidth: 42, bottomWidth: 250, height: 860, lean: 130, alpha: 0.29, thickness: 2, layerAlpha: 1.2, opacityMode: "dim", beamBoost: 1.82, color: "#d2e7ff" },
+      { x: 3890, y: -132, topWidth: 82, bottomWidth: 520, height: 1180, lean: -60, alpha: 0.43, thickness: 4, layerAlpha: 1.48, foreground: true, frontAlpha: 0.34, blinding: true, opacityMode: "pulse", beamBoost: 2.38, color: "#f2f8ff" },
+      { x: 4740, y: -108, topWidth: 50, bottomWidth: 306, height: 960, lean: 150, alpha: 0.34, thickness: 3, layerAlpha: 1.28, foreground: true, frontAlpha: 0.22, opacityMode: "steady", beamBoost: 2, color: "#dbeaff" },
+      { x: 5920, y: -120, topWidth: 70, bottomWidth: 430, height: 1120, lean: -145, alpha: 0.4, thickness: 4, layerAlpha: 1.4, foreground: true, frontAlpha: 0.28, opacityMode: "dim", beamBoost: 2.26, color: "#edf5ff" },
+      { x: 7000, y: -118, topWidth: 48, bottomWidth: 280, height: 960, lean: 95, alpha: 0.32, thickness: 3, layerAlpha: 1.26, opacityMode: "pulse", beamBoost: 1.96, color: "#cfe4ff" },
+      { x: 8420, y: -122, topWidth: 76, bottomWidth: 460, height: 1120, lean: -125, alpha: 0.41, thickness: 4, layerAlpha: 1.42, foreground: true, frontAlpha: 0.3, blinding: true, opacityMode: "dim", beamBoost: 2.28, color: "#eff7ff" },
+      { x: 9840, y: -116, topWidth: 42, bottomWidth: 260, height: 930, lean: 112, alpha: 0.31, thickness: 2, layerAlpha: 1.18, opacityMode: "pulse", beamBoost: 1.94, color: "#d3e8ff" },
+      { x: 11280, y: -134, topWidth: 86, bottomWidth: 540, height: 1180, lean: -70, alpha: 0.44, thickness: 4, layerAlpha: 1.48, foreground: true, frontAlpha: 0.34, blinding: true, opacityMode: "steady", beamBoost: 2.42, color: "#f4f9ff" },
+      { x: 12820, y: -108, topWidth: 52, bottomWidth: 310, height: 980, lean: 160, alpha: 0.34, thickness: 3, layerAlpha: 1.26, foreground: true, frontAlpha: 0.22, opacityMode: "pulse", beamBoost: 2.02, color: "#dbeeff" },
+      { x: 14600, y: -126, topWidth: 72, bottomWidth: 450, height: 1140, lean: -150, alpha: 0.4, thickness: 4, layerAlpha: 1.42, foreground: true, frontAlpha: 0.3, opacityMode: "dim", beamBoost: 2.3, color: "#edf6ff" }
+    ],
+    introTitle: "Level 7",
+    introCopy: "Carry the lantern through the moonlit inner garden, find the hidden key, and leave before the blue dark closes around you.",
+    questTasks: ["flower", "lantern", "wing", "petal", "key", "coins", "enemies"]
   }
 ];
 
@@ -1433,6 +1554,20 @@ function createLevelSix() {
   run(16, 101, 22);
   run(16, 136, 30);
   run(16, 178, 32);
+  run(16, 222, 28);
+  run(16, 262, 30);
+  run(16, 304, 26);
+  run(16, 342, 32);
+  run(16, 388, 32);
+  run(15, 56, 4);
+  run(15, 94, 5);
+  run(15, 126, 6);
+  run(15, 169, 6);
+  run(15, 213, 6);
+  run(15, 253, 6);
+  run(15, 295, 6);
+  run(15, 333, 6);
+  run(15, 378, 7);
 
   run(13, 19, 8);
   run(13, 43, 11);
@@ -1440,23 +1575,41 @@ function createLevelSix() {
   run(13, 115, 10);
   run(13, 151, 13);
   run(13, 185, 10);
+  run(13, 226, 12);
+  run(13, 254, 12);
+  run(13, 286, 10);
+  run(13, 318, 13);
+  run(13, 354, 11);
+  run(13, 392, 11);
 
   run(10, 36, 9);
   run(10, 63, 11);
   run(10, 96, 10);
   run(10, 132, 12);
   run(10, 166, 10);
+  run(10, 236, 10);
+  run(10, 274, 12);
+  run(10, 310, 10);
+  run(10, 346, 12);
+  run(10, 382, 12);
 
   run(7, 54, 9);
   run(7, 84, 8);
   run(7, 120, 9);
   run(7, 153, 8);
   run(7, 178, 11);
+  run(7, 248, 9);
+  run(7, 292, 10);
+  run(7, 332, 9);
+  run(7, 370, 11);
 
   run(4, 70, 9);
   run(4, 106, 8);
   run(4, 139, 10);
   run(4, 172, 11);
+  run(4, 268, 9);
+  run(4, 314, 9);
+  run(4, 358, 10);
 
   [
     [14, 4, "p"],
@@ -1472,7 +1625,17 @@ function createLevelSix() {
     [15, 144, "g"],
     [15, 158, "m"],
     [15, 187, "g"],
-    [15, 198, "d"],
+    [15, 198, "g"],
+    [15, 232, "g"],
+    [15, 244, "m"],
+    [15, 270, "g"],
+    [15, 286, "m"],
+    [15, 314, "g"],
+    [15, 326, "m"],
+    [15, 352, "g"],
+    [15, 368, "m"],
+    [15, 396, "g"],
+    [15, 410, "d"],
     [12, 22, "g"],
     [12, 46, "m"],
     [12, 50, "g"],
@@ -1482,20 +1645,182 @@ function createLevelSix() {
     [12, 156, "m"],
     [12, 160, "g"],
     [12, 190, "g"],
+    [12, 230, "g"],
+    [12, 260, "m"],
+    [12, 290, "g"],
+    [12, 324, "g"],
+    [12, 360, "m"],
+    [12, 398, "g"],
     [9, 40, "g"],
     [9, 67, "g"],
     [9, 101, "m"],
     [9, 136, "g"],
     [9, 171, "m"],
+    [9, 240, "g"],
+    [9, 280, "g"],
+    [9, 316, "m"],
+    [9, 352, "g"],
+    [9, 388, "m"],
     [6, 58, "g"],
     [6, 88, "g"],
     [6, 125, "m"],
     [6, 157, "g"],
     [6, 183, "m"],
+    [6, 252, "g"],
+    [6, 298, "m"],
+    [6, 336, "g"],
+    [6, 376, "g"],
     [3, 74, "g"],
     [3, 110, "f"],
     [3, 144, "g"],
-    [3, 176, "g"]
+    [3, 176, "g"],
+    [3, 272, "g"],
+    [3, 318, "g"],
+    [3, 364, "g"]
+  ].forEach(([row, column, value]) => put(row, column, value));
+
+  return rows.map((row) => row.join(""));
+}
+
+function createLevelSeven() {
+  const { rows, put, run } = createLevelRows(22, LEVEL_SEVEN_WIDTH_TILES);
+
+  run(20, 0, 32);
+  run(20, 38, 30);
+  run(20, 78, 34);
+  run(20, 122, 32);
+  run(20, 164, 34);
+  run(20, 210, 50);
+  run(20, 270, 34);
+  run(20, 318, 32);
+  run(20, 366, 34);
+  run(20, 416, 32);
+  run(20, 474, 46);
+  run(19, 71, 5);
+  run(19, 115, 5);
+  run(19, 157, 5);
+  run(19, 201, 6);
+  run(19, 263, 5);
+  run(19, 307, 6);
+  run(19, 354, 7);
+  run(19, 404, 7);
+  run(19, 452, 7);
+  run(18, 463, 7);
+
+  run(17, 16, 10);
+  run(17, 46, 12);
+  run(17, 88, 13);
+  run(17, 132, 12);
+  run(17, 174, 14);
+  run(17, 222, 13);
+  run(17, 282, 12);
+  run(17, 330, 14);
+  run(17, 382, 12);
+  run(17, 430, 14);
+  run(17, 488, 12);
+
+  run(14, 34, 12);
+  run(14, 66, 10);
+  run(14, 108, 13);
+  run(14, 152, 12);
+  run(14, 195, 13);
+  run(14, 238, 12);
+  run(14, 292, 12);
+  run(14, 344, 12);
+  run(14, 392, 13);
+  run(14, 448, 12);
+  run(14, 500, 12);
+
+  run(11, 55, 12);
+  run(11, 92, 11);
+  run(11, 128, 12);
+  run(11, 176, 13);
+  run(11, 218, 12);
+  run(11, 310, 13);
+  run(11, 358, 12);
+  run(11, 410, 13);
+  run(11, 466, 12);
+
+  run(8, 82, 11);
+  run(8, 118, 10);
+  run(8, 160, 12);
+  run(8, 202, 11);
+  run(8, 232, 10);
+  run(8, 334, 11);
+  run(8, 386, 10);
+  run(8, 438, 12);
+  run(8, 486, 11);
+
+  [
+    [18, 4, "p"],
+    [19, 8, "f"],
+    [19, 10, "g"],
+    [19, 18, "g"],
+    [19, 27, "g"],
+    [19, 30, "j"],
+    [19, 46, "l"],
+    [19, 62, "m"],
+    [19, 86, "g"],
+    [19, 102, "m"],
+    [19, 132, "g"],
+    [19, 148, "m"],
+    [19, 174, "g"],
+    [19, 190, "m"],
+    [19, 222, "g"],
+    [19, 286, "g"],
+    [19, 300, "m"],
+    [19, 326, "g"],
+    [19, 342, "m"],
+    [19, 382, "g"],
+    [19, 394, "m"],
+    [19, 430, "g"],
+    [19, 442, "m"],
+    [19, 490, "g"],
+    [19, 506, "d"],
+    [16, 20, "g"],
+    [16, 50, "g"],
+    [16, 56, "m"],
+    [16, 92, "g"],
+    [16, 138, "g"],
+    [16, 180, "g"],
+    [16, 184, "m"],
+    [16, 228, "g"],
+    [16, 288, "g"],
+    [16, 336, "m"],
+    [16, 388, "g"],
+    [16, 436, "g"],
+    [16, 494, "m"],
+    [13, 39, "g"],
+    [13, 70, "g"],
+    [13, 114, "m"],
+    [13, 118, "g"],
+    [13, 158, "g"],
+    [13, 201, "m"],
+    [13, 204, "g"],
+    [13, 244, "g"],
+    [13, 298, "g"],
+    [13, 350, "g"],
+    [13, 398, "m"],
+    [13, 454, "g"],
+    [13, 506, "g"],
+    [10, 61, "g"],
+    [10, 98, "m"],
+    [10, 134, "g"],
+    [10, 182, "g"],
+    [10, 224, "g"],
+    [10, 316, "g"],
+    [10, 364, "m"],
+    [10, 416, "k"],
+    [10, 472, "g"],
+    [7, 88, "g"],
+    [7, 124, "g"],
+    [7, 166, "h"],
+    [7, 208, "g"],
+    [7, 236, "g"],
+    [7, 340, "g"],
+    [7, 392, "g"],
+    [7, 444, "h"],
+    [7, 492, "g"]
   ].forEach(([row, column, value]) => put(row, column, value));
 
   return rows.map((row) => row.join(""));
@@ -1569,7 +1894,10 @@ const hud = {
   bossHealth: document.querySelector("#boss-health"),
   bossHealthFill: document.querySelector("#boss-health-fill"),
   equippedIcon: document.querySelector("#equipped-icon"),
+  equippedIconSecondary: document.querySelector("#equipped-icon-secondary"),
   equippedName: document.querySelector("#equipped-name"),
+  equippedPanel: document.querySelector("#hud-equipped"),
+  equippedCopy: document.querySelector("#equipped-copy"),
   itemActionKey: document.querySelector("#item-action-key"),
   birdCooldown: document.querySelector("#bird-cooldown"),
   gameRoot: document.querySelector("#game"),
@@ -1714,7 +2042,7 @@ function setMessage(title, copy, button = "Start") {
   hud.message.hidden = !gameAssetsReady;
 }
 
-function updateHud() {
+function updateHud(options = {}) {
   hud.score.textContent = String(state.score).padStart(6, "0");
   hud.gems.textContent = String(state.gems).padStart(2, "0");
   hud.lives.replaceChildren();
@@ -1723,6 +2051,9 @@ function updateHud() {
     const heart = document.createElement("img");
     heart.src = `./public/assets/environment/life-heart.png?v=${ASSET_VERSION}`;
     heart.alt = "";
+    if (options.regeneratedHeart && index === state.lives - 1) {
+      heart.classList.add("is-regenerated");
+    }
     hud.lives.appendChild(heart);
   }
   hud.time.textContent = Number.isFinite(state.timeLeft) ? String(state.timeLeft).padStart(3, "0") : "∞";
@@ -1732,22 +2063,39 @@ function updateHud() {
 }
 
 function updateEquippedHud() {
-  let itemName = "NONE";
-  let itemImage = "";
+  const items = [];
   if (state.hasAcornBasket) {
-    itemName = "ACORN";
-    itemImage = pixelatedEquippedImages.acorn || `./public/assets/environment/falling_acorn.png?v=${ASSET_VERSION}`;
-  } else if (state.hasLantern) {
-    itemName = "LANTERN";
-    itemImage = pixelatedEquippedImages.lantern || `./public/assets/environment/lantern.png?v=${ASSET_VERSION}`;
-  } else if (state.hasFlower) {
-    itemName = "FLOWER";
-    itemImage = pixelatedEquippedImages.flower || `./public/assets/environment/flower_item.png?v=${ASSET_VERSION}`;
+    items.push({
+      name: "ACORN",
+      image: pixelatedEquippedImages.acorn || `./public/assets/environment/falling_acorn.png?v=${ASSET_VERSION}`
+    });
   }
+  if (state.hasFlower) {
+    items.push({
+      name: "FLOWER",
+      image: pixelatedEquippedImages.flower || `./public/assets/environment/flower_item.png?v=${ASSET_VERSION}`
+    });
+  }
+  if (state.hasLantern) {
+    items.push({
+      name: "LANTERN",
+      image: pixelatedEquippedImages.lantern || `./public/assets/environment/lantern.png?v=${ASSET_VERSION}`
+    });
+  }
+  const [primary, secondary] = items;
+  const hasEquippedItems = items.length > 0;
+  const itemName = hasEquippedItems ? items.map((item) => item.name).join(" + ") : "";
+  if (hud.equippedPanel) hud.equippedPanel.hidden = !hasEquippedItems;
+  if (hud.equippedCopy) hud.equippedCopy.hidden = !hasEquippedItems;
   hud.equippedName.textContent = itemName;
-  hud.equippedIcon.src = itemImage;
-  hud.equippedIcon.alt = itemName === "NONE" ? "" : itemName;
-  hud.equippedIcon.hidden = !itemImage;
+  hud.equippedIcon.src = primary?.image || "";
+  hud.equippedIcon.alt = primary?.name || "";
+  hud.equippedIcon.hidden = !primary;
+  if (hud.equippedIconSecondary) {
+    hud.equippedIconSecondary.src = secondary?.image || "";
+    hud.equippedIconSecondary.alt = secondary?.name || "";
+    hud.equippedIconSecondary.hidden = !secondary;
+  }
   if (hud.itemActionKey) hud.itemActionKey.hidden = !state.hasAcornBasket;
 }
 
@@ -1901,7 +2249,8 @@ function getAudioSettings() {
     return {
       music: saved.music !== false,
       sfx: saved.sfx !== false,
-      dash: saved.dash === true
+      dash: saved.dash === true,
+      admin: saved.admin === true
     };
   } catch (_error) {
     return { ...DEFAULT_AUDIO_SETTINGS };
@@ -1929,8 +2278,16 @@ function isDashEnabled() {
   return state.audioSettings?.dash === true;
 }
 
+function isAdminEnabled() {
+  return state.audioSettings?.admin === true;
+}
+
 function setAudioSetting(key, enabled) {
   if (!Object.hasOwn(DEFAULT_AUDIO_SETTINGS, key)) return;
+  if (key === "admin" && enabled && !confirmAdminPassword()) {
+    updateAudioSettingsPanel();
+    return;
+  }
   state.audioSettings = {
     ...DEFAULT_AUDIO_SETTINGS,
     ...(state.audioSettings || {}),
@@ -1941,6 +2298,11 @@ function setAudioSetting(key, enabled) {
   const scene = game.scene.getScene("PlayScene");
   if (!scene?.scene?.isActive()) return;
   scene.applyAudioSettings();
+}
+
+function confirmAdminPassword() {
+  const value = window.prompt("Enter admin password");
+  return value === ADMIN_PASSWORD;
 }
 
 function setDifficultySetting(value) {
@@ -2590,6 +2952,7 @@ class PlayScene extends Phaser.Scene {
     this.suitcaseBoxProjectiles = [];
     this.damageInvulnerableUntil = 0;
     this.damageFlickerTween = null;
+    this.adminHeartRegenTimers = [];
     this.elevatorSignBubble = null;
     this.elevatorSignPromptShown = false;
     this.mysteriousMan = null;
@@ -2599,6 +2962,7 @@ class PlayScene extends Phaser.Scene {
     this.mysteriousManExitX = 0;
     this.mysteriousManScriptAt = 0;
     this.catFollowPlayerAfterElevator = false;
+    this.gardenStatueRunKeys = new Set();
     this.clearDomSpeechBubbles();
     this.domSpeechBubbles = [];
     setBossHealthVisible(false);
@@ -2615,10 +2979,10 @@ class PlayScene extends Phaser.Scene {
     this.createDiveIndicatorBirds();
     this.createDiveFieldLeaves();
     this.createLightRays();
+    this.createNightLanternLights();
     this.createKeyGardenIndicators();
     this.createDecorativeGardens();
     this.createPlayer();
-    this.createNightLanternLights();
     this.createLanternOverlay();
     this.createOldLadyNpc();
     this.createCatNpc();
@@ -2817,7 +3181,8 @@ class PlayScene extends Phaser.Scene {
         sheet("mr-magpie", "./public/assets/character/mr_magpie.png", MR_MAGPIE_FRAME_WIDTH, MR_MAGPIE_FRAME_HEIGHT);
         image("mr-magpie-jump", "./public/assets/character/mr_magpie_jump.png");
       }
-      if (level.finalElevator || this.isCommandAttackLevel(level) || level.ambientBirds) {
+      const needsBirdSprite = level.finalElevator || level.ambientBirds || (this.isCommandAttackLevel(level) && level.actionAbility !== "flower-petals");
+      if (needsBirdSprite) {
         const birdSprite = this.getBirdSpriteKey(level);
         sheet(birdSprite, this.getBirdSpritePath(birdSprite), BIRD_FRAME_WIDTH, BIRD_FRAME_HEIGHT);
       }
@@ -2845,6 +3210,7 @@ class PlayScene extends Phaser.Scene {
       if (level.parallax === "parallax-cathedral") image("parallax-cathedral", "./public/assets/environment/paralax_cathedral.png");
       if (level.parallax === "parallax-park") image("parallax-park", "./public/assets/environment/paralax_park.png");
       if (level.parallax === "parallax-garden") image("parallax-garden", "./public/assets/environment/paralax_garden.png");
+      if (level.parallax === "parallax-inner-garden-night") image("parallax-inner-garden-night", "./public/assets/environment/paralax_inner_garden_night.png");
       if (level.frontParallax === "parallax-park-frontlayer") {
         image("parallax-park-frontlayer", "./public/assets/environment/paralax_park_frontlayer.png");
       }
@@ -2877,7 +3243,7 @@ class PlayScene extends Phaser.Scene {
         image("flower-item", "./public/assets/environment/flower_item.png");
         sheet("flower-petal", "./public/assets/environment/flower_petal.png", FLOWER_PETAL_FRAME_WIDTH, FLOWER_PETAL_FRAME_HEIGHT);
       }
-      if (level.gardenDecor) this.queueGardenAssets(image);
+      if (level.gardenDecor || level.decorativeGardens?.length || level.keyGarden) this.queueGardenAssets(image);
       if (level.lanternPlayerSheet || this.levelHasCell(level, "l")) image("lantern", "./public/assets/environment/lantern.png");
       (level.storyFrames || []).forEach((frame) => {
         if (frame?.key && frame?.src) storyImage(frame.key, frame.src);
@@ -2895,7 +3261,7 @@ class PlayScene extends Phaser.Scene {
         GIANT_HAND_IMPACT_SFX_KEYS.forEach((sfxKey) => audio(sfxKey, this.getSfxPath(sfxKey)));
       }
       if (level.birdSfx) audio(level.birdSfx, this.getSfxPath(level.birdSfx));
-      if (level.haystacks?.length || level.keyGarden) {
+      if (level.haystacks?.length || level.keyGarden || level.gardenDecor || level.decorativeGardens?.length) {
         audio(HAYSTACK_LAND_SFX_KEY, this.getSfxPath(HAYSTACK_LAND_SFX_KEY));
         audio(HAYSTACK_WALKIN_SFX_KEY, this.getSfxPath(HAYSTACK_WALKIN_SFX_KEY));
       }
@@ -3128,21 +3494,7 @@ class PlayScene extends Phaser.Scene {
   }
 
   queueGardenAssets(image) {
-    const base = "./public/assets/environment/garden";
-    [
-      "arc_1",
-      "bench_1",
-      "bush_1",
-      "bush_2",
-      "bush_3",
-      "bush_4",
-      "bush_5",
-      "bush_6",
-      "fountain_1",
-      "fountain_2",
-      "lantern_1",
-      "lantern_2"
-    ].forEach((name) => image(`garden-${name}`, `${base}/${name}.png`));
+    KEY_GARDEN_ASSETS.forEach((asset) => image(asset.key, asset.src));
   }
 
   getHazardPath(key = "falling-acorn") {
@@ -4699,14 +5051,15 @@ class PlayScene extends Phaser.Scene {
   getAllowedGardenAssetsForLevel() {
     return KEY_GARDEN_ASSETS.filter((asset) => {
       if (!this.textures.exists(asset.key)) return false;
-      if (state.levelIndex === 0 || state.levelIndex === 3 || state.levelIndex === 5) return true;
+      if (state.levelIndex === 6 && asset.key === "garden-bench-1") return false;
+      if (state.levelIndex === 0 || state.levelIndex === 3 || state.levelIndex === 5 || state.levelIndex === 6) return true;
       if (state.levelIndex === 1 || state.levelIndex === 2) return asset.type === "bush" || asset.type === "lantern";
       return asset.type === "bush";
     });
   }
 
   shouldHideKeyInGardenBushes() {
-    return state.levelIndex >= 0 && state.levelIndex <= 2;
+    return (state.levelIndex >= 0 && state.levelIndex <= 2) || state.levelIndex === 6;
   }
 
   pickGardenAsset(assets, noise = 0) {
@@ -4723,6 +5076,13 @@ class PlayScene extends Phaser.Scene {
 
   createGardenDecorSprite(asset, x, y, options = {}) {
     if (!asset || !this.textures.exists(asset.key)) return null;
+    if (asset.key.includes("statue")) {
+      this.gardenStatueRunKeys = this.gardenStatueRunKeys || new Set();
+      const run = this.getNearestPlatformRun?.(x, y);
+      const statueRunKey = run?.id || `${Math.round(y / TILE)}:${Math.round(x / (TILE * 8))}`;
+      if (this.gardenStatueRunKeys.has(statueRunKey)) return null;
+      this.gardenStatueRunKeys.add(statueRunKey);
+    }
     const sprite = options.interactive
       ? this.gardenBushes.create(x, y, asset.key)
       : this.add.image(x, y, asset.key);
@@ -4744,8 +5104,17 @@ class PlayScene extends Phaser.Scene {
       sprite.body.setSize(Math.max(36, sprite.width * 0.72), Math.max(24, sprite.height * 0.36));
       sprite.body.setOffset(sprite.width * 0.14, sprite.height * 0.56);
       sprite.setData("lastBurstAt", -Infinity);
+      sprite.setData("lastSoundAt", -Infinity);
     } else {
       this.platformVisuals?.add(sprite);
+    }
+    if (asset.type === "lantern" && this.level.nightLevel) {
+      this.createNightLanternLightForSprite(sprite, {
+        radius: options.lightRadius,
+        fringe: options.lightFringe,
+        yOffset: options.lightYOffset,
+        foreground: options.lightForeground
+      }, seed);
     }
     return sprite;
   }
@@ -4892,32 +5261,48 @@ class PlayScene extends Phaser.Scene {
       const assetKey = config.asset || (index % 2 ? "garden-lantern-2" : "garden-lantern-1");
       if (!this.textures.exists(assetKey)) return;
       const x = (config.column ?? 0) * TILE + TILE / 2;
-      const floorY = (config.floorRow ?? 0) * TILE;
-      const lantern = this.add.image(x, floorY + 2, assetKey);
+      const targetY = (config.floorRow ?? 0) * TILE;
+      const platformRun = [...(this.platformRuns || [])]
+        .filter((run) => x >= run.startX - TILE * 0.5 && x <= run.endX + TILE * 0.5)
+        .sort((a, b) => Math.abs(a.topY - targetY) - Math.abs(b.topY - targetY))[0];
+      const floorY = (platformRun?.topY ?? targetY) + 2;
+      const lantern = this.add.image(x, floorY, assetKey);
       lantern.setOrigin(0.5, 1);
       lantern.setScale((config.scale ?? 0.34) * Phaser.Math.Linear(0.92, 1.08, this.wallPlacementNoise(index + 13, config.column ?? 0)));
       lantern.setDepth(KEY_GARDEN_PROP_BACK_DEPTH);
       this.platformVisuals?.add(lantern);
-
-      const radius = config.radius ?? NIGHT_LANTERN_RADIUS;
-      const lanternHeight = (lantern.height || 0) * Math.abs(lantern.scaleY || 1);
-      const light = {
-        x,
-        y: floorY - (config.yOffset ?? 82) + lanternHeight * 0.75,
-        radius,
-        fringe: config.fringe ?? NIGHT_LANTERN_FRINGE,
-        foreground: index % 3 === 1,
-        phase: this.wallPlacementNoise(index + 31, index + 77) * Math.PI * 2
-      };
-      const glow = this.add.image(light.x, light.y, NIGHT_LANTERN_GLOW_KEY);
-      glow.setScale(radius / 128);
-      glow.setDepth(NIGHT_LANTERN_GLOW_DEPTH);
-      glow.setBlendMode(Phaser.BlendModes.ADD);
-      glow.setAlpha(0.46);
-      this.nightLanternLights.push({ ...light, lantern, glow });
+      this.createNightLanternLightForSprite(lantern, {
+        radius: config.radius,
+        fringe: config.fringe,
+        yOffset: config.yOffset,
+        foreground: index % 3 === 1
+      }, index);
     });
 
     this.playerLanternGlow = null;
+  }
+
+  createNightLanternLightForSprite(lantern, config = {}, index = 0) {
+    if (!this.level.nightLevel || !lantern?.active) return null;
+    this.ensureNightLanternGlowTexture();
+    this.nightLanternLights = this.nightLanternLights || [];
+    const radius = config.radius ?? NIGHT_LANTERN_RADIUS;
+    const lanternHeight = (lantern.height || 0) * Math.abs(lantern.scaleY || 1);
+    const light = {
+      x: lantern.x,
+      y: lantern.y - (config.yOffset ?? 82) + lanternHeight * 0.75,
+      radius,
+      fringe: config.fringe ?? NIGHT_LANTERN_FRINGE,
+      foreground: config.foreground ?? index % 3 === 1,
+      phase: this.wallPlacementNoise(index + 31, index + 77) * Math.PI * 2
+    };
+    const glow = this.add.image(light.x, light.y, NIGHT_LANTERN_GLOW_KEY);
+    glow.setScale(radius / 128);
+    glow.setDepth(NIGHT_LANTERN_GLOW_DEPTH);
+    glow.setBlendMode(Phaser.BlendModes.ADD);
+    glow.setAlpha(0.46);
+    this.nightLanternLights.push({ ...light, lantern, glow });
+    return light;
   }
 
   ensureNightLanternGlowTexture() {
@@ -5274,8 +5659,15 @@ class PlayScene extends Phaser.Scene {
     };
   }
 
-  lightRayRgba(alpha) {
-    return `rgba(255, 239, 198, ${Phaser.Math.Clamp(alpha, 0, 1)})`;
+  lightRayRgba(alpha, color = this.level?.lightColor || "#ffefc6") {
+    const hex = String(color || "#ffefc6").replace("#", "");
+    const normalized = hex.length === 3
+      ? hex.split("").map((value) => value + value).join("")
+      : hex.padEnd(6, "0").slice(0, 6);
+    const red = Number.parseInt(normalized.slice(0, 2), 16);
+    const green = Number.parseInt(normalized.slice(2, 4), 16);
+    const blue = Number.parseInt(normalized.slice(4, 6), 16);
+    return `rgba(${red}, ${green}, ${blue}, ${Phaser.Math.Clamp(alpha, 0, 1)})`;
   }
 
   createWaterBelow() {
@@ -5710,7 +6102,7 @@ class PlayScene extends Phaser.Scene {
         if (cell === "g" || cell === "c") {
           const gem = this.gems.create(x, y, "coin");
           gem.setScale(ITEM_SCALE);
-          gem.setDepth(ITEM_DEPTH);
+          gem.setDepth(this.getPickupItemDepth());
           gem.setCircle(58, 61, 58);
           state.totalGems += 1;
           this.tweens.add({ targets: gem, y: y - 6, duration: 900, yoyo: true, repeat: -1, ease: "Sine.inOut" });
@@ -5722,14 +6114,14 @@ class PlayScene extends Phaser.Scene {
         if (cell === "j") {
           const doubleJump = this.doubleJumps.create(x, y, "jump-item");
           doubleJump.setScale(ITEM_SCALE);
-          doubleJump.setDepth(ITEM_DEPTH);
+          doubleJump.setDepth(this.getPickupItemDepth());
           doubleJump.setCircle(60, 59, 60);
           this.tweens.add({ targets: doubleJump, y: y - 8, duration: 720, yoyo: true, repeat: -1, ease: "Sine.inOut" });
         }
         if (cell === "b") {
           const basket = this.acornBaskets.create(x, y, "acorn-basket");
           basket.setScale(BASKET_SCALE);
-          basket.setDepth(ITEM_DEPTH);
+          basket.setDepth(this.getPickupItemDepth());
           basket.setCircle(75, 64, 54);
           this.basketPoint = { x, y };
           this.tweens.add({ targets: basket, y: y - 7, duration: 820, yoyo: true, repeat: -1, ease: "Sine.inOut" });
@@ -5737,14 +6129,14 @@ class PlayScene extends Phaser.Scene {
         if (cell === "l") {
           const lantern = this.lanterns.create(x, y, "lantern");
           lantern.setScale(LANTERN_SCALE);
-          lantern.setDepth(DARKNESS_DEPTH + 1);
+          lantern.setDepth(this.getPickupItemDepth(0.15));
           lantern.setCircle(70, 49, 55);
           this.tweens.add({ targets: lantern, y: y - 7, duration: 820, yoyo: true, repeat: -1, ease: "Sine.inOut" });
         }
         if (cell === "f") {
           const flower = this.flowers.create(x, y, "flower-item");
           flower.setScale(0.055);
-          flower.setDepth(ITEM_DEPTH);
+          flower.setDepth(this.getPickupItemDepth());
           flower.setCircle(430, 80, 80);
           this.flowerPoint = { x, y };
           this.tweens.add({ targets: flower, y: y - 8, angle: 5, duration: 920, yoyo: true, repeat: -1, ease: "Sine.inOut" });
@@ -5756,7 +6148,7 @@ class PlayScene extends Phaser.Scene {
           const hazardKey = this.level.fallingHazard || "falling-acorn";
           const acorn = this.acorns.create(x, -80, hazardKey);
           acorn.setScale(hazardKey === "falling-brick" ? BRICK_SCALE : ACORN_SCALE);
-          acorn.setDepth(ITEM_DEPTH);
+          acorn.setDepth(this.getPickupItemDepth());
           acorn.setCircle(70, 47, 52);
           acorn.body.allowGravity = false;
           acorn.body.immovable = false;
@@ -5803,6 +6195,10 @@ class PlayScene extends Phaser.Scene {
     this.createFinalElevator();
     this.createPlatformShadows();
     this.createGardenDecorations();
+  }
+
+  getPickupItemDepth(offset = 0) {
+    return (this.level?.darkness ? DARKNESS_DEPTH + 1.1 : ITEM_DEPTH) + offset;
   }
 
   createWallTileVisual(x, y, rowIndex, columnIndex) {
@@ -6654,6 +7050,19 @@ class PlayScene extends Phaser.Scene {
           scaleBoost: asset?.type === "lantern" ? 0.78 : 0.86
         });
       }
+    });
+
+    (config.fixedOrnaments || []).forEach((ornament, index) => {
+      const asset = gardenAssets.find((candidate) => candidate.key === ornament.asset);
+      if (!asset) return;
+      const run = this.getNearestPlatformRun(ornament.x, ornament.row * TILE);
+      if (!run) return;
+      const x = Phaser.Math.Clamp(ornament.x, run.startX + 20, run.endX - 20);
+      this.createGardenDecorSprite(asset, x, run.topY + 2, {
+        seed: 9000 + index * 37,
+        interactive: false,
+        scaleBoost: ornament.scaleBoost ?? 0.92
+      });
     });
   }
 
@@ -8299,9 +8708,12 @@ class PlayScene extends Phaser.Scene {
       0
     );
     if (touchSpeed < HAY_BURST_MIN_TOUCH_SPEED * 0.55) return;
+    if (now - (bush.getData("lastSoundAt") || -Infinity) >= HAY_BURST_COOLDOWN_MS * 0.65) {
+      bush.setData("lastSoundAt", now);
+      this.playLevelSfx(HAYSTACK_WALKIN_SFX_KEY, 0.32);
+    }
     if (now - (bush.getData("lastBurstAt") || -Infinity) < HAY_BURST_COOLDOWN_MS) return;
     bush.setData("lastBurstAt", now);
-    this.playLevelSfx(HAYSTACK_WALKIN_SFX_KEY, 0.32);
     this.spawnGardenBurst(bush.x, bush.y - bush.displayHeight * 0.34);
     if (bush.getData("revealsKey") && !this.keyRevealed) {
       this.keySprite?.setData("gardenBushTouched", true);
@@ -11257,6 +11669,7 @@ class PlayScene extends Phaser.Scene {
     this.cancelDiveCameraZoom();
     this.cancelBossRevealCamera({ restoreCamera: false });
     this.clearFinalElevatorCredits();
+    this.clearAdminHeartRegenTimers();
     this.birdFlocks?.forEach((bird) => bird?.destroy?.());
     this.birdFlocks = [];
     this.birdFlockGroups = [];
@@ -11621,7 +12034,7 @@ class PlayScene extends Phaser.Scene {
   configureHeartPickup(heart, { armedAt = this.time.now, bob = false } = {}) {
     if (!heart) return heart;
     heart.setScale(HEART_SCALE);
-    heart.setDepth(ITEM_DEPTH);
+    heart.setDepth(this.getPickupItemDepth());
     heart.setCircle(58, 61, 58);
     heart.body.allowGravity = false;
     heart.body.immovable = true;
@@ -11999,7 +12412,13 @@ class PlayScene extends Phaser.Scene {
     this.cancelBirdAttackCameraZoom();
     this.cancelDiveCameraZoom();
     state.lives -= 1;
-    updateHud();
+    if (isAdminEnabled() && state.lives <= 0) {
+      state.lives = 1;
+      updateHud({ regeneratedHeart: true });
+    } else {
+      updateHud();
+      this.queueAdminHeartRegeneration();
+    }
     this.cameras.main.shake(shouldRespawn ? 180 : 120, shouldRespawn ? 0.012 : 0.006);
     if (state.lives <= 0) {
       this.showGameOverScreen({
@@ -12031,6 +12450,22 @@ class PlayScene extends Phaser.Scene {
       this.resetCatNpc();
       this.createDiveIndicatorBirds();
     }
+  }
+
+  queueAdminHeartRegeneration() {
+    if (!isAdminEnabled() || !state.running || state.lives >= MAX_LIVES) return;
+    const timer = this.time.delayedCall(ADMIN_HEART_REGEN_DELAY_MS, () => {
+      this.adminHeartRegenTimers = (this.adminHeartRegenTimers || []).filter((entry) => entry !== timer);
+      if (!isAdminEnabled() || !state.running || state.lives >= MAX_LIVES) return;
+      state.lives = Math.min(MAX_LIVES, state.lives + 1);
+      updateHud({ regeneratedHeart: true });
+    });
+    this.adminHeartRegenTimers.push(timer);
+  }
+
+  clearAdminHeartRegenTimers() {
+    this.adminHeartRegenTimers?.forEach((timer) => timer?.remove?.(false));
+    this.adminHeartRegenTimers = [];
   }
 
   flickerPlayerDamage() {
@@ -12287,15 +12722,43 @@ function showMenuPanel(title, copy, panel = "") {
   setMenuPanelVisible(true);
 }
 
+const LEVEL_EPISODES = [
+  { title: "Episode 1", start: 0, end: 4 },
+  { title: "Episode 2", start: 5, end: 9 }
+];
+
+function appendLevelEpisodeColumns(target) {
+  const episodesWrapper = document.createElement("div");
+  episodesWrapper.className = "level-select-episodes";
+
+  LEVEL_EPISODES.forEach((episode) => {
+    const availableLevels = LEVELS
+      .map((level, index) => ({ level, index }))
+      .filter(({ index }) => index >= episode.start && index <= episode.end);
+    if (!availableLevels.length) return;
+    const section = document.createElement("section");
+    section.className = "level-select-episode";
+    const heading = document.createElement("h3");
+    heading.textContent = episode.title;
+    const levels = document.createElement("div");
+    levels.className = "level-select-buttons";
+    availableLevels.forEach(({ level, index }) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = level.name;
+      button.addEventListener("click", () => requestSelectedLevel(index));
+      levels.appendChild(button);
+    });
+    section.append(heading, levels);
+    episodesWrapper.appendChild(section);
+  });
+
+  target.appendChild(episodesWrapper);
+}
+
 function showLevelSelectPanel() {
   showMenuPanel("Select Level", "Choose a route and load only the assets needed for that level.", "level-select");
-  LEVELS.forEach((level, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = level.name;
-    button.addEventListener("click", () => requestSelectedLevel(index));
-    hud.menuPanelContent.appendChild(button);
-  });
+  appendLevelEpisodeColumns(hud.menuPanelContent);
 }
 
 function showMusicBoxPanel() {
@@ -12348,8 +12811,8 @@ function updateAudioSettingsPanel() {
     .querySelectorAll(".settings-toggle-row")
     .forEach((row) => {
       const key = row.dataset.setting;
-      const enabled = key === "dash"
-        ? state.audioSettings?.dash === true
+      const enabled = key === "dash" || key === "admin"
+        ? state.audioSettings?.[key] === true
         : state.audioSettings?.[key] !== false;
       const button = row.querySelector(".settings-toggle");
       if (!button) return;
@@ -12359,13 +12822,23 @@ function updateAudioSettingsPanel() {
     });
 }
 
+function createSettingsToggleGrid(toggles) {
+  const grid = document.createElement("div");
+  grid.className = "settings-toggle-grid";
+  toggles.forEach((toggle) => {
+    grid.appendChild(createSettingsToggle(toggle.key, toggle.label, toggle.description));
+  });
+  return grid;
+}
+
 function showSettingsPanel() {
   showMenuPanel("Settings", "Choose which audio layers and movement assists should be active. Your preferences are saved in this browser.", "settings");
-  hud.menuPanelContent.append(
-    createSettingsToggle("music", "Music", "Menu themes, level soundtracks, music box tracks, and ambient loops."),
-    createSettingsToggle("sfx", "Sound Effects", "Pickups, attacks, dialogue sounds, impacts, and environmental effects."),
-    createSettingsToggle("dash", "Dash", "Double-tap left or right to dash when enabled.")
-  );
+  hud.menuPanelContent.appendChild(createSettingsToggleGrid([
+    { key: "music", label: "Music", description: "Menu themes, level soundtracks, music box tracks, and ambient loops." },
+    { key: "sfx", label: "Sound Effects", description: "Pickups, attacks, dialogue sounds, impacts, and environmental effects." },
+    { key: "dash", label: "Dash", description: "Double-tap left or right to dash when enabled." },
+    { key: "admin", label: "Admin", description: "Testing helper. Lost hearts regenerate after a short delay." }
+  ]));
   updateAudioSettingsPanel();
 }
 
@@ -12374,12 +12847,12 @@ function createCheatSettingsControls() {
   wrapper.className = "cheat-settings";
   const heading = document.createElement("h2");
   heading.textContent = "Settings";
-  wrapper.append(
-    heading,
-    createSettingsToggle("music", "Music", "Toggle all music layers."),
-    createSettingsToggle("sfx", "Sound Effects", "Toggle pickups, attacks, impacts, and ambience."),
-    createSettingsToggle("dash", "Dash", "Toggle double-tap dash movement.")
-  );
+  wrapper.append(heading, createSettingsToggleGrid([
+    { key: "music", label: "Music", description: "Toggle all music layers." },
+    { key: "sfx", label: "Sound Effects", description: "Toggle pickups, attacks, impacts, and ambience." },
+    { key: "dash", label: "Dash", description: "Toggle double-tap dash movement." },
+    { key: "admin", label: "Admin", description: "Password-protected heart regeneration for testing." }
+  ]));
   return wrapper;
 }
 
@@ -12406,18 +12879,13 @@ function showCreditsPanel() {
   hud.menuPanelContent.appendChild(list);
 }
 
-LEVELS.forEach((level, index) => {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.textContent = level.name;
-  button.addEventListener("click", () => requestSelectedLevel(index));
-  hud.cheatLevels.appendChild(button);
-});
+appendLevelEpisodeColumns(hud.cheatLevels);
 
 const returnToMenuButton = document.createElement("button");
 returnToMenuButton.type = "button";
 returnToMenuButton.textContent = "Return to Menu";
 returnToMenuButton.addEventListener("click", returnToMainMenu);
+returnToMenuButton.className = "cheat-return-menu";
 hud.cheatLevels.appendChild(returnToMenuButton);
 hud.cheatLevels.after(createCheatSettingsControls());
 updateAudioSettingsPanel();

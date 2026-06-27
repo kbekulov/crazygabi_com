@@ -1,5 +1,46 @@
 # Changelog
 
+## v0.62.3
+
+- Added a password-protected Admin setting for delayed heart regeneration during testing.
+- Arranged settings toggles into two columns.
+- Hid the item HUD when Gabi is not carrying an item.
+- Matched flower attack cooldown icon sizing to the bird cooldown icon.
+
+## v0.62.2
+
+- Added fair connector platforms to the extended Level 6 and Level 7 routes.
+- Kept night-level pickups visible above the darkness layer.
+- Updated the flower cooldown UI art.
+
+## v0.62.1
+
+- Removed bird references and bench props from Level 7.
+- Made garden bush sound effects play only while Gabi is moving through bushes.
+
+## v0.62.0
+
+- Extended Levels 6 and 7 with longer garden routes, more platforms, enemies, coins, and light coverage.
+- Added a dual-item HUD stack so Gabi can carry two items at once.
+- Gave Level 7 both flower and lantern progression, with the flower available first and the lantern later.
+- Limited garden statues to one per platform.
+
+## v0.61.1
+
+- Added the missing Level 7 wing pickup and quest entry.
+- Grounded Level 7 lanterns on platform tops and gave every night-garden lantern prop its own light.
+- Made garden bush sounds consistent and enlarged garden statues.
+
+## v0.61.0
+
+- Added Level 7 as a night inner-garden route with moonlit beams, garden landmarks, lantern light, and its own music.
+- Displayed episode level groups as columns in both level selection menus.
+- Expanded garden decoration variety with new bushes, props, lanterns, trees, and guaranteed Level 6 statues.
+
+## v0.60.1
+
+- Grouped the level selection menu into Episode 1 and Episode 2 sections.
+
 ## v0.60.0
 
 - Replaced mobile swipe controls with an invisible left-side joystick.
