@@ -1,5 +1,41 @@
 # Changelog
 
+## v0.64.0
+
+- Added Normal difficulty between Easy and Hard, with Hard now using denser enemies, fewer recovery drops, tougher boss pacing, and wider BU hand danger.
+- Made dash default off on Easy and Normal, and on for Hard unless the player changes it in settings.
+- Tuned Level 7 butterflies with longer contrails and more frequent appearances.
+- Renamed the in-game overlay to Quick Menu and improved the settings panel fit.
+- Improved scripted dive launching for Level 4 and BU reveal camera targeting.
+
+## v0.63.14
+
+- Changed Level 7 butterfly contrails to linger as path residue with fewer particles.
+
+## v0.63.13
+
+- Made Level 7 butterfly contrails narrower while enlarging individual sparkle particles.
+
+## v0.63.12
+
+- Rebalanced Level 7 butterfly contrails to be longer, airier, and easier to read.
+
+## v0.63.11
+
+- Slimmed and shortened Level 7 butterfly contrails while keeping them bright.
+
+## v0.63.10
+
+- Made Level 7 butterfly contrails much brighter, denser, and longer-lasting.
+
+## v0.63.9
+
+- Strengthened Level 7 butterfly sparkle trails, added soft darkness-cutting light circles, reduced butterfly frequency, and let Shift attacks destroy them.
+
+## v0.63.8
+
+- Added solitary blue butterflies to Level 7 as glowing hazards with animated sparkle trails.
+
 ## v0.63.7
 
 - Added a persistent Story Mode setting that skips manga intro panels by default.
