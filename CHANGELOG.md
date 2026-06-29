@@ -1,5 +1,89 @@
 # Changelog
 
+## v0.63.5
+
+- Moved the in-game menu action buttons into a shared centered row.
+
+## v0.63.4
+
+- Centered and compacted the in-game menu action buttons.
+
+## v0.63.3
+
+- Reworked the in-game 0/Esc menu into level and settings columns so it fits better on screen.
+
+## v0.63.2
+
+- Fixed bridge landings after jumps so Gabi returns to the walking path instead of the railings.
+- Allowed Shift attacks while Gabi is standing on an arched bridge.
+
+## v0.63.1
+
+- Adjusted bridge traversal so arched bridges keep normal run speed.
+- Added bridge jumping support while preserving normal jump physics.
+- Stabilized bridge body and sprite sync during bridge landings.
+
+## v0.63.0
+
+- Added a temporary Level 0 mechanics test route for bridge traversal.
+- Added a testing-only level select section gated by a development flag.
+- Kept campaign progression from entering hidden test levels.
+
+## v0.62.12
+
+- Replaced Level 6 bridge grounding with a dedicated traversal state to stop vertical flickering.
+- Forced rightward launch input when jumping neutrally from the Level 5 dive trigger.
+
+## v0.62.11
+
+- Rebuilt the Level 6 bridge as a sensor-style arched surface instead of a hidden flat collider.
+- Removed the competing bridge support body that caused Gabi to bounce between bridge heights.
+
+## v0.62.10
+
+- Reworked Level 6 bridge grounding so Gabi can run onto the bridge without a bump.
+- Added flat bridge lead-ins and a stronger continuous arched surface to prevent falling through.
+
+## v0.62.9
+
+- Kept Level 6 to a single arched bridge in the intended middle section.
+- Added invisible physical support under the bridge so Gabi cannot fall through it.
+- Improved smooth bridge grounding while preserving the arched walking surface.
+
+## v0.62.8
+
+- Updated bridge rendering math for the higher-resolution bridge asset.
+- Replaced segmented bridge stepping with a smooth continuous arch surface for Gabi.
+- Made bridge entry match platform height so Gabi can run onto it without jumping.
+
+## v0.62.7
+
+- Moved the arched bridge setup into Level 6 and added an early connector bridge.
+- Applied structured garden prop spacing and overhead clearance to statues, benches, and fountains.
+- Prevented platform-fence streetlights from appearing in cramped edge or low-ceiling spots.
+
+## v0.62.6
+
+- Kept garden bushes within platform bounds.
+- Reduced repeated garden feature crowding and skipped statues without enough overhead space.
+- Forced Level 5 dive-perch jumps to launch forward even from stillness.
+- Focused the Level 5 boss reveal zoom on the colossus head using live sprite bounds.
+
+## v0.62.5
+
+- Replaced the Level 6 middle floating connector with an arched bridge.
+- Added segmented bridge collision so Gabi can run up and down the bridge curve.
+- Kept garden statues away from platform edges.
+
+## v0.62.4
+
+- Added glow to streetlight fence tiles.
+- Improved key-garden placement, bush sizing, and Level 2 lantern-area decoration rules.
+- Made Level 3 wall-supported walkable areas read as proper platforms.
+- Reordered Level 4 elevator credits so gameplay testers appear last at the top.
+- Tightened Level 5 dive triggering, boss reveal focus, and post-boss door placement.
+- Raised chain links above platform art while keeping them behind Gabi.
+
 ## v0.62.3
 
 - Added a password-protected Admin setting for delayed heart regeneration during testing.

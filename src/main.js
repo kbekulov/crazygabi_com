@@ -1,5 +1,5 @@
 const TILE = 32;
-const GAME_VERSION = "v0.62.3";
+const GAME_VERSION = "v0.63.5";
 const VIEW_WIDTH = 960;
 const VIEW_HEIGHT = 540;
 const PLAY_HEIGHT = VIEW_HEIGHT;
@@ -103,8 +103,12 @@ const PLATFORM_Y_OFFSET = 22;
 const FENCE_Y_OFFSET = -40;
 const PLATFORM_DEPTH = 2;
 const FENCE_DEPTH = 1;
-const HANGING_CHAIN_DEPTH = FENCE_DEPTH + 0.28;
-const HANGING_CHAIN_ROOT_DEPTH = PLATFORM_DEPTH + 0.18;
+const FENCE_STREET_LIGHT_FRAME = 2;
+const FENCE_STREET_LIGHT_SOURCE_X = 677 - PLATFORM_FRAME_WIDTH * FENCE_STREET_LIGHT_FRAME;
+const FENCE_STREET_LIGHT_SOURCE_Y = 41;
+const FENCE_STREET_LIGHT_GLOW_DEPTH = FENCE_DEPTH + 0.18;
+const HANGING_CHAIN_DEPTH = PLATFORM_DEPTH + 0.34;
+const HANGING_CHAIN_ROOT_DEPTH = PLATFORM_DEPTH + 0.42;
 const HANGING_CHAIN_SCALE = 0.2;
 const HANGING_CHAIN_ROOT_PLATFORM_DROP = TILE * 0.58;
 const HANGING_CHAIN_ROOT_BOTTOM_ANCHOR = { x: 37, y: 65 };
@@ -127,6 +131,13 @@ const KEY_GARDEN_BURST_DEPTH = HAY_BURST_DEPTH + 0.08;
 const KEY_GARDEN_LIGHT_COUNT = [3, 6];
 const KEY_GARDEN_BUSH_FRONT_Y_OFFSET = 9;
 const KEY_GARDEN_PROP_BACK_DEPTH = 3.55;
+const KEY_GARDEN_EDGE_BIG_BUSH_SCALE = 0.36;
+const KEY_GARDEN_EDGE_BIG_BUSH_INSET = TILE * 1.6;
+const GARDEN_SOLITARY_REPEAT_DISTANCE = VIEW_WIDTH * 0.86;
+const GARDEN_SOLITARY_CLASS_REPEAT_DISTANCE = VIEW_WIDTH * 1.05;
+const GARDEN_STATUE_PLATFORM_EDGE_INSET = TILE * 2.7;
+const GARDEN_DECOR_EDGE_PADDING = 8;
+const GARDEN_STATUE_HEADROOM_PADDING = TILE * 0.75;
 const GARDEN_BURST_PARTICLE_SCALE = 0.75;
 const KEY_REVEAL_PICKUP_DELAY = 2000;
 const DECORATIVE_GARDEN_DEFAULT_DENSITY = 0.54;
@@ -150,6 +161,16 @@ const KEY_GARDEN_ASSETS = [
   { key: "garden-lantern-2", src: "./public/assets/environment/garden/lantern_2.png", scale: 0.38, weight: 0.85, type: "lantern" },
   { key: "garden-lantern-3", src: "./public/assets/environment/garden/lantern_3.png", scale: 0.36, weight: 0.8, type: "lantern" }
 ];
+const ARCH_BRIDGE_DEPTH = 5.35;
+const ARCH_BRIDGE_STAND_BOTTOM_RATIO = 140 / 220;
+const ARCH_BRIDGE_STAND_TOP_RATIO = 84 / 220;
+const ARCH_BRIDGE_SUPPORT_MARGIN = 34;
+const ARCH_BRIDGE_ENTER_SNAP = 18;
+const ARCH_BRIDGE_LANDING_SNAP = 42;
+const ARCH_BRIDGE_ENTRY_FLAT_LENGTH = TILE * 1.35;
+const ARCH_BRIDGE_RUN_SPEED = 260;
+const ARCH_BRIDGE_JUMP_REGRAB_DELAY_MS = 520;
+const DIVE_FORCED_INPUT_MS = 2400;
 const HAY_BURST_COLORS = [0xc99654, 0x7d5525, 0xe6bc75, 0xca9656, 0x8a5b2e, 0xb9894a];
 const GARDEN_BURST_COLORS = [0x2e9f5b, 0x6edb7a, 0x145a38, 0x5bc7ca, 0x2c84bd, 0xa0eec3, 0x275f87];
 const HAY_BURST_MIN_TOUCH_SPEED = 44;
@@ -363,7 +384,7 @@ const ENEMY_NAMES = [
   "OCM Tiers Case Escalation",
   "KYC WUDB Onboarding Assistant"
 ];
-const ASSET_VERSION = "20260627-admin-settings";
+const ASSET_VERSION = "20260628-cheat-action-row";
 const STORY_ASSET_VERSION = ASSET_VERSION;
 
 function getSpineRuntime() {
@@ -473,7 +494,9 @@ const LEVEL_FOUR_WIDTH_TILES = 224;
 const LEVEL_FIVE_WIDTH_TILES = 720;
 const LEVEL_SIX_WIDTH_TILES = 420;
 const LEVEL_SEVEN_WIDTH_TILES = 520;
+const LEVEL_ZERO_WIDTH_TILES = 48;
 const LEVEL_HEIGHT_TILES = 18;
+const TEST_LEVELS_ENABLED = true;
 const LEVELS = [
   {
     name: "Level 1",
@@ -904,6 +927,15 @@ const LEVELS = [
     parallax: "parallax-garden",
     platformTexture: "platform-strip",
     fenceTexture: "platform-fence",
+    bridges: [
+      {
+        key: "bridge-1",
+        src: "./public/assets/environment/bridge_1.png",
+        startColumn: 207,
+        endColumn: 225,
+        endRow: 16
+      }
+    ],
     ambientLeaves: {
       sprite: "flower-petal",
       animation: "flower-petal-float",
@@ -1060,6 +1092,35 @@ const LEVELS = [
     introTitle: "Level 7",
     introCopy: "Carry the lantern through the moonlit inner garden, find the hidden key, and leave before the blue dark closes around you.",
     questTasks: ["flower", "lantern", "wing", "petal", "key", "coins", "enemies"]
+  },
+  {
+    name: "Level 0",
+    rows: createLevelZero(),
+    timeLimit: null,
+    soundtrack: null,
+    enemySprite: "robot-lv1",
+    actionAbility: null,
+    startSpeech: "",
+    showStartingHouse: false,
+    showWater: false,
+    doorYOffset: -30,
+    requiresKeyForDoor: false,
+    parallax: "parallax-garden",
+    platformTexture: "platform-strip",
+    fenceTexture: "platform-fence",
+    bridges: [
+      {
+        key: "bridge-1",
+        src: "./public/assets/environment/bridge_1.png",
+        startColumn: 9,
+        endColumn: 28,
+        endRow: 16
+      }
+    ],
+    introTitle: "Level 0",
+    introCopy: "Bridge mechanics test. Hold right and reach the door.",
+    questTasks: [],
+    testLevel: true
   }
 ];
 
@@ -1073,6 +1134,15 @@ function createLevelRows(height = LEVEL_HEIGHT_TILES, width = LEVEL_WIDTH_TILES)
   };
 
   return { rows, put, run };
+}
+
+function createLevelZero() {
+  const { rows, put, run } = createLevelRows(18, LEVEL_ZERO_WIDTH_TILES);
+  run(16, 0, 11);
+  run(16, 26, 15);
+  put(15, 4, "p");
+  put(15, 38, "d");
+  return rows;
 }
 
 function createLevelOne() {
@@ -1563,7 +1633,6 @@ function createLevelSix() {
   run(15, 94, 5);
   run(15, 126, 6);
   run(15, 169, 6);
-  run(15, 213, 6);
   run(15, 253, 6);
   run(15, 295, 6);
   run(15, 333, 6);
@@ -1920,6 +1989,8 @@ const hud = {
   menuPanelClose: document.querySelector("#menu-panel-close"),
   cheatMenu: document.querySelector("#cheat-menu"),
   cheatLevels: document.querySelector("#cheat-levels"),
+  cheatSettingsColumn: document.querySelector("#cheat-settings-column"),
+  cheatActions: document.querySelector("#cheat-actions"),
   cheatClose: document.querySelector("#cheat-close")
 };
 
@@ -2859,6 +2930,9 @@ class PlayScene extends Phaser.Scene {
     this.platforms = this.physics.add.staticGroup();
     this.movingPlatforms = this.physics.add.group({ allowGravity: false, immovable: true });
     this.movingPlatformRuns = [];
+    this.archedBridges = [];
+    this.bridgeRide = null;
+    this.bridgeRegrabDisabledUntil = 0;
     this.finalElevator = null;
     this.finalElevatorActive = false;
     this.finalElevatorCompleted = false;
@@ -2917,6 +2991,8 @@ class PlayScene extends Phaser.Scene {
     this.diveCameraZoomProxy = null;
     this.diveCameraFocus = null;
     this.pendingDiveLedge = null;
+    this.forcedDiveDirection = 0;
+    this.forcedDiveDirectionUntil = 0;
     this.scriptedHaystackDive = null;
     this.heartDropsCreated = 0;
     this.basketPromptActive = false;
@@ -2963,6 +3039,7 @@ class PlayScene extends Phaser.Scene {
     this.mysteriousManScriptAt = 0;
     this.catFollowPlayerAfterElevator = false;
     this.gardenStatueRunKeys = new Set();
+    this.gardenFeatureCooldowns = new Map();
     this.clearDomSpeechBubbles();
     this.domSpeechBubbles = [];
     setBossHealthVisible(false);
@@ -3216,6 +3293,7 @@ class PlayScene extends Phaser.Scene {
       }
       if (level.showWater !== false) image("water-below", "./public/assets/environment/water_below.png");
       if (level.haystacks?.length) image("haystack", "./public/assets/environment/haystack.png");
+      (level.bridges || []).forEach((bridge) => image(bridge.key, bridge.src));
       if (level.showStartingHouse || level.constructionBillboard) {
         image("starting-house", "./public/assets/environment/starting_house.png");
         image("starting-billboard", "./public/assets/environment/starting_billboard.png");
@@ -4700,6 +4778,9 @@ class PlayScene extends Phaser.Scene {
     camera.stopFollow();
 
     const keepCentered = () => {
+      const currentFocus = this.getDistantColossusHeadFocus();
+      focus.x = Phaser.Math.Linear(focus.x, currentFocus.x, 0.42);
+      focus.y = Phaser.Math.Linear(focus.y, currentFocus.y, 0.42);
       camera.setZoom(proxy.zoom);
       camera.centerOn(Math.round(focus.x), Math.round(focus.y));
     };
@@ -4741,33 +4822,70 @@ class PlayScene extends Phaser.Scene {
     this.bossRevealTweens.push(zoomIn);
   }
 
+  getWorldBoundsForObject(object) {
+    if (!object?.active || typeof object.getWorldTransformMatrix !== "function") return null;
+    const matrix = object.getWorldTransformMatrix();
+    const width = object.width || object.displayWidth || 1;
+    const height = object.height || object.displayHeight || 1;
+    const left = -width * (object.originX ?? 0.5);
+    const right = width * (1 - (object.originX ?? 0.5));
+    const top = -height * (object.originY ?? 0.5);
+    const bottom = height * (1 - (object.originY ?? 0.5));
+    const points = [
+      matrix.transformPoint(left, top),
+      matrix.transformPoint(right, top),
+      matrix.transformPoint(left, bottom),
+      matrix.transformPoint(right, bottom)
+    ];
+    const xs = points.map((point) => point.x);
+    const ys = points.map((point) => point.y);
+    const bounds = {
+      left: Math.min(...xs),
+      right: Math.max(...xs),
+      top: Math.min(...ys),
+      bottom: Math.max(...ys)
+    };
+    bounds.width = bounds.right - bounds.left;
+    bounds.height = bounds.bottom - bounds.top;
+    bounds.centerX = bounds.left + bounds.width * 0.5;
+    bounds.centerY = bounds.top + bounds.height * 0.5;
+    return bounds;
+  }
+
   getDistantColossusHeadFocus() {
     const camera = this.cameras?.main;
     const rig = this.distantColossus;
     if (!camera || !rig?.object?.active) return { x: 0, y: 0 };
-    const containerScaleX = rig.object.scaleX || 1;
-    const containerScaleY = rig.object.scaleY || 1;
     const pngHead = rig.parts?.head;
     if (pngHead?.active) {
-      const visualCenterX = pngHead.x + (0.5 - pngHead.originX) * pngHead.displayWidth;
-      const upperHeadY = pngHead.y + (0.36 - pngHead.originY) * pngHead.displayHeight;
-      return {
-        x: camera.scrollX + rig.object.x + visualCenterX * containerScaleX,
-        y: camera.scrollY + rig.object.y + upperHeadY * containerScaleY
-      };
+      const bounds = this.getWorldBoundsForObject(pngHead);
+      if (bounds) {
+        return {
+          x: bounds.centerX,
+          y: bounds.top + bounds.height * 0.38
+        };
+      }
     }
-    const scaleX = containerScaleX;
-    const scaleY = containerScaleY;
-    const head = rig.parts?.head;
-    if (head?.active) {
+    const neck = rig.parts?.neck;
+    if (neck?.active) {
+      const bounds = this.getWorldBoundsForObject(neck);
+      if (bounds) {
+        return {
+          x: bounds.centerX,
+          y: bounds.top - bounds.height * 0.85
+        };
+      }
+    }
+    const containerBounds = this.getWorldBoundsForObject(rig.object);
+    if (containerBounds) {
       return {
-        x: camera.scrollX + rig.object.x + head.x * scaleX,
-        y: camera.scrollY + rig.object.y + head.y * scaleY - 24
+        x: containerBounds.centerX,
+        y: containerBounds.top + containerBounds.height * 0.18
       };
     }
     return {
-      x: camera.scrollX + rig.object.x,
-      y: camera.scrollY + rig.object.y - 84
+      x: rig.object.x,
+      y: rig.object.y - 84
     };
   }
 
@@ -4912,6 +5030,7 @@ class PlayScene extends Phaser.Scene {
 
     const runs = this.findGardenPlatformRuns(point, keyRun);
     runs.forEach((run, clusterIndex) => {
+      if (state.levelIndex === 1 && clusterIndex > 0) return;
       const floorY = run.topY + 2;
       const runWidth = run.endX - run.startX;
       const centerNoise = this.wallPlacementNoise(Math.floor(floorY / TILE) + clusterIndex * 17, Math.floor(point.x / TILE) + 29);
@@ -5074,25 +5193,137 @@ class PlayScene extends Phaser.Scene {
     return pool[pool.length - 1];
   }
 
+  getGardenSolitaryClass(asset) {
+    if (!asset) return "";
+    if (asset.key.includes("fountain")) return "fountain";
+    if (asset.key.includes("statue")) return "statue";
+    if (asset.key.includes("arc")) return "arc";
+    if (asset.key.includes("bench")) return "bench";
+    if (asset.key.includes("flowerpot")) return "flowerpot";
+    return asset.key;
+  }
+
+  isGardenStructuredProp(asset) {
+    if (!asset) return false;
+    return asset.key.includes("statue") || asset.key.includes("bench") || asset.key.includes("fountain");
+  }
+
+  getGardenTextureSize(asset) {
+    if (!asset || !this.textures.exists(asset.key)) return { width: 1, height: 1 };
+    const source = this.textures.get(asset.key)?.getSourceImage?.();
+    return {
+      width: source?.width || 1,
+      height: source?.height || 1
+    };
+  }
+
+  getGardenDecorScale(asset, x, seed, scaleBoost = 1) {
+    return (
+      asset.scale *
+      scaleBoost *
+      Phaser.Math.Linear(0.9, 1.08, this.wallPlacementNoise(seed + 41, Math.floor(x / TILE) + 83))
+    );
+  }
+
+  findNearestPlatformTopAbove(x, y) {
+    if (!this.platformRuns?.length) return null;
+    let nearest = null;
+    this.platformRuns.forEach((run) => {
+      if (x < run.startX - TILE * 0.35 || x > run.endX + TILE * 0.35) return;
+      if (run.topY >= y - TILE * 0.5) return;
+      if (nearest === null || run.topY > nearest) nearest = run.topY;
+    });
+    return nearest;
+  }
+
+  hasVerticalDecorationClearance(x, floorY, displayHeight, padding = GARDEN_STATUE_HEADROOM_PADDING) {
+    const nearestAbove = this.findNearestPlatformTopAbove(x, floorY);
+    return nearestAbove === null || floorY - displayHeight >= nearestAbove + padding;
+  }
+
   createGardenDecorSprite(asset, x, y, options = {}) {
     if (!asset || !this.textures.exists(asset.key)) return null;
-    if (asset.key.includes("statue")) {
+    let resolvedAsset = asset;
+    const run = this.getNearestPlatformRun?.(x, y);
+    let resolvedX = x;
+    const seed = options.seed ?? 0;
+    if (resolvedAsset.type === "bush" && run) {
+      const nearEdge =
+        resolvedX - run.startX < KEY_GARDEN_EDGE_BIG_BUSH_INSET ||
+        run.endX - resolvedX < KEY_GARDEN_EDGE_BIG_BUSH_INSET;
+      if (nearEdge && resolvedAsset.scale >= KEY_GARDEN_EDGE_BIG_BUSH_SCALE) {
+        const smallestBush = KEY_GARDEN_ASSETS
+          .filter((candidate) => candidate.type === "bush" && this.textures.exists(candidate.key))
+          .sort((a, b) => a.scale - b.scale)[0];
+        if (smallestBush) resolvedAsset = smallestBush;
+      }
+    }
+    if (this.isGardenStructuredProp(resolvedAsset) && run) {
+      const minX = run.startX + GARDEN_STATUE_PLATFORM_EDGE_INSET;
+      const maxX = run.endX - GARDEN_STATUE_PLATFORM_EDGE_INSET;
+      if (maxX <= minX) return null;
+      resolvedX = Phaser.Math.Clamp(resolvedX, minX, maxX);
+    }
+
+    let scale = this.getGardenDecorScale(resolvedAsset, resolvedX, seed, options.scaleBoost ?? 1);
+    let textureSize = this.getGardenTextureSize(resolvedAsset);
+    let displayWidth = textureSize.width * scale;
+    let displayHeight = textureSize.height * scale;
+    if (resolvedAsset.type === "bush" && run) {
+      const minX = run.startX + displayWidth * 0.5 + GARDEN_DECOR_EDGE_PADDING;
+      const maxX = run.endX - displayWidth * 0.5 - GARDEN_DECOR_EDGE_PADDING;
+      if (maxX <= minX) {
+        const smallestBush = KEY_GARDEN_ASSETS
+          .filter((candidate) => candidate.type === "bush" && this.textures.exists(candidate.key))
+          .sort((a, b) => a.scale - b.scale)[0];
+        if (!smallestBush || smallestBush.key === resolvedAsset.key) return null;
+        resolvedAsset = smallestBush;
+        scale = this.getGardenDecorScale(resolvedAsset, resolvedX, seed, options.scaleBoost ?? 1);
+        textureSize = this.getGardenTextureSize(resolvedAsset);
+        displayWidth = textureSize.width * scale;
+        displayHeight = textureSize.height * scale;
+      }
+      const finalMinX = run.startX + displayWidth * 0.5 + GARDEN_DECOR_EDGE_PADDING;
+      const finalMaxX = run.endX - displayWidth * 0.5 - GARDEN_DECOR_EDGE_PADDING;
+      if (finalMaxX <= finalMinX) return null;
+      resolvedX = Phaser.Math.Clamp(resolvedX, finalMinX, finalMaxX);
+      scale = this.getGardenDecorScale(resolvedAsset, resolvedX, seed, options.scaleBoost ?? 1);
+      textureSize = this.getGardenTextureSize(resolvedAsset);
+      displayHeight = textureSize.height * scale;
+    }
+    const isBulkGardenFeature = resolvedAsset.key === "garden-tree-3";
+    const isSolitaryGardenFeature = resolvedAsset.type === "feature" && !isBulkGardenFeature;
+    if (isSolitaryGardenFeature) {
+      this.gardenFeatureCooldowns = this.gardenFeatureCooldowns || new Map();
+      const classKey = this.getGardenSolitaryClass(resolvedAsset);
+      const lastAssetX = this.gardenFeatureCooldowns.get(`asset:${resolvedAsset.key}`);
+      const lastClassX = this.gardenFeatureCooldowns.get(`class:${classKey}`);
+      if (Number.isFinite(lastAssetX) && Math.abs(lastAssetX - resolvedX) < GARDEN_SOLITARY_REPEAT_DISTANCE) return null;
+      if (
+        Number.isFinite(lastClassX) &&
+        Math.abs(lastClassX - resolvedX) < GARDEN_SOLITARY_CLASS_REPEAT_DISTANCE
+      ) {
+        return null;
+      }
+      this.gardenFeatureCooldowns.set(`asset:${resolvedAsset.key}`, resolvedX);
+      this.gardenFeatureCooldowns.set(`class:${classKey}`, resolvedX);
+    }
+    if (this.isGardenStructuredProp(resolvedAsset)) {
       this.gardenStatueRunKeys = this.gardenStatueRunKeys || new Set();
-      const run = this.getNearestPlatformRun?.(x, y);
-      const statueRunKey = run?.id || `${Math.round(y / TILE)}:${Math.round(x / (TILE * 8))}`;
+      const structuredClass = this.getGardenSolitaryClass(resolvedAsset);
+      const statueRunKey = `${structuredClass}:${run?.id || `${Math.round(y / TILE)}:${Math.round(resolvedX / (TILE * 8))}`}`;
       if (this.gardenStatueRunKeys.has(statueRunKey)) return null;
+      if (!this.hasVerticalDecorationClearance(resolvedX, y, displayHeight)) return null;
       this.gardenStatueRunKeys.add(statueRunKey);
     }
-    const sprite = options.interactive
-      ? this.gardenBushes.create(x, y, asset.key)
-      : this.add.image(x, y, asset.key);
-    const seed = options.seed ?? 0;
-    const noise = this.wallPlacementNoise(Math.floor(y / TILE) + seed + 7, Math.floor(x / TILE) + seed + 23);
+    const noise = this.wallPlacementNoise(Math.floor(y / TILE) + seed + 7, Math.floor(resolvedX / TILE) + seed + 23);
     const rawDepth = Phaser.Math.Linear(3.32, 4.86, noise) + (options.depthBias ?? 0);
-    const isGardenProp = asset.type === "lantern" || asset.type === "feature";
+    const isGardenProp = resolvedAsset.type === "lantern" || resolvedAsset.type === "feature";
     const depth = isGardenProp ? KEY_GARDEN_PROP_BACK_DEPTH : rawDepth;
-    const visualY = asset.type === "bush" && depth > 4 ? y + KEY_GARDEN_BUSH_FRONT_Y_OFFSET : y;
-    const scale = asset.scale * (options.scaleBoost ?? 1) * Phaser.Math.Linear(0.9, 1.08, this.wallPlacementNoise(seed + 41, Math.floor(x / TILE) + 83));
+    const visualY = resolvedAsset.type === "bush" && depth > 4 ? y + KEY_GARDEN_BUSH_FRONT_Y_OFFSET : y;
+    const sprite = options.interactive
+      ? this.gardenBushes.create(resolvedX, y, resolvedAsset.key)
+      : this.add.image(resolvedX, y, resolvedAsset.key);
     sprite.setOrigin(0.5, 1);
     sprite.setDepth(depth);
     sprite.setY(visualY);
@@ -5108,7 +5339,7 @@ class PlayScene extends Phaser.Scene {
     } else {
       this.platformVisuals?.add(sprite);
     }
-    if (asset.type === "lantern" && this.level.nightLevel) {
+    if (resolvedAsset.type === "lantern" && this.level.nightLevel) {
       this.createNightLanternLightForSprite(sprite, {
         radius: options.lightRadius,
         fringe: options.lightFringe,
@@ -5303,6 +5534,56 @@ class PlayScene extends Phaser.Scene {
     glow.setAlpha(0.46);
     this.nightLanternLights.push({ ...light, lantern, glow });
     return light;
+  }
+
+  createStreetLightGlow(x, y, index = 0) {
+    this.ensureNightLanternGlowTexture();
+    const glow = this.add.image(x, y, NIGHT_LANTERN_GLOW_KEY);
+    const radius = Phaser.Math.Linear(86, 124, this.wallPlacementNoise(index + 503, Math.floor(x / TILE) + 17));
+    glow.setScale(radius / 128);
+    glow.setDepth(FENCE_STREET_LIGHT_GLOW_DEPTH);
+    glow.setBlendMode(Phaser.BlendModes.ADD);
+    glow.setAlpha(0.3);
+    this.tweens.add({
+      targets: glow,
+      alpha: 0.44,
+      scaleX: glow.scaleX * 1.08,
+      scaleY: glow.scaleY * 1.08,
+      duration: Phaser.Math.Between(1250, 1900),
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.inOut"
+    });
+    this.platformVisuals?.add(glow);
+    return glow;
+  }
+
+  createFenceStreetLightGlow({
+    x,
+    topY,
+    segmentWidth,
+    fenceTexture,
+    fenceFrame,
+    index = 0
+  } = {}) {
+    if (fenceTexture !== "platform-fence" || fenceFrame !== FENCE_STREET_LIGHT_FRAME) return null;
+    const lightX = x - segmentWidth / 2 + (FENCE_STREET_LIGHT_SOURCE_X / PLATFORM_FRAME_WIDTH) * segmentWidth;
+    const lightY =
+      topY +
+      FENCE_Y_OFFSET -
+      PLATFORM_SEGMENT_HEIGHT / 2 +
+      (FENCE_STREET_LIGHT_SOURCE_Y / PLATFORM_FRAME_HEIGHT) * PLATFORM_SEGMENT_HEIGHT;
+    return this.createStreetLightGlow(lightX, lightY, index);
+  }
+
+  canPlaceFenceStreetLight({ x, topY, segmentWidth, runStart, runEnd } = {}) {
+    if (!Number.isFinite(x) || !Number.isFinite(topY)) return false;
+    if (Number.isFinite(runStart) && Number.isFinite(runEnd)) {
+      const inset = TILE * 1.5;
+      if (x - segmentWidth * 0.5 < runStart + inset || x + segmentWidth * 0.5 > runEnd - inset) return false;
+    }
+    const streetLightHeight = Math.abs(FENCE_Y_OFFSET) + PLATFORM_SEGMENT_HEIGHT * 0.62;
+    return this.hasVerticalDecorationClearance(x, topY, streetLightHeight, TILE * 0.55);
   }
 
   ensureNightLanternGlowTexture() {
@@ -6189,6 +6470,7 @@ class PlayScene extends Phaser.Scene {
       });
     });
     this.createPlatformVisuals();
+    this.createArchedBridges();
     this.snapSpawnPointToPlatform();
     this.createHangingChains();
     this.createMovingPlatforms();
@@ -6362,6 +6644,40 @@ class PlayScene extends Phaser.Scene {
         this.addPlatformRun(start, columnIndex - start, rowIndex);
       }
     });
+
+    if (this.level.wallTiles) {
+      this.levelRows.forEach((row, rowIndex) => {
+        let columnIndex = 0;
+        while (columnIndex < row.length) {
+          const isWalkableWallTop =
+            row[columnIndex] === "w" &&
+            this.levelRows[rowIndex - 1]?.[columnIndex] !== "w" &&
+            this.levelRows[rowIndex - 1]?.[columnIndex] !== "#";
+          if (!isWalkableWallTop) {
+            columnIndex += 1;
+            continue;
+          }
+
+          const start = columnIndex;
+          while (
+            columnIndex < row.length &&
+            row[columnIndex] === "w" &&
+            this.levelRows[rowIndex - 1]?.[columnIndex] !== "w" &&
+            this.levelRows[rowIndex - 1]?.[columnIndex] !== "#"
+          ) {
+            columnIndex += 1;
+          }
+          this.platformRuns.push({
+            startX: start * TILE,
+            endX: columnIndex * TILE,
+            topY: rowIndex * TILE,
+            rowIndex,
+            wallCap: true
+          });
+          this.addPlatformRun(start, columnIndex - start, rowIndex);
+        }
+      });
+    }
   }
 
   snapSpawnPointToPlatform() {
@@ -6375,6 +6691,151 @@ class PlayScene extends Phaser.Scene {
       x: Phaser.Math.Clamp(spawnX, nearestRun.startX + TILE, nearestRun.endX - TILE),
       y: nearestRun.topY - TILE * 1.35
     };
+  }
+
+  createArchedBridges() {
+    const bridges = this.level.bridges || [];
+    if (!bridges.length) return;
+    bridges.forEach((bridge, bridgeIndex) => this.createArchedBridge(bridge, bridgeIndex));
+  }
+
+  createArchedBridge(bridge, bridgeIndex = 0) {
+    if (!bridge?.key || !this.textures.exists(bridge.key)) return;
+    const startX = (bridge.startColumn ?? 0) * TILE;
+    const endX = (bridge.endColumn ?? bridge.startColumn + 1) * TILE;
+    const worldWidth = Math.max(TILE, endX - startX);
+    const source = this.textures.get(bridge.key)?.getSourceImage?.();
+    const sourceWidth = source?.width || 1;
+    const sourceHeight = source?.height || 1;
+    const scale = bridge.scale ?? worldWidth / sourceWidth;
+    const worldHeight = sourceHeight * scale;
+    const standBottomY = bridge.standBottomY ?? sourceHeight * ARCH_BRIDGE_STAND_BOTTOM_RATIO;
+    const standTopY = bridge.standTopY ?? sourceHeight * ARCH_BRIDGE_STAND_TOP_RATIO;
+    const endStandingY = (bridge.endRow ?? 0) * TILE + (bridge.endYOffset ?? 0);
+    const bridgeTopY = endStandingY - standBottomY * scale;
+    const centerX = (startX + endX) / 2;
+    const bridgeVisual = this.add.image(centerX, bridgeTopY + worldHeight, bridge.key);
+    bridgeVisual.setOrigin(0.5, 1);
+    bridgeVisual.setDisplaySize(worldWidth, worldHeight);
+    bridgeVisual.setDepth(bridge.depth ?? ARCH_BRIDGE_DEPTH);
+    this.platformVisuals.add(bridgeVisual);
+
+    const archRise = (standBottomY - standTopY) * scale;
+    const bridgeRun = {
+      startX,
+      endX,
+      topY: endStandingY,
+      rowIndex: bridge.endRow ?? 0,
+      bridge: true,
+      id: `bridge-${bridgeIndex}`,
+      endStandingY,
+      archRise,
+      curvePower: bridge.curvePower ?? 1.62,
+      flatLeadIn: bridge.flatLeadIn ?? ARCH_BRIDGE_ENTRY_FLAT_LENGTH
+    };
+    this.archedBridges.push(bridgeRun);
+    this.platformRuns.push(bridgeRun);
+  }
+
+  getBridgeSurfaceY(bridge, x) {
+    const span = Math.max(1, bridge.endX - bridge.startX);
+    const flatLeadIn = Math.min(bridge.flatLeadIn ?? 0, span * 0.22);
+    const innerStart = bridge.startX + flatLeadIn;
+    const innerEnd = bridge.endX - flatLeadIn;
+    if (innerEnd <= innerStart || x <= innerStart || x >= innerEnd) return bridge.endStandingY;
+
+    const progress = Phaser.Math.Clamp((x - innerStart) / Math.max(1, innerEnd - innerStart), 0, 1);
+    const centered = Math.abs(progress * 2 - 1);
+    const rise = bridge.archRise * (1 - Math.pow(centered, bridge.curvePower ?? 1.62));
+    return bridge.endStandingY - rise;
+  }
+
+  findBridgeUnderPlayer() {
+    if (!this.player?.body || !this.archedBridges?.length) return null;
+    const centerX = this.player.body.x + this.player.body.width * 0.5;
+    return this.archedBridges.find(
+      (bridge) =>
+        centerX >= bridge.startX - ARCH_BRIDGE_SUPPORT_MARGIN &&
+        centerX <= bridge.endX + ARCH_BRIDGE_SUPPORT_MARGIN
+    ) || null;
+  }
+
+  stopPlayerBridgeRide({ keepGravity = true } = {}) {
+    if (!this.bridgeRide || !this.player?.body) {
+      this.bridgeRide = null;
+      return;
+    }
+    const { spriteOffsetX = this.player.x - this.player.body.x, spriteOffsetY = this.player.y - this.player.body.y } = this.bridgeRide;
+    const bodyX = this.player.x - spriteOffsetX;
+    const bodyY = this.player.y - spriteOffsetY;
+    this.player.body.reset(bodyX, bodyY);
+    this.player.setPosition(bodyX + spriteOffsetX, bodyY + spriteOffsetY);
+    this.bridgeRide = null;
+    if (keepGravity) this.player.body.allowGravity = true;
+    this.player.body.moves = true;
+    this.player.setData("bridgeGrounded", false);
+  }
+
+  placePlayerOnBridge(bridge, { delta = 0, inputDirection = 0 } = {}) {
+    if (!this.player?.body || !bridge) return false;
+    const body = this.player.body;
+    const spriteOffsetX = this.bridgeRide?.spriteOffsetX ?? this.player.x - body.x;
+    const spriteOffsetY = this.bridgeRide?.spriteOffsetY ?? this.player.y - body.y;
+    const movement = inputDirection * ARCH_BRIDGE_RUN_SPEED * (delta / 1000);
+    if (movement) this.player.x += movement;
+    body.x = this.player.x - spriteOffsetX;
+    const centerX = body.x + body.width * 0.5;
+    if (centerX < bridge.startX - ARCH_BRIDGE_SUPPORT_MARGIN || centerX > bridge.endX + ARCH_BRIDGE_SUPPORT_MARGIN) {
+      this.stopPlayerBridgeRide();
+      return false;
+    }
+    const surfaceY = this.getBridgeSurfaceY(bridge, centerX);
+    const footOffset = this.bridgeRide?.footOffset ?? Math.max(0, body.height - spriteOffsetY);
+    this.player.y = surfaceY - footOffset;
+    body.x = this.player.x - spriteOffsetX;
+    body.y = this.player.y - spriteOffsetY;
+    body.updateCenter();
+    body.setVelocity(0, 0);
+    body.moves = false;
+    body.allowGravity = false;
+    this.player.setData("bridgeGrounded", true);
+    this.player.setData("bridgeSurfaceY", surfaceY);
+    return true;
+  }
+
+  updatePlayerBridgeRide({ delta = 0, left = false, right = false, jump = false } = {}) {
+    if (!this.player?.body?.enable || !this.archedBridges?.length || this.chainClimb || this.gabiDash?.active) {
+      this.stopPlayerBridgeRide();
+      return false;
+    }
+
+    const body = this.player.body;
+    const bridge = this.findBridgeUnderPlayer();
+    const inputDirection = left === right ? 0 : right ? 1 : -1;
+    if (this.bridgeRide) {
+      if (!bridge || bridge.id !== this.bridgeRide.id || body.velocity.y < -40) {
+        this.stopPlayerBridgeRide();
+        return false;
+      }
+      return this.placePlayerOnBridge(bridge, { delta, inputDirection });
+    }
+
+    if ((this.time?.now || 0) < this.bridgeRegrabDisabledUntil) return false;
+    if (!bridge || body.velocity.y < -60) return false;
+    const surfaceY = this.getBridgeSurfaceY(bridge, body.x + body.width * 0.5);
+    const bottom = body.y + body.height;
+    const enteringFromPlatform = body.blocked.down || body.touching.down;
+    const fallingOntoBridge = body.velocity.y >= 0 && bottom >= surfaceY - ARCH_BRIDGE_LANDING_SNAP && bottom <= surfaceY + ARCH_BRIDGE_ENTER_SNAP;
+    const walkingOntoBridge = enteringFromPlatform && Math.abs(bottom - surfaceY) <= ARCH_BRIDGE_ENTER_SNAP;
+    if (!fallingOntoBridge && !walkingOntoBridge) return false;
+
+    this.bridgeRide = {
+      id: bridge.id,
+      spriteOffsetX: this.player.x - body.x,
+      spriteOffsetY: this.player.y - body.y,
+      footOffset: Math.max(0, body.height - (this.player.y - body.y))
+    };
+    return this.placePlayerOnBridge(bridge, { delta, inputDirection });
   }
 
   createHangingChains() {
@@ -6778,11 +7239,27 @@ class PlayScene extends Phaser.Scene {
 
       if (Phaser.Math.Between(0, 100) < 68) {
         const fenceRoll = Phaser.Math.Between(0, 100);
-        const fenceFrame = fenceRoll < 6 ? 2 : Phaser.Math.Between(0, 1);
+        const wantsStreetLight = fenceRoll < 6;
+        const canPlaceStreetLight = this.canPlaceFenceStreetLight({
+          x,
+          topY,
+          segmentWidth,
+          runStart: worldStart,
+          runEnd: worldStart + worldWidth
+        });
+        const fenceFrame = wantsStreetLight && canPlaceStreetLight ? 2 : Phaser.Math.Between(0, 1);
         const fence = this.add.image(x, topY + FENCE_Y_OFFSET, fenceTexture, fenceFrame);
         fence.setDisplaySize(segmentWidth, PLATFORM_SEGMENT_HEIGHT);
         fence.setDepth(FENCE_DEPTH);
         this.platformVisuals.add(fence);
+        this.createFenceStreetLightGlow({
+          x,
+          topY,
+          segmentWidth,
+          fenceTexture,
+          fenceFrame,
+          index: rowIndex * 1000 + startColumn * 17 + index
+        });
       }
     }
   }
@@ -6815,11 +7292,28 @@ class PlayScene extends Phaser.Scene {
       visuals.push({ sprite: platform, offsetX, offsetY: PLATFORM_Y_OFFSET - TILE / 2 });
 
       if (Phaser.Math.Between(0, 100) < 54) {
-        const fenceFrame = Phaser.Math.Between(0, 100) < 5 ? 2 : Phaser.Math.Between(0, 1);
+        const wantsStreetLight = Phaser.Math.Between(0, 100) < 5;
+        const canPlaceStreetLight = this.canPlaceFenceStreetLight({
+          x: centerX + offsetX,
+          topY,
+          segmentWidth,
+          runStart: worldStart,
+          runEnd: worldStart + worldWidth
+        });
+        const fenceFrame = wantsStreetLight && canPlaceStreetLight ? 2 : Phaser.Math.Between(0, 1);
         const fence = this.add.image(centerX + offsetX, topY + FENCE_Y_OFFSET, fenceTexture, fenceFrame);
         fence.setDisplaySize(segmentWidth, PLATFORM_SEGMENT_HEIGHT);
         fence.setDepth(FENCE_DEPTH);
         visuals.push({ sprite: fence, offsetX, offsetY: FENCE_Y_OFFSET - TILE / 2 });
+        const glow = this.createFenceStreetLightGlow({
+          x: centerX + offsetX,
+          topY,
+          segmentWidth,
+          fenceTexture,
+          fenceFrame,
+          index: rowIndex * 1000 + startColumn * 17 + index
+        });
+        if (glow) visuals.push({ sprite: glow, offsetX: glow.x - centerX, offsetY: glow.y - centerY });
       }
     }
 
@@ -6930,10 +7424,14 @@ class PlayScene extends Phaser.Scene {
     const x = elevator.body.x - Math.min(520, VIEW_WIDTH * 0.42);
     const startY = elevator.baseY - 250;
     const endY = elevator.topY + 310;
+    const elevatorSections = [
+      ...CREDITS_SECTIONS.filter(([category]) => category !== "Gameplay Testers"),
+      ...CREDITS_SECTIONS.filter(([category]) => category === "Gameplay Testers")
+    ];
     const availableHeight = Math.max(1, startY - endY);
-    const step = availableHeight / Math.max(1, CREDITS_SECTIONS.length - 1);
+    const step = availableHeight / Math.max(1, elevatorSections.length - 1);
 
-    this.finalElevatorCredits = CREDITS_SECTIONS.map(([category, names], index) => {
+    this.finalElevatorCredits = elevatorSections.map(([category, names], index) => {
       const y = startY - step * index;
       const container = this.add.container(x, y);
       const title = this.add.text(0, 0, category.toUpperCase(), {
@@ -7703,8 +8201,15 @@ class PlayScene extends Phaser.Scene {
     }
 
     const mobileDirection = this.getMobileMoveDirection();
-    const left = this.cursors.left.isDown || this.keysInput.left.isDown || mobileDirection < 0;
-    const right = this.cursors.right.isDown || this.keysInput.right.isDown || mobileDirection > 0;
+    let left = this.cursors.left.isDown || this.keysInput.left.isDown || mobileDirection < 0;
+    let right = this.cursors.right.isDown || this.keysInput.right.isDown || mobileDirection > 0;
+    if (this.forcedDiveDirection && time < this.forcedDiveDirectionUntil) {
+      left = this.forcedDiveDirection < 0;
+      right = this.forcedDiveDirection > 0;
+    } else if (this.forcedDiveDirection && time >= this.forcedDiveDirectionUntil) {
+      this.forcedDiveDirection = 0;
+      this.forcedDiveDirectionUntil = 0;
+    }
     const leftPressed = Phaser.Input.Keyboard.JustDown(this.cursors.left) || Phaser.Input.Keyboard.JustDown(this.keysInput.left);
     const rightPressed = Phaser.Input.Keyboard.JustDown(this.cursors.right) || Phaser.Input.Keyboard.JustDown(this.keysInput.right);
     const jumpSpace = Phaser.Input.Keyboard.JustDown(this.keysInput.jump);
@@ -7716,7 +8221,8 @@ class PlayScene extends Phaser.Scene {
     const climbDown = this.cursors.down.isDown || this.keysInput.down.isDown;
     const action = Phaser.Input.Keyboard.JustDown(this.keysInput.action) || this.consumeMobileAction();
     const birdAttack = Phaser.Input.Keyboard.JustDown(this.keysInput.birdAttack) || this.consumeMobileBirdAttack();
-    const onFloor = this.player.body.blocked.down;
+    const bridgeGrounded = this.updatePlayerBridgeRide({ delta, left, right, jump });
+    const onFloor = this.player.body.blocked.down || bridgeGrounded;
 
     if (this.isItemPromptActive()) {
       this.player.setAccelerationX(0);
@@ -7741,7 +8247,10 @@ class PlayScene extends Phaser.Scene {
       return;
     }
 
-    if (left) {
+    if (bridgeGrounded) {
+      this.player.setAccelerationX(0);
+      if (left !== right) this.setGabiFlip(left);
+    } else if (left) {
       this.player.setAccelerationX(-1250);
       this.setGabiFlip(true);
     } else if (right) {
@@ -7768,8 +8277,14 @@ class PlayScene extends Phaser.Scene {
     if (jump && this.isGliding) {
       this.cancelGlideToFall();
     } else if (jump && onFloor) {
+      if (this.bridgeRide) {
+        const bridgeJumpDirection = left === right ? 0 : right ? 1 : -1;
+        this.bridgeRegrabDisabledUntil = time + ARCH_BRIDGE_JUMP_REGRAB_DELAY_MS;
+        this.stopPlayerBridgeRide();
+        if (bridgeJumpDirection) this.player.setVelocityX(bridgeJumpDirection * 260);
+      }
       this.player.setVelocityY(-510);
-      if (this.shouldUseGabiDiveJump(left, right)) this.startGabiDive(time);
+      if (this.shouldUseGabiDiveJump(left, right, time)) this.startGabiDive(time);
     } else if (
       jump &&
       state.hasDoubleJump &&
@@ -7874,7 +8389,7 @@ class PlayScene extends Phaser.Scene {
     if (!this.isCommandAttackLevel()) return false;
     if (!state.hasBirdControl) return false;
     if (time - this.lastBirdAttackAt < BIRD_ATTACK_COOLDOWN) return false;
-    if (!this.player.body.blocked.down && !this.player.body.touching.down) return false;
+    if (!this.player.body.blocked.down && !this.player.body.touching.down && !this.player.getData("bridgeGrounded")) return false;
     const target = this.findNearestVisibleBirdAttackTarget();
 
     this.lastBirdAttackAt = time;
@@ -8161,28 +8676,55 @@ class PlayScene extends Phaser.Scene {
       })[0] || null;
   }
 
-  shouldUseGabiDiveJump(left = false, right = false) {
+  shouldUseGabiDiveJump(left = false, right = false, time = 0) {
     if (!this.anims.exists("gabi-dive") || !this.player?.body) return false;
-    const direction = this.getDiveLaunchDirection(left, right);
+    const indicatorLaunch = this.getDiveIndicatorJumpLaunch();
+    const direction = this.getDiveLaunchDirection(left, right) || indicatorLaunch?.direction || 0;
     if (!direction) {
       this.pendingDiveLedge = null;
       return false;
     }
 
-    const diveLedge = this.getPlayerManualDiveLedge(direction);
+    const diveLedge = this.getPlayerManualDiveLedge(direction) || indicatorLaunch?.ledge || null;
     if (!this.isValidDiveLaunchDirection(diveLedge, direction)) {
       this.pendingDiveLedge = null;
       return false;
     }
 
     const currentSpeed = Math.abs(this.player.body.velocity.x || 0);
-    if (currentSpeed < DIVE_JUMP_MIN_HORIZONTAL_SPEED && left !== right) {
+    if (indicatorLaunch) {
+      if (left === right) this.startForcedDiveDirection(direction, time);
+      this.player.setAccelerationX(0);
+      this.player.setVelocityX(direction * DIVE_JUMP_FORCED_HORIZONTAL_SPEED);
+    } else if (currentSpeed < DIVE_JUMP_MIN_HORIZONTAL_SPEED && left !== right) {
       this.player.setVelocityX(direction * DIVE_JUMP_FORCED_HORIZONTAL_SPEED);
     }
 
     this.setGabiFlip(direction < 0);
     this.pendingDiveLedge = diveLedge || null;
     return Boolean(diveLedge);
+  }
+
+  startForcedDiveDirection(direction = 1, time = 0) {
+    if (!direction) return;
+    this.forcedDiveDirection = direction > 0 ? 1 : -1;
+    this.forcedDiveDirectionUntil = time + DIVE_FORCED_INPUT_MS;
+  }
+
+  getDiveIndicatorJumpLaunch() {
+    if (!this.player?.body || !this.level.diveIndicators?.length) return null;
+    const indicator = this.level.diveIndicators.find((config) => {
+      const x = (config.column ?? 0) * TILE + TILE / 2;
+      const y = (config.row ?? 0) * TILE - (config.yOffset ?? 18);
+      return (
+        Math.abs(this.player.x - x) <= DIVE_INDICATOR_TRIGGER_DISTANCE &&
+        Math.abs(this.player.y - y) <= 180
+      );
+    });
+    if (!indicator) return null;
+    const direction = indicator.direction ?? 1;
+    const ledge = (this.level.manualDiveLedges || []).find((candidate) => this.matchesDiveLedgeSide(candidate, direction));
+    return ledge ? { direction, ledge } : null;
   }
 
   getDiveLaunchDirection(left = false, right = false) {
@@ -8576,6 +9118,8 @@ class PlayScene extends Phaser.Scene {
     this.gabiDiveUntil = 0;
     this.gabiDiveAngleDirection = 0;
     this.pendingDiveLedge = null;
+    this.forcedDiveDirection = 0;
+    this.forcedDiveDirectionUntil = 0;
     this.stopDiveWindSfx();
     this.clearDiveWindLines();
     this.diveWindStartedAt = 0;
@@ -9094,6 +9638,7 @@ class PlayScene extends Phaser.Scene {
   resetPlayerToSpawn() {
     this.stopScriptedHaystackDive();
     this.stopChainClimb();
+    this.stopPlayerBridgeRide();
     this.chainGrabDisabledUntil = 0;
     this.chainGrabDisabledChain = null;
     this.damageFlickerTween?.remove?.();
@@ -11913,7 +12458,7 @@ class PlayScene extends Phaser.Scene {
     const direction = this.player.flipX ? 1 : -1;
     const x = Phaser.Math.Clamp(this.player.x + direction * 118, (run?.startX ?? 0) + 44, (run?.endX ?? this.levelWidth) - 44);
     const y = (run ? run.topY - TILE / 2 : this.player.y) + (this.level.doorYOffset ?? -16);
-    const door = this.doors.create(x, y, "exit-door");
+    const door = this.doors.create(x, y + 8, "exit-door");
     door.setScale(DOOR_SCALE);
     door.setDepth(DOOR_DEPTH);
     door.refreshBody();
@@ -11923,11 +12468,11 @@ class PlayScene extends Phaser.Scene {
     this.tweens.add({
       targets: door,
       alpha: 1,
-      y: y - 8,
+      y,
       duration: 420,
       ease: "Sine.out",
       onComplete: () => {
-        if (door.active) door.y = y - 8;
+        if (door.active) door.y = y;
       }
     });
   }
@@ -12411,6 +12956,7 @@ class PlayScene extends Phaser.Scene {
     this.damageInvulnerableUntil = now + DAMAGE_INVULNERABLE_MS;
     this.cancelBirdAttackCameraZoom();
     this.cancelDiveCameraZoom();
+    this.stopPlayerBridgeRide();
     state.lives -= 1;
     if (isAdminEnabled() && state.lives <= 0) {
       state.lives = 1;
@@ -12502,8 +13048,9 @@ class PlayScene extends Phaser.Scene {
     awardScore(state.levelGems === state.totalGems ? 1000 : 350);
     if (Number.isFinite(state.timeLeft)) awardScore(state.timeLeft * 10);
     updateHud();
-    if (state.levelIndex < LEVELS.length - 1) {
-      this.advanceToNextLevel();
+    const nextLevelIndex = this.getNextCampaignLevelIndex();
+    if (nextLevelIndex !== null) {
+      this.advanceToNextLevel(nextLevelIndex);
       return;
     }
 
@@ -12513,8 +13060,16 @@ class PlayScene extends Phaser.Scene {
     });
   }
 
-  advanceToNextLevel() {
-    this.requestLevelStart(state.levelIndex + 1, { resetScore: false });
+  getNextCampaignLevelIndex() {
+    for (let index = state.levelIndex + 1; index < LEVELS.length; index += 1) {
+      if (!LEVELS[index]?.testLevel) return index;
+    }
+    return null;
+  }
+
+  advanceToNextLevel(levelIndex = this.getNextCampaignLevelIndex()) {
+    if (levelIndex === null) return;
+    this.requestLevelStart(levelIndex, { resetScore: false });
   }
 
   showGameOverScreen({ copy } = {}) {
@@ -12727,6 +13282,16 @@ const LEVEL_EPISODES = [
   { title: "Episode 2", start: 5, end: 9 }
 ];
 
+function appendLevelButtons(levels, target) {
+  levels.forEach(({ level, index }) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = level.name;
+    button.addEventListener("click", () => requestSelectedLevel(index));
+    target.appendChild(button);
+  });
+}
+
 function appendLevelEpisodeColumns(target) {
   const episodesWrapper = document.createElement("div");
   episodesWrapper.className = "level-select-episodes";
@@ -12734,7 +13299,7 @@ function appendLevelEpisodeColumns(target) {
   LEVEL_EPISODES.forEach((episode) => {
     const availableLevels = LEVELS
       .map((level, index) => ({ level, index }))
-      .filter(({ index }) => index >= episode.start && index <= episode.end);
+      .filter(({ level, index }) => !level.testLevel && index >= episode.start && index <= episode.end);
     if (!availableLevels.length) return;
     const section = document.createElement("section");
     section.className = "level-select-episode";
@@ -12742,16 +13307,27 @@ function appendLevelEpisodeColumns(target) {
     heading.textContent = episode.title;
     const levels = document.createElement("div");
     levels.className = "level-select-buttons";
-    availableLevels.forEach(({ level, index }) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = level.name;
-      button.addEventListener("click", () => requestSelectedLevel(index));
-      levels.appendChild(button);
-    });
+    appendLevelButtons(availableLevels, levels);
     section.append(heading, levels);
     episodesWrapper.appendChild(section);
   });
+
+  if (TEST_LEVELS_ENABLED) {
+    const testLevels = LEVELS
+      .map((level, index) => ({ level, index }))
+      .filter(({ level }) => level.testLevel);
+    if (testLevels.length) {
+      const section = document.createElement("section");
+      section.className = "level-select-episode level-select-test-episode";
+      const heading = document.createElement("h3");
+      heading.textContent = "Testing";
+      const levels = document.createElement("div");
+      levels.className = "level-select-buttons";
+      appendLevelButtons(testLevels, levels);
+      section.append(heading, levels);
+      episodesWrapper.appendChild(section);
+    }
+  }
 
   target.appendChild(episodesWrapper);
 }
@@ -12886,8 +13462,8 @@ returnToMenuButton.type = "button";
 returnToMenuButton.textContent = "Return to Menu";
 returnToMenuButton.addEventListener("click", returnToMainMenu);
 returnToMenuButton.className = "cheat-return-menu";
-hud.cheatLevels.appendChild(returnToMenuButton);
-hud.cheatLevels.after(createCheatSettingsControls());
+hud.cheatActions.prepend(returnToMenuButton);
+hud.cheatSettingsColumn.appendChild(createCheatSettingsControls());
 updateAudioSettingsPanel();
 
 window.addEventListener("keydown", (event) => {
